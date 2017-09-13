@@ -11,6 +11,9 @@ const int MAX_FLAG_VALUES = 4; // It's actually 2
 // First MAX_RESETS is resets left for next player, second one is for previous player
 // the value is 0 if this is a losing position, if it is not zero it is the amount of stones to take
 int dp[MAX_STONES][MAX_CUR_MAX][MAX_RESETS][MAX_RESETS][MAX_FLAG_VALUES];
+// A boolean that tells us whether or not it is optimal to use reset here in combination with
+// amount of stones told to take from dp
+bool shouldWeReset[MAX_STONES][MAX_CUR_MAX][MAX_RESETS][MAX_RESETS][MAX_FLAG_VALUES];
 
 int main() {
   // Initialize the base case
@@ -36,11 +39,15 @@ int main() {
             }
             allowedStonesToTake = min(allowedStonesToTake, stonesLeft);
 
-            // Initialize the dp with losing until we find a winning move
-            dp[stonesLeft][curMax][nextResets][prevResets][currentlyReset] = 0;
             int *ptr = &dp[stonesLeft][curMax][nextResets][prevResets][currentlyReset];
+            bool *resetPtr = &shouldWeReset[stonesLeft][curMax][nextResets][prevResets][currentlyReset];
 
-            for (int stonesToTake = 1; stonesToTake <= allowedStonesToTake; stonesToTake++) {
+            // Initialize the dp with losing and not resetting until we find a winning move
+            *ptr = 0;
+            *resetPtr = false;
+
+            // We start from the top just because of a decision that we'd rather take maximum amount of winning stones, as that'll finish the game faster, no reason not to
+            for (int stonesToTake = allowedStonesToTake; stonesToTake > 0; stonesToTake--) {
               int newStonesLeft = stonesLeft - stonesToTake;
               int newCurMax = max(curMax, stonesToTake);
 
@@ -48,6 +55,9 @@ int main() {
               if (dontUseReset == 0) {
                 // This means we put them in a losing position
                 *ptr = max(*ptr, stonesToTake);
+                *resetPtr = false;
+                // We can break as we found a winning move
+                break;
               }
 
               if (nextResets > 0) {
@@ -56,6 +66,9 @@ int main() {
                 if (useReset == 0) {
                   // This means we put them in a losing position
                   *ptr = max(*ptr, stonesToTake);
+                  *resetPtr = true;
+                  // We break for same reason as above
+                  break;
                 }
               }
             }
@@ -65,9 +78,10 @@ int main() {
     }
   }
 
+  cout << "Ready" << endl;
   while (true) {
     int stonesLeft, curMax, nextResets, prevResets, currentlyReset;
     cin >> stonesLeft >> curMax >> nextResets >> prevResets >> currentlyReset;
-    cout << dp[stonesLeft][curMax][nextResets][prevResets][currentlyReset] << endl;
+    cout << dp[stonesLeft][curMax][nextResets][prevResets][currentlyReset] << ' ' << shouldWeReset[stonesLeft][curMax][nextResets][prevResets][currentlyReset] << endl;
   }
 }
