@@ -1,4 +1,3 @@
-#include <iostream>
 #include <algorithm>
 
 using namespace std;
@@ -15,7 +14,7 @@ int dp[MAX_STONES][MAX_CUR_MAX][MAX_RESETS][MAX_RESETS][MAX_FLAG_VALUES];
 // amount of stones told to take from dp
 bool shouldWeReset[MAX_STONES][MAX_CUR_MAX][MAX_RESETS][MAX_RESETS][MAX_FLAG_VALUES];
 
-int main() {
+void initialize() {
   // Initialize the base case
   // No matter the other conditions if there are no stones left the next player to play loses
   for (int curMax = 0; curMax < MAX_CUR_MAX; curMax++) {
@@ -77,11 +76,11 @@ int main() {
       }
     }
   }
+}
 
-  cout << "Ready" << endl;
-  while (true) {
-    int stonesLeft, curMax, nextResets, prevResets, currentlyReset;
-    cin >> stonesLeft >> curMax >> nextResets >> prevResets >> currentlyReset;
-    cout << dp[stonesLeft][curMax][nextResets][prevResets][currentlyReset] << ' ' << shouldWeReset[stonesLeft][curMax][nextResets][prevResets][currentlyReset] << endl;
-  }
+int getMove(int curStones, int curMax, int nextResets, int prevResets, int currentlyReset, bool &shouldIReset) {
+  // shouldIReset is passed by reference to provide the "second return value"
+  shouldIReset = shouldWeReset[curStones][curMax][nextResets][prevResets][currentlyReset];
+  // Return amount of stones to take (or 0 if losing position)
+  return dp[curStones][curMax][nextResets][prevResets][currentlyReset];
 }
