@@ -44,12 +44,19 @@ int main() {
               int newStonesLeft = stonesLeft - stonesToTake;
               int newCurMax = max(curMax, stonesToTake);
 
-              // First case is we don't use a reset ourselves
-              *ptr = max(*ptr, dp[newStonesLeft][newCurMax][prevResets][nextResets][0]);
+              int dontUseReset = dp[newStonesLeft][newCurMax][prevResets][nextResets][0];
+              if (dontUseReset == 0) {
+                // This means we put them in a losing position
+                *ptr = max(*ptr, stonesToTake);
+              }
 
               if (nextResets > 0) {
                 // This means we have the possibility of using a reset ourselves
-                *ptr = max(*ptr, dp[newStonesLeft][newCurMax][prevResets][nextResets - 1][1]);
+                int useReset = dp[newStonesLeft][newCurMax][prevResets][nextResets - 1][1];
+                if (useReset == 0) {
+                  // This means we put them in a losing position
+                  *ptr = max(*ptr, stonesToTake);
+                }
               }
             }
           }
@@ -58,4 +65,9 @@ int main() {
     }
   }
 
+  while (true) {
+    int stonesLeft, curMax, nextResets, prevResets, currentlyReset;
+    cin >> stonesLeft >> curMax >> nextResets >> prevResets >> currentlyReset;
+    cout << dp[stonesLeft][curMax][nextResets][prevResets][currentlyReset] << endl;
+  }
 }
