@@ -17,11 +17,15 @@ int main() {
 
     bool shouldIReset;
     int stonesToTake = getMove(stonesLeft, curMax, nextResets, prevResets, currentlyReset, shouldIReset);
-    if (stonesToTake) {
-      cout << "Player " << playerId << " Used " << stonesToTake << " stones and reset flag for next turn is: " << shouldIReset << endl;
+    if (!playerId) {
+      if (stonesToTake) {
+        cout << "Player " << playerId << " Used " << stonesToTake << " stones and reset flag for next turn is: " << shouldIReset << endl;
+      } else {
+        stonesToTake = 1;
+        cout << "Player " << playerId << " believes he is lost and is therefore only using " << stonesToTake << " stone and reset flag for next turn is: " << shouldIReset << endl;
+      }
     } else {
-      stonesToTake = 1;
-      cout << "Player " << playerId << " believes he is lost and is therefore only using " << stonesToTake << " stone and reset flag for next turn is: " << shouldIReset << endl;
+      cin >> stonesToTake >> shouldIReset;
     }
     stonesLeft -= stonesToTake;
     curMax = max(curMax, stonesToTake);
