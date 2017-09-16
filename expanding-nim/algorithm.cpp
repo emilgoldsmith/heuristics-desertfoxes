@@ -82,5 +82,7 @@ int getMove(int curStones, int curMax, int nextResets, int prevResets, int curre
   // shouldIReset is passed by reference to provide the "second return value"
   shouldIReset = shouldWeReset[curStones][curMax][nextResets][prevResets][currentlyReset];
   // Return amount of stones to take (or 0 if losing position)
-  return dp[curStones][curMax][nextResets][prevResets][currentlyReset];
+  int ret = dp[curStones][curMax][nextResets][prevResets][currentlyReset];
+  if (ret == 0) ret = 1;
+  return ret;
 }
