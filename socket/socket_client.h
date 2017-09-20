@@ -4,20 +4,18 @@
 
 #include <string>
 #include "json.hpp"
-using json = nlohmann::json;
-using string = std::string;
 
 class SocketClient {
-  string sockAddress;
+  std::string sockAddress;
   int sockPort;
   int sockFD;
 
 public:
-  SocketClient(string socketAddress, int socketPort);
+  SocketClient(std::string socketAddress, int socketPort);
   int sendAll(char *buf, int len);
-  string receive(int bufferSize);
-  int sendJSON(json j);
-  json receiveJSON(int bufferSize);
+  std::string receive(int bufferSize);
+  int sendJSON(nlohmann:json j);
+  nlohmann::json receiveJSON(int bufferSize);
 };
 
 #endif
