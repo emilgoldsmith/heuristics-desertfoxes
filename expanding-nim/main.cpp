@@ -24,9 +24,7 @@ int main(int argc, char const *argv[])
   }
 
   bool goesFirst = (stoi(argv[1]) == 0) ? true: false;
-  cout << goesFirst << endl;
-  NimClient client(goesFirst, "172.16.25.70", 9000);
-  // NimClient client(goesFirst, "127.0.0.1", 9000);
+  NimClient client(goesFirst, "127.0.0.1", 9000);
 
   // initialize game variable
   int numStonesLeft = client.initNumStones;
@@ -64,7 +62,7 @@ int main(int argc, char const *argv[])
     if (int(gameState["reset_used"])) {
       numAdvResets--;
     }
-    
+
     // make my move
     numStonesToTake = getMove(numStonesLeft, currentMax, numMyResets, numAdvResets, int(gameState["reset_used"]), shouldIReset);
     checkGameOver(client.makeMove(numStonesToTake, shouldIReset));
