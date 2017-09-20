@@ -18,8 +18,15 @@ int main(int argc, char const *argv[])
   initialize();
 
   // client setup
-  bool goesFirst = false;
-  NimClient client(goesFirst, "127.0.0.1", 9000);
+  if (argc != 2) {
+    cout << "Usage: ./main <0 for going first, 1 for going second>" << endl;
+    exit(0);
+  }
+
+  bool goesFirst = (stoi(argv[1]) == 0) ? true: false;
+  cout << goesFirst << endl;
+  NimClient client(goesFirst, "172.16.25.70", 9000);
+  // NimClient client(goesFirst, "127.0.0.1", 9000);
 
   // initialize game variable
   int numStonesLeft = client.initNumStones;
