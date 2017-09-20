@@ -2,9 +2,9 @@
 
 using namespace std;
 
-const int MAX_STONES = 1010; // It's actually 1000
-const int MAX_CUR_MAX = 50; // It's actually 45
-const int MAX_RESETS = 6; // It's actually 4
+const int MAX_STONES = 1010; // It's actually 1001
+const int MAX_CUR_MAX = 50; // It's actually 46
+const int MAX_RESETS = 7; // It's actually 5
 const int MAX_FLAG_VALUES = 4; // It's actually 2
 
 // First MAX_RESETS is resets left for next player, second one is for previous player
