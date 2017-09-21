@@ -1,4 +1,4 @@
-main: client.cpp
-	g++ -std=c++11 -o main.out client.cpp
-debug: client.cpp
-	g++ -std=c++11 -o main.out client.cpp -g
+main: parser.cpp main.cpp
+	g++ -std=c++11 -o main.out main.cpp parser.cpp
+debug: parser.cpp main.cpp
+	g++ -std=c++11 -o main.out main.cpp parser.cpp -g
