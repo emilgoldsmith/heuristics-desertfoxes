@@ -101,6 +101,7 @@ vector<vector<graph_edge> > createGraph(int maxNodeNumber) {
     struct color currentColor = colors[currentEdge.color];
     struct graph_edge equivalentGraphEdgeA = {
       currentEdge.node2,
+      currentEdge.traversetime,
       currentColor.greentime,
       currentColor.redtime,
     };
@@ -109,6 +110,7 @@ vector<vector<graph_edge> > createGraph(int maxNodeNumber) {
 
     struct graph_edge equivalentGraphEdgeB = {
       currentEdge.node1,
+      currentEdge.traversetime,
       currentColor.greentime,
       currentColor.redtime,
     };

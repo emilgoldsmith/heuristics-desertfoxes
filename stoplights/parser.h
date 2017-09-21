@@ -7,6 +7,7 @@
 
 struct graph_edge {
   int target;
+  int traversetime;
   int greentime;
   int redtime;
 };
