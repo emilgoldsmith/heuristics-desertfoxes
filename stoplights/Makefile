@@ -1,6 +1,15 @@
+CXX = g++
+CXXFLAGS = -std=c++11
+
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
+  CXXFLAGS += -DDEBUG -g
+else
+  CXXFLAGS += -O2
+endif
+
 main: parser.cpp main.cpp
-	g++ -std=c++11 -o main.out main.cpp parser.cpp
-debug: parser.cpp main.cpp
-	g++ -std=c++11 -o main.out main.cpp parser.cpp -g
+	$(CXX) -o main.out main.cpp parser.cpp solve.cpp ../socket/socket_client.cpp ../timer/timer.cpp $(CXXFLAGS)
+
 generator: test_case_generator.cpp
-	g++ -std=c++11 -o generator.out test_case_generator.cpp
+	$(CXX) -o generator.out test_case_generator.cpp $(CXXFLAGS)
