@@ -13,3 +13,6 @@ main: parser.cpp main.cpp
 
 generator: test_case_generator.cpp
 	$(CXX) -o generator.out test_case_generator.cpp $(CXXFLAGS)
+
+run_default:
+	./main.out 127.0.0.1 12345 300000
