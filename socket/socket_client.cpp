@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <cstdio>
 
+using namespace std;
+using json = nlohmann::json;
 
 SocketClient::SocketClient(string socketAddress, int socketPort) {
   sockAddress = socketAddress;
@@ -26,6 +28,10 @@ SocketClient::SocketClient(string socketAddress, int socketPort) {
     printf("Socket failed to connect to %s:%d\n", sockAddress.data(), sockPort);
     exit(0);
   }
+}
+
+SocketClient::~SocketClient() {
+  close(sockFD);
 }
 
 // send all of the first len bytes of buf
@@ -67,4 +73,8 @@ int SocketClient::sendJSON(json j) {
 json SocketClient::receiveJSON(int bufferSize) {
   string jsonString = SocketClient::receive(bufferSize);
   return json::parse(jsonString);
+}
+
+void SocketClient::closeSocket() {
+  close(sockFD);
 }

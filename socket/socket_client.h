@@ -12,10 +12,12 @@ class SocketClient {
 
 public:
   SocketClient(std::string socketAddress, int socketPort);
+  ~SocketClient();
   int sendAll(char *buf, int len);
   std::string receive(int bufferSize);
-  int sendJSON(nlohmann:json j);
+  int sendJSON(nlohmann::json j);
   nlohmann::json receiveJSON(int bufferSize);
+  void closeSocket();
 };
 
 #endif
