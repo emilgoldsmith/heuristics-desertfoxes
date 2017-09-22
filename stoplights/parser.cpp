@@ -34,10 +34,12 @@ void error(string err) {
   exit(1);
 }
 
-vector<vector<graph_edge> > parse(string s) {
+vector<vector<graph_edge> > parse(string s, int &startIndex, int &endIndex) {
   stringstream ss;
   ss << s;
-  // Handle first line
+  // Get start and end node
+  ss >> startIndex >> endIndex;
+  // Handle first text line
   string tmp;
   ss >> tmp;
   if (tmp != "node1") error("wrong first line format");

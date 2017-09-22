@@ -12,6 +12,6 @@ struct graph_edge {
   int redtime;
 };
 
-std::vector<std::vector<graph_edge> > parse(std::string s);
+std::vector<std::vector<graph_edge> > parse(std::string s, int &startIndex, int &endIndex);
 
 #endif

@@ -22,8 +22,9 @@ int main(int argc, char *argv[]) {
   int maxInputSize = atoi(argv[3]);
   string input = socket.receive(maxInputSize);
   timer.start();
-  vector<vector<graph_edge> > graph = parse(input);
-  string output = solve(graph);
+  int startIndex, endIndex;
+  vector<vector<graph_edge> > graph = parse(input, startIndex, endIndex);
+  string output = solve(graph, startIndex, endIndex);
   socket.sendString(output);
   timer.pause();
   cout << "Finished\nTime Elapsed: " << timer.getTime() << endl;
