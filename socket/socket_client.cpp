@@ -56,9 +56,10 @@ int SocketClient::sendAll(char *buf, int len) {
 
 // receive a string
 string SocketClient::receive(int bufferSize) {
-  char data[bufferSize];
+  char *data = new char [bufferSize];
   int bytesReceived = recv(sockFD, data, bufferSize, 0);
   string dataString(data, bytesReceived);
+  delete[] data;
   return dataString;
 }
 
