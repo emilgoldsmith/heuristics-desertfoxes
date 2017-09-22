@@ -62,11 +62,16 @@ string SocketClient::receive(int bufferSize) {
   return dataString;
 }
 
+// send string
+int SocketClient::sendString(string s) {
+  char *ptrToString = s.data(); // convert to C string
+  return sendAll(ptrToString, s.length()); // We don't need the null character at the end so therefore we don't add + 1 to the length
+}
+
 // send JSON
 int SocketClient::sendJSON(json j) {
   string jsonString = j.dump();
-  char *data = (char *) jsonString.data(); // convert to C string
-  return sendAll(data, jsonString.length());
+  return sendString(jsonString);
 }
 
 // receive JSON

@@ -17,6 +17,7 @@ public:
   std::string receive(int bufferSize);
   int sendJSON(nlohmann::json j);
   nlohmann::json receiveJSON(int bufferSize);
+  int sendString(std::string s);
   void closeSocket();
 };
 
