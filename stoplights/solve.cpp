@@ -25,6 +25,7 @@ auto comp = [] (Node &a, Node &b) -> bool { return a.dist > b.dist; };
 // get the stopLight distance (accounting for waiting time)
 int getStoplightDist(int clockTime, graph_edge edge) {
   if (edge.redtime == 0) return edge.traversetime;
+  if (edge.greentime < edge.traversetime) return numeric_limits<int>::max();
   int cycle = edge.greentime + edge.redtime;
   int stoplightStatus = edge.greentime - (clockTime % cycle);
   // edge is currently red or not green enough to be traversed
