@@ -20,7 +20,7 @@ struct Node {
 };
 
 // compare function used by priority queue
-auto comp = [] (Node &a, Node &b) -> bool { return a.dist < b.dist; };
+auto comp = [] (Node &a, Node &b) -> bool { return a.dist > b.dist; };
 
 // get the stopLight distance (accounting for waiting time)
 int getStoplightDist(int clockTime, graph_edge edge) {
@@ -125,8 +125,8 @@ string solve(vector<vector<graph_edge> > graph, int startIndex, int endIndex) {
       // update clock
       t = endTime;
       // append to string
-      pathString += to_string(startNode) + " ";
-      pathString += to_string(endNode) + " ";
+      pathString += "n" + to_string(startNode) + " ";
+      pathString += "n" + to_string(endNode) + " ";
       pathString += to_string(startTime) + " ";
       pathString += to_string(endTime) + "\n";
     }
@@ -136,6 +136,6 @@ string solve(vector<vector<graph_edge> > graph, int startIndex, int endIndex) {
   delete [] visited;
   delete [] distances;
   delete [] parentNodes;
-  
+
   return pathString;
 }

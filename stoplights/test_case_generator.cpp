@@ -2,7 +2,7 @@
 #include <random>
 #include <set>
 #include <utility>
-#include<algorithm>
+#include <algorithm>
 
 using namespace std;
 

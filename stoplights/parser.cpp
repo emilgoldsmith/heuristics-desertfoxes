@@ -38,7 +38,12 @@ vector<vector<graph_edge> > parse(string s, int &startIndex, int &endIndex) {
   stringstream ss;
   ss << s;
   // Get start and end node
-  ss >> startIndex >> endIndex;
+  string startIndexString, endIndexString;
+  ss >> startIndexString >> endIndexString;
+  startIndexString = startIndexString.substr(1, string::npos);
+  endIndexString = endIndexString.substr(1, string::npos);
+  startIndex = stoi(startIndexString);
+  endIndex = stoi(endIndexString);
   // Handle first text line
   string tmp;
   ss >> tmp;
