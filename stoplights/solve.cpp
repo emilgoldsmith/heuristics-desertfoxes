@@ -10,9 +10,9 @@ using namespace std;
 
 struct Node {
   int index; // index of node
-  int dist; // distance of node from source
+  long long dist; // distance of node from source
   int arrivedAt; // clock time of arrival (-1 for nodes not yet reached)
-  Node(int i, int d, int t) {
+  Node(int i, long long d, int t) {
     index = i;
     dist = d;
     arrivedAt = t;
@@ -37,9 +37,9 @@ int getStoplightDist(int clockTime, graph_edge edge) {
 }
 
 string solve(vector<vector<graph_edge> > graph, int startIndex, int endIndex) {
-  const int INF = numeric_limits<int>::max(); // set INF to largest int
+  const long long INF = numeric_limits<long long>::max(); // set INF to largest int
   bool *visited = new bool[graph.size()]; // if node has been included in shortest path already
-  int *distances = new int[graph.size()]; // distance of each node to source
+  long long *distances = new long long[graph.size()]; // distance of each node to source
   priority_queue<Node, vector<Node>, decltype(comp)> pq(comp); // min heap sorted by distance
   int *parentNodes = new int[graph.size()]; // store index of parent of each node in the shortest path
 
