@@ -8,8 +8,8 @@ else
   CXXFLAGS += -O2
 endif
 
-main: parser.cpp main.cpp
-	$(CXX) -o main.out main.cpp ../socket/socket_client.cpp ../timer/timer.cpp $(CXXFLAGS)
+main: main.cpp game_state.cpp
+	$(CXX) -o main.out main.cpp game_state.cpp $(CXXFLAGS)
 
 run_default:
-	./main.out 127.0.0.1 12345 300000
+	./main.out
