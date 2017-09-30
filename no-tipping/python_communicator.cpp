@@ -19,7 +19,7 @@ void init(string command) {
     exit(1);
   }
 
-  string pythonProgramCommand = command + to_string(pipefd_write[0]) + " " + to_string(pipefd_read[1]);
+  string pythonProgramCommand = command + " " + to_string(pipefd_write[0]) + " " + to_string(pipefd_read[1]);
 
   pythonfd = popen(pythonProgramCommand.data(), "w");
 }

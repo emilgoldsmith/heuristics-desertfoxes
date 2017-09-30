@@ -8,8 +8,8 @@ else
   CXXFLAGS += -O2
 endif
 
-main: main.cpp game_state.cpp
-	$(CXX) -o main.out main.cpp game_state.cpp $(CXXFLAGS)
+main: main.cpp game_state.cpp python_communicator.cpp
+	$(CXX) -o main.out main.cpp game_state.cpp python_communicator.cpp $(CXXFLAGS)
 
 run_default:
 	./main.out
