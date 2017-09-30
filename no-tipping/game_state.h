@@ -3,6 +3,7 @@
 #define GAME_STATE_H
 
 #include <vector>
+#include <string>
 #include <utility>
 
 struct Move {
@@ -37,6 +38,7 @@ public:
   void makeMove(Move move);
   GameState(int xtotalWeights, std::vector<int> vectorBoard, int xplayer1, int xplayer2, bool xplayer1Plays, bool xaddingPhase, int xwinner, int xtorqueLeft, int xtorqueRight);
   GameState copy();
+  std::string extractFeatures();
 };
 
 #endif

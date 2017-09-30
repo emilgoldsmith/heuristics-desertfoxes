@@ -14,6 +14,3 @@ def read():
             break
 
     return msg
-
-write("Hello there\n");
-print read()

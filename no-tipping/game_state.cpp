@@ -3,6 +3,7 @@
 #include <vector>
 #include <utility>
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -203,4 +204,37 @@ GameState GameState::copy() {
     vectorBoard[i] = board[i];
   }
   return GameState(totalWeights, vectorBoard, player1, player2, player1Plays, addingPhase, winner, torqueLeft, torqueRight);
+}
+
+string GameState::extractFeatures() {
+  string features = "";
+  for (int i = 0; i < 61; i++) {
+    features += to_string(board[i]) + " ";
+  }
+
+  for (int i = 1; i <= totalWeights; i++) {
+    if (player1 & (1 << i)) {
+      features += "0";
+    } else {
+      features += "1";
+    }
+    features += " ";
+  }
+
+  for (int i = 1; i <= totalWeights; i++) {
+    if (player2 & (1 << i)) {
+      features += "0";
+    } else {
+      features += "1";
+    }
+    features += " ";
+  }
+
+  if (addingPhase) {
+    features += "1 0 ";
+  } else {
+    features += "0 1 ";
+  }
+
+  features += "1 0";
 }
