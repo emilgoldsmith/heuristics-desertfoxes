@@ -14,6 +14,9 @@ main: main.cpp game_state.cpp python_communicator.cpp
 ntmain: no_tipping_main.cpp no_tipping_client.cpp game_state.cpp
 	$(CXX) -o no_tipping_main.out no_tipping_main.cpp no_tipping_client.cpp solve.cpp game_state.cpp ../socket/socket_client.cpp $(CXXFLAGS)
 
+vs: vs.cpp game_state.cpp solve.cpp
+	$(CXX) -o vs.out vs.cpp game_state.cpp solve.cpp $(CXXFLAGS)
+
 run_default:
 	./main.out
 
