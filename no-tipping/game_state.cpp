@@ -68,47 +68,33 @@ vector<Move> GameState::getValidMoves() {
     player = &player2;
   }
   if (addingPhase) {
-    for (int weight = 1; weight <= totalWeights; weight++) {
+    for (int weight = totalWeights; weight > 0; weight--) {
       if ((*player & (1 << weight)) == 0) {
         // The player doesn't have this weight
         continue;
       }
-      for (int boardIndex = leftSupport; boardIndex <= rightSupport; boardIndex++) {
+      for (int boardIndex = 30; boardIndex > 0; boardIndex--) {
         int arrayIndex = getArrayIndex(boardIndex);
         if (board[arrayIndex] == 0) {
           // Board is empty here so we can indeed place it here
           Move candidateMove = {weight, boardIndex};
           if (validMove(candidateMove)) {
             moves.push_back(candidateMove);
-          } else {
-            cerr << "Expected weights in between supports to never tip the booard" << endl;
+          }
+        }
+        arrayIndex = getArrayIndex(-1*boardIndex);
+        if (board[arrayIndex] == 0) {
+          // Board is empty here so we can indeed place it here
+          Move candidateMove = {weight, -1*boardIndex};
+          if (validMove(candidateMove)) {
+            moves.push_back(candidateMove);
           }
         }
       }
-      for (int boardIndex = leftSupport - 1; boardIndex >= -30; boardIndex--) {
-        int arrayIndex = getArrayIndex(boardIndex);
-        if (board[arrayIndex] == 0) {
-          // Board is empty here so we can indeed place it here
-          Move candidateMove = {weight, boardIndex};
-          if (validMove(candidateMove)) {
-            moves.push_back(candidateMove);
-          } else {
-            losingMove = candidateMove;
-            break;
-          }
-        }
-      }
-      for (int boardIndex = rightSupport + 1; boardIndex <= 30; boardIndex++) {
-        int arrayIndex = getArrayIndex(boardIndex);
-        if (board[arrayIndex] == 0) {
-          // Board is empty here so we can indeed place it here
-          Move candidateMove = {weight, boardIndex};
-          if (validMove(candidateMove)) {
-            moves.push_back(candidateMove);
-          } else {
-            losingMove = candidateMove;
-            break;
-          }
+      if (board[getArrayIndex(0)] == 0) {
+        Move candidateMove = {weight, 0};
+        if (validMove(candidateMove)) {
+          moves.push_back(candidateMove);
         }
       }
     }
