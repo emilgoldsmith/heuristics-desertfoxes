@@ -23,7 +23,7 @@ int main(int argc, char const *argv[])
 
   while (true) {
     ntp.receiveMove();
-    Move m = solve(ntp.state);
+    Move m = solveMinimax(ntp.state, 5);
     ntp.makeMove(m.weight, m.position);
   }
 
