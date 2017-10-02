@@ -5,5 +5,6 @@
 
 Move solveNaive(GameState *state);
 Move solveMinimax(GameState *state, int maxDepth);
+Move solveMinimaxRemoveFocus(GameState *state, int maxDepth);
 
 #endif

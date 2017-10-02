@@ -17,6 +17,9 @@ ntmain: no_tipping_main.cpp no_tipping_client.cpp game_state.cpp
 vs: vs.cpp game_state.cpp solve.cpp
 	$(CXX) -o vs.out vs.cpp game_state.cpp solve.cpp $(CXXFLAGS)
 
+one_game: vs_one_game.cpp solve.cpp
+	$(CXX) -o vs_one_game.out vs_one_game.cpp solve.cpp game_state.cpp ../timer/timer.cpp $(CXXFLAGS)
+
 run_default:
 	./main.out
 
