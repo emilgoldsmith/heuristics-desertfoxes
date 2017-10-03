@@ -39,6 +39,8 @@ public:
   GameState(int xtotalWeights, std::vector<int> vectorBoard, int xplayer1, int xplayer2, bool xplayer1Plays, bool xaddingPhase, int xwinner, int xtorqueLeft, int xtorqueRight);
   GameState copy();
   std::string extractFeatures();
+  int numWeightsLeft();
+  int getTotalWeights();
 };
 
 #endif

@@ -224,3 +224,17 @@ string GameState::extractFeatures() {
 
   features += "1 0";
 }
+
+int GameState::numWeightsLeft() {
+  int count = 0;
+  for (int i = 0; i < 61; i++) {
+    if (board[i] != 0) {
+      count++;
+    }
+  }
+  return count;
+}
+
+int GameState::getTotalWeights() {
+  return totalWeights;
+}
