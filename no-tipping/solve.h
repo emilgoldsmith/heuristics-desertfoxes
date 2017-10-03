@@ -47,10 +47,12 @@ class NoTippingSolve {
   // get a preliminary move during removal phase
   Move getRemoveMove(GameState &gs);
 
+  double dead;
+
   // here, we always define the first player to be the maximizing player
   ScoredMove minimax(GameState &gs, int depth, bool isMax, int alpha, int beta, double timeLimit);
 public:
-  NoTippingSolve(int addStrat, int removeStrat, bool exhaustive, int exhaustiveN);
+  NoTippingSolve(int addStrat, int removeStrat, bool exhaustive, int exhaustiveN, double maxDeadline = 5);
   // calibrate n for exhaustive search
   Move getMove(GameState &gs);
 };

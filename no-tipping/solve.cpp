@@ -4,11 +4,12 @@
 
 using namespace std;
 
-NoTippingSolve::NoTippingSolve(int addStrat, int removeStrat, bool exhaustive, int exhaustiveN) {
+NoTippingSolve::NoTippingSolve(int addStrat, int removeStrat, bool exhaustive, int exhaustiveN, double maxDeadline) {
   addStrategy = addStrat;
   removeStrategy = removeStrat;
   exhaustiveSearch = exhaustive;
   n = exhaustiveN;
+  dead = maxDeadline;
 }
 
 int NoTippingSolve::naiveEval(GameState &gs) {
@@ -179,7 +180,9 @@ Move NoTippingSolve::getMove(GameState &gs) {
     }
     // exhaustive search possible, <= n weights left
     cout << "(Less than " << n << " weights left)" << endl;
-    ScoredMove sm = minimax(gs, n + 1, gs.isPlayer1sTurn(), NEGATIVE_INF, POSITIVE_INF, -1);
+    double timeLimit = min(dead, t.timeLeft() / 2);
+    double deadline = t.getTime() + timeLimit;
+    ScoredMove sm = minimax(gs, n + 1, gs.isPlayer1sTurn(), NEGATIVE_INF, POSITIVE_INF, deadline);
     cout << "Score: " << sm.score << endl;
     desiredMove = sm.move;
     t.pause();
