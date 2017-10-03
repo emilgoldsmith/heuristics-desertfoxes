@@ -20,10 +20,11 @@ int main(int argc, char const *argv[])
   }
 
   NoTippingClient ntp(goesFirst, address, port);
+  NoTippingSolve solver(3, 2, true, 28, 20);
 
   while (true) {
     ntp.receiveMove();
-    Move m = solveMinimax(ntp.state, 5);
+    Move m = solver.getMove(*ntp.state);
     ntp.makeMove(m.weight, m.position);
   }
 
