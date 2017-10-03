@@ -91,7 +91,7 @@ Move NoTippingSolve::getRemoveMove(GameState &gs) {
 
 ScoredMove NoTippingSolve::minimax(GameState &gs, int depth, bool isMax, int alpha, int beta, double deadline) {
   // if time ran out
-  if (!exhaustiveSearch && t.getTime() >= deadline) {
+  if (deadline > 0 && t.getTime() >= deadline) {
     return {{-100, -100}, -999};
   }
 
@@ -115,7 +115,7 @@ ScoredMove NoTippingSolve::minimax(GameState &gs, int depth, bool isMax, int alp
     bestScore = NEGATIVE_INF;
     for (auto &move : nextMoves) {
       // if time ran out
-      if (!exhaustiveSearch && t.getTime() >= deadline) {
+      if (deadline > 0 && t.getTime() >= deadline) {
         break;
       }
       GameState newState = gs.copy();
@@ -139,7 +139,7 @@ ScoredMove NoTippingSolve::minimax(GameState &gs, int depth, bool isMax, int alp
   bestScore = POSITIVE_INF;
   for (auto &move : nextMoves) {
     // if time ran out
-    if (!exhaustiveSearch && t.getTime() >= deadline) {
+    if (deadline > 0 && t.getTime() >= deadline) {
       break;
     }
     GameState newState = gs.copy();
