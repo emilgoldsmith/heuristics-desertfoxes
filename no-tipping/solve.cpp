@@ -1,67 +1,131 @@
-#include "game_state.h"
-#include "../timer/timer.h"
+#include "solve.h"
 #include <iostream>
+#include <random>
 
 using namespace std;
 
-const int POS_INF = 999999;
-const int NEG_INF = -999999;
-
-struct scoredMove {
-  Move move;
-  int score;
-};
-
-Move solveNaive(GameState *state) {
-  return state->getValidMoves()[0];
+NoTippingSolve::NoTippingSolve(int addStrat, int removeStrat, bool exhaustive, int exhaustiveN) {
+  addStrategy = addStrat;
+  removeStrategy = removeStrat;
+  exhaustiveSearch = exhaustive;
+  n = exhaustiveN;
 }
 
-// first player is maximizing player
-int evaluateNaive(GameState *state) {
-  if (state->getWinner() == -1) {
-    return 0;
-  // first player wins
-  } else if (state->getWinner() == 0) {
-    return POS_INF;
-  // secomd player wins
-  } else {
-    return NEG_INF;
+int NoTippingSolve::naiveEval(GameState &gs) {
+  if (gs.getWinner() == 0) {
+    return POSITIVE_INF;
   }
+  if (gs.getWinner() == 1) {
+    return NEGATIVE_INF;
+  }
+  return 0;
 }
 
-int evaluateOptions(GameState *state) {
-  if (state->getWinner() == -1) {
-    return state->getValidMoves().size();
-  // first player wins
-  } else if (state->getWinner() == 0) {
-    return POS_INF;
-  // secomd player wins
-  } else {
-    return NEG_INF;
+int NoTippingSolve::optionEval(GameState &gs) {
+  if (gs.getWinner() == 0) {
+    return POSITIVE_INF;
   }
+  if (gs.getWinner() == 1) {
+    return NEGATIVE_INF;
+  }
+  // not terminal node
+  // since first player is the maximizing player, if it's the first player's turn
+  // higher values are favored, so the positive size is returned
+  if (gs.isPlayer1sTurn()) {
+    return gs.getValidMoves().size();
+  }
+  // similarly, second player is minimizing player and favors lower values, so negative size is returned
+  return -1 * gs.getValidMoves().size();
 }
 
-// here, the max player is just the first player
-scoredMove minimaxHelper(GameState *state, int depth, int maxDepth, bool isMaxPlayer, int alpha, int beta) {
-  vector<Move> nextMoves = state->getValidMoves();
-  // cout << "Depth: " << depth << " Branching factor: " << nextMoves.size() << endl;
-  if (depth >= maxDepth || state->getWinner() != -1) {
-    return { {-100, -100}, evaluateNaive(state) };
+int NoTippingSolve::getUniform(int from, int to) {
+  random_device randDev;
+  mt19937 generator(randDev());
+  uniform_int_distribution<int> distribution(from, to);
+  return distribution(generator);
+}
+
+Move NoTippingSolve::getOptionLimitingMove(GameState &gs) {
+  vector<Move> nextMoves = gs.getValidMoves();
+  int numOptions;
+  int minNumOptions = POSITIVE_INF;
+  Move desiredMove;
+  for (auto &move : nextMoves) {
+    GameState newState = gs.copy();
+    newState.makeMove(move);
+    numOptions = newState.getValidMoves().size();
+    if (numOptions < minNumOptions) {
+      minNumOptions = numOptions;
+      desiredMove = move;
+    }
+  }
+  return desiredMove;
+}
+
+Move NoTippingSolve::getAddMove(GameState &gs) {
+  if (addStrategy == 1) {
+    return gs.getValidMoves()[0];
+  }
+  if (addStrategy == 2) {
+    return getOptionLimitingMove(gs);
+  }
+  if (addStrategy == 3) {
+    vector<Move> nextMoves = gs.getValidMoves();
+    return nextMoves[getUniform(0, nextMoves.size() - 1)];
+  }
+  cout << "unknown adding strategy #: " << addStrategy << endl;
+  exit(1);
+}
+
+Move NoTippingSolve::getRemoveMove(GameState &gs) {
+  if (removeStrategy == 1) {
+    return getOptionLimitingMove(gs);
+  }
+  if (removeStrategy == 2) {
+    vector<Move> nextMoves = gs.getValidMoves();
+    return nextMoves[getUniform(0, nextMoves.size() - 1)];
+  }
+  cout << "unknown removal strategy #: " << removeStrategy << endl;
+  exit(1);
+}
+
+ScoredMove NoTippingSolve::minimax(GameState &gs, int depth, bool isMax, int alpha, int beta, double deadline) {
+  // if time ran out
+  if (!exhaustiveSearch && t.getTime() >= deadline) {
+    return {{-100, -100}, -999};
   }
 
-  int bestScore;
-  if (isMaxPlayer) {
-    Move bestMove = {-100, -100};
-    bestScore = NEG_INF;
+  // condition for normal termination
+  if (depth == 0 || gs.getWinner() != -1) {
+    // use naive evaluation
+    if (exhaustiveSearch) {
+      return {{-100, -100}, naiveEval(gs)};
+    }
+    // use option-limiting heuristics
+    return {{-100, -100 }, optionEval(gs)};
+  }
+
+  // search one level deeper
+  int bestScore = -999;
+  Move bestMove = getRemoveMove(gs);
+  vector<Move> nextMoves = gs.getValidMoves();
+  // cout << "expansion factor: " << nextMoves.size() << endl;
+
+  if (isMax) {
+    bestScore = NEGATIVE_INF;
     for (auto &move : nextMoves) {
-      GameState stateCopy = state->copy();
-      stateCopy.makeMove(move);
-      scoredMove sm = minimaxHelper(&stateCopy, depth + 1, maxDepth, !isMaxPlayer, alpha, beta);
+      // if time ran out
+      if (!exhaustiveSearch && t.getTime() >= deadline) {
+        break;
+      }
+      GameState newState = gs.copy();
+      newState.makeMove(move);
+      ScoredMove sm = minimax(newState, depth-1, !isMax, alpha, beta, deadline);
       if (sm.score > bestScore) {
         bestScore = sm.score;
         bestMove = {move.weight, move.position};
       }
-      if (alpha < bestScore) { // alpha is minimum score guaranteed on a max node
+      if (alpha < bestScore) {
         alpha = bestScore;
       }
       if (beta <= alpha) {
@@ -69,50 +133,80 @@ scoredMove minimaxHelper(GameState *state, int depth, int maxDepth, bool isMaxPl
       }
     }
     return {bestMove, bestScore};
-  } else {
-    Move bestMove = {-100, -100};
-    bestScore = POS_INF;
-    for (auto &move : nextMoves) {
-      GameState stateCopy = state->copy();
-      stateCopy.makeMove(move);
-      scoredMove sm = minimaxHelper(&stateCopy, depth + 1, maxDepth, !isMaxPlayer, alpha, beta);
-      if (sm.score < bestScore) {
-        bestScore = sm.score;
-        bestMove = {move.weight, move.position};
-      }
-      if (beta > bestScore) { // beta is maximum score guaranteed on a min node
-        beta = bestScore;
-      }
-      if (beta <= alpha) {
-        break;
-      }
+  }
+
+  // min player
+  bestScore = POSITIVE_INF;
+  for (auto &move : nextMoves) {
+    // if time ran out
+    if (!exhaustiveSearch && t.getTime() >= deadline) {
+      break;
     }
-    return {bestMove, bestScore};
+    GameState newState = gs.copy();
+    newState.makeMove(move);
+    ScoredMove sm = minimax(newState, depth-1, !isMax, alpha, beta, deadline);
+    if (sm.score < bestScore) {
+      bestScore = sm.score;
+      bestMove = {move.weight, move.position};
+    }
+    if (beta > bestScore) {
+      beta = bestScore;
+    }
+    if (beta <= alpha) {
+      break;
+    }
   }
+  return {bestMove, bestScore};
 }
 
-Move solveMinimax(GameState *state, int maxDepth) {
-  scoredMove bestScoredMove = minimaxHelper(state, 0, maxDepth, state->isPlayer1sTurn(), NEG_INF, POS_INF);
-  cout << bestScoredMove.score << " ";
-  return bestScoredMove.move;
-}
+Move NoTippingSolve::getMove(GameState &gs) {
+  t.start();
+  Move desiredMove;
 
-Move solveMinimaxTimed(GameState *state, int timeLimit) {
-  Timer timer;
-  double lastTime = 0;
-  scoredMove bestScoredMove;
-  for (int depth = 1; depth < 40; depth++) {
-    timer.start();
-    // do more stuff later
+  // add phase
+  if (gs.isAddingPhase()) {
+    desiredMove = getAddMove(gs);
+    t.pause();
+    return desiredMove;
   }
-}
 
-Move solveMinimaxRemoveFocus(GameState *state, int maxDepth) {
-  if (state->isAddingPhase()) {
-    return state->getValidMoves()[0];
+  // removal phase - exhaustive search
+  if (exhaustiveSearch) {
+    if (gs.numWeightsLeft() > n) {
+      desiredMove = getRemoveMove(gs);
+      t.pause();
+      return desiredMove;
+    }
+    // exhaustive search possible, <= n weights left
+    cout << "(Less than " << n << " weights left)" << endl;
+    ScoredMove sm = minimax(gs, n + 1, gs.isPlayer1sTurn(), NEGATIVE_INF, POSITIVE_INF, -1);
+    cout << "Score: " << sm.score << endl;
+    desiredMove = sm.move;
+    t.pause();
+    return desiredMove;
   }
-  // removing phase
-  scoredMove bestScoredMove = minimaxHelper(state, 0, maxDepth, state->isPlayer1sTurn(), NEG_INF, POS_INF);
-  cout << bestScoredMove.score << " ";
-  return bestScoredMove.move;
+
+  // removal phase - regular minimax, start at search depth 2
+  // allot more time for early searches, 8 is "arbitary"
+  double timeLimit = t.timeLeft() / 8;
+  double deadline = t.getTime() + timeLimit;
+  cout << "Alloted time for this level: " << timeLimit << endl;
+  desiredMove = getRemoveMove(gs);
+  Move desiredMoveBackup;
+  for (int depth = 2; depth <= gs.numWeightsLeft() + 1; depth++) {
+    cout << "iteratively exploring depth " << depth << endl;
+    ScoredMove sm = minimax(gs, depth, gs.isPlayer1sTurn(), NEGATIVE_INF, POSITIVE_INF, deadline);
+    cout << "Score: " << sm.score << endl;
+    desiredMoveBackup = desiredMove;
+    desiredMove = sm.move;
+    if (t.getTime() >= deadline) {
+      cout << "Time ran out " << endl;
+      break;
+    }
+  }
+  // fix premature minimax termination
+  desiredMove = desiredMoveBackup;
+
+  t.pause();
+  return desiredMove;
 }
