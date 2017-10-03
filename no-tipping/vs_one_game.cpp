@@ -6,21 +6,27 @@
 
 using namespace std;
 
-int runCompetition(int maxWeights, int someVariableP1, int otherVariableP1, int someVariableP2, int otherVariableP2) {
-  GameState state(maxWeights);
+int runCompetition(int numWeights, NoTippingSolve player1, NoTippingSolve player2) {
 
+  GameState state(numWeights);
   int currentPlayer = 0;
   while (state.getWinner() == -1) {
+    if (state.isAddingPhase()) {
+      cout << "[Add] ";
+    } else {
+      cout << "[Remove] ";
+    }
+
     Move move;
     if (currentPlayer == 0) {
-      cout << "first player ";
-      move = solveMinimaxRemoveFocus(&state, someVariableP1);
+      move = player1.getMove(state);
+      cout << "First player plays: ";
     } else {
-      cout << "second player ";
-      move = solveMinimax(&state, someVariableP2);
+      move = player2.getMove(state);
+      cout << "Second player plays: ";
     }
-    cout << "Adding phase: " << state.isAddingPhase() << endl;
-    cout << "Player: " << currentPlayer << "; Move: " << "(" << move.weight << ", " << move.position << ")" << endl;
+    cout << "{weight: " << move.weight << ", position: " << move.position << "}" << endl;
+
     state.makeMove(move);
     currentPlayer = (currentPlayer + 1) % 2;
   }
@@ -29,8 +35,27 @@ int runCompetition(int maxWeights, int someVariableP1, int otherVariableP1, int 
 }
 
 int main() {
-  int p1MaxDepth = 5;
-  int p2MaxDepth = 1;
-  int winner = runCompetition(25, p1MaxDepth, -1, p2MaxDepth, -1);
-  cout << winner << endl;
+  NoTippingSolve naivePlayer(1, 2, true, 0);
+  NoTippingSolve exhaustivePlayer(2, 1, true, 22);
+  NoTippingSolve greedyPlayer(2, 1, false, -1);
+
+  int winner;
+  int firstWins = 0;
+  int secondWins = 0;
+  for (int i = 0; i < 1; i++) {
+    winner = runCompetition(15, greedyPlayer, exhaustivePlayer);
+    if (winner == 0) {
+      firstWins++;
+    } else {
+      secondWins++;
+    }
+    // switch players
+    winner = runCompetition(15, exhaustivePlayer, greedyPlayer);
+    if (winner == 0) {
+      secondWins++;
+    } else {
+      firstWins++;
+    }
+  }
+  cout << "First player score: " << firstWins << ", second player score: " << secondWins << endl;
 }
