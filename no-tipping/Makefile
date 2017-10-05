@@ -20,6 +20,9 @@ vs: vs.cpp game_state.cpp solve.cpp
 one_game: vs_one_game.cpp solve.cpp
 	$(CXX) -o vs_one_game.out vs_one_game.cpp solve.cpp game_state.cpp ../timer/timer.cpp $(CXXFLAGS)
 
+computation: vs_one_game.cpp solve.cpp
+	$(CXX) -o computation.out test_computation_power.cpp solve.cpp game_state.cpp ../timer/timer.cpp $(CXXFLAGS)
+
 run_default:
 	./main.out
 

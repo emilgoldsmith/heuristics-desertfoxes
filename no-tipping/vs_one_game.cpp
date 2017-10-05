@@ -7,25 +7,15 @@
 using namespace std;
 
 int runCompetition(int numWeights, NoTippingSolve player1, NoTippingSolve player2) {
-
   GameState state(numWeights);
   int currentPlayer = 0;
   while (state.getWinner() == -1) {
-    if (state.isAddingPhase()) {
-      cout << "[Add] ";
-    } else {
-      cout << "[Remove] ";
-    }
-
     Move move;
     if (currentPlayer == 0) {
       move = player1.getMove(state);
-      cout << "First player plays: ";
     } else {
       move = player2.getMove(state);
-      cout << "Second player plays: ";
     }
-    cout << "{weight: " << move.weight << ", position: " << move.position << "}" << endl;
 
     state.makeMove(move);
     currentPlayer = (currentPlayer + 1) % 2;
@@ -35,27 +25,31 @@ int runCompetition(int numWeights, NoTippingSolve player1, NoTippingSolve player
 }
 
 int main() {
-  NoTippingSolve naivePlayer(1, 2, true, 0);
-  NoTippingSolve exhaustivePlayer(2, 1, true, 22);
-  NoTippingSolve greedyPlayer(2, 1, false, -1);
 
-  int winner;
-  int firstWins = 0;
+  int actualWins = 0;
   int secondWins = 0;
-  for (int i = 0; i < 1; i++) {
-    winner = runCompetition(15, greedyPlayer, exhaustivePlayer);
+  for (int i = 0; i < 10; i++) {
+    NoTippingSolve Guyu1(3, 2, true, 25, 35);
+    NoTippingSolve Emil1(3, 2, true, 28, 20);
+    int winner = runCompetition(25, Emil1, Guyu1);
     if (winner == 0) {
-      firstWins++;
+      actualWins++;
+      cout << "Emil wins" << endl;
     } else {
       secondWins++;
+      cout << "Guyu wins" << endl;
     }
+    NoTippingSolve Guyu2(3, 2, true, 25, 35);
+    NoTippingSolve Emil2(3, 2, true, 28, 20);
     // switch players
-    winner = runCompetition(15, exhaustivePlayer, greedyPlayer);
+    winner = runCompetition(25, Emil2, Guyu2);
     if (winner == 0) {
       secondWins++;
+      cout << "Guyu wins" << endl;
     } else {
-      firstWins++;
+      actualWins++;
+      cout << "Emil wins" << endl;
     }
   }
-  cout << "First player score: " << firstWins << ", second player score: " << secondWins << endl;
+  cout << "Emil " << " won " << actualWins << "/20 times" << endl;
 }
