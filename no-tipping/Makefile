@@ -23,8 +23,17 @@ one_game: vs_one_game.cpp solve.cpp
 run_default:
 	./main.out
 
-run:
-	./no_tipping_main.out 127.0.0.1 12345 -f
+run_first:
+	./no_tipping_main.out 172.16.27.252 9000 -f
+
+run_second:
+	./no_tipping_main.out 172.16.27.252 9000
+
+run_first8:
+	./no_tipping_main.out 172.16.27.252 8000 -f
+
+run_second8:
+	./no_tipping_main.out 172.16.27.252 8000
 
 run_random:
 	python2 random_client.py 127.0.0.1:12345
