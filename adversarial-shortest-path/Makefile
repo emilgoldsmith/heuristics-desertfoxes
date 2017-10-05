@@ -8,8 +8,8 @@ else
   CXXFLAGS += -O2
 endif
 
-main: main.cpp game_state.cpp python_communicator.cpp
-	$(CXX) -o main.out main.cpp game_state.cpp python_communicator.cpp $(CXXFLAGS)
+main: client.cpp
+	$(CXX) -o main.out client.cpp ../socket/socket_client.cpp $(CXXFLAGS)
 
 run_default:
 	./main.out
