@@ -8,9 +8,11 @@ else
   CXXFLAGS += -O2
 endif
 
-main: client.cpp
-	$(CXX) -o main.out client.cpp ../socket/socket_client.cpp $(CXXFLAGS)
+main: main.cpp client.cpp solve.cpp ../socket/socket_client.cpp
+	$(CXX) -o main.out main.cpp client.cpp solve.cpp ../socket/socket_client.cpp $(CXXFLAGS)
 
-run_default:
-	./main.out
+run_traverser:
+	./main.out 0
 
+run_adversary:
+	./main.out 1

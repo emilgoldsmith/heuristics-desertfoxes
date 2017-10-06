@@ -1,3 +1,5 @@
+#include "client.h"
+#include "move.h"
 #include "../socket/socket_client.h"
 #include "../json/json.hpp"
 
@@ -10,28 +12,18 @@
 using namespace std;
 using json = nlohmann::json;
 
-class Client {
-  SocketClient *socket;
-  map<string, int> encoder;
-  map<int, string> decoder;
-  pair<string, string> targetNodes;
-
-  public:
-    Client(string ip, int port, bool isTraverser);
-    vector<vector<int> > getGraph();
-};
-
-Client::Client(string ip, int port, bool isTraverser) {
+Client::Client(string ip, int port, int playerRole) {
+  role = playerRole;
   socket = new SocketClient(ip, port);
-  int playerType = isTraverser ? 0 : 1;
   json playerInfo = {
     {"name", "DesertFoxes"},
-    {"type", playerType}
+    {"type", playerRole}
   };
   socket->sendJSON(playerInfo);
+  receiveGraph();
 }
 
-vector<vector<int> > Client::getGraph() {
+void Client::receiveGraph() {
   json graphInfo = socket->receiveJSON(2000*1000);
   targetNodes = make_pair(graphInfo["start_node"], graphInfo["end_node"]);
   json graph = graphInfo["graph"];
@@ -40,7 +32,7 @@ vector<vector<int> > Client::getGraph() {
   for (char c : graph_string) {
     if (c == '[') numNodes++;
   }
-  vector<vector<int> > adjacencyLists(numNodes);
+  adjacencyList.resize(numNodes);
   bool inList = false;
   int currentEncodedNode = -1;
   bool inString = false;
@@ -61,7 +53,7 @@ vector<vector<int> > Client::getGraph() {
           currentEncodedNode = encoder[nodeName];
         } else {
           // This is an adjacent node
-          adjacencyLists[currentEncodedNode].push_back(encoder[nodeName]);
+          adjacencyList[currentEncodedNode].push_back(encoder[nodeName]);
         }
       } else {
         // We are at the start of a nodeName
@@ -74,11 +66,56 @@ vector<vector<int> > Client::getGraph() {
       nodeName += c;
     }
   }
-  return adjacencyLists;
 }
 
-int main() {
-  Client traverser("127.0.0.1", 8080, true);
-  Client adversary("127.0.0.1", 8080, false);
-  vector<vector<int> > graph = traverser.getGraph();
+void Client::sendTraversal(int start, int end) {
+  json msg = {
+    {"start_node", decoder[start]},
+    {"end_node", decoder[end]}
+  };
+  socket->sendJSON(msg);
+}
+
+void Client::sendUpdate(int node1, int node2, double factor) {
+  json msg = {
+    {"node_1", decoder[node1]},
+    {"node_2", decoder[node2]},
+    {"cost_factor", factor}
+  };
+  socket->sendJSON(msg);
+}
+
+void Client::makeMove(int node1_or_start, int node2_or_start, double factor) {
+  if (role == 0) {
+    sendTraversal(node1_or_start, node2_or_start);
+  } else if (factor == -1) {
+    cerr << "DIDN'T SUPPLY FACTOR WITH ADVERSARY MOVE" << endl;
+  } else {
+    sendUpdate(node1_or_start, node2_or_start, factor);
+  }
+}
+
+Move Client::receiveUpdate(bool ourUpdate) {
+  json info = socket->receiveJSON(500);
+  if (info["done"]) {
+    cout << "Game is over" << endl;
+    exit(0);
+  }
+  if (info["error"]) {
+    string player = ourUpdate ? "we" : "they";
+    cout << player << " ran out of time" << endl;
+    exit(0);
+  }
+  string node1 = info["edge"][0];
+  string node2 = info["edge"][1];
+  Move move = {
+    encoder[node1.substr(1, node1.size() - 1)], // Remove quotes around number and encode
+    encoder[node2.substr(1, node2.size() - 1)], // Remove quotes around number
+    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate)) ? info["add_cost"] : info["new_cost"]
+  };
+  return move;
+}
+
+pair<int, int> Client::getTargetNodes() {
+  return make_pair(encoder[targetNodes.first], encoder[targetNodes.second]);
 }
