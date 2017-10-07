@@ -62,7 +62,7 @@ pair<double, vector<int>> ASPGameState::getShortestPath(int source, int dest) {
     pq.pop();
 
     // we have reached the destination
-    if (currentIndex = dest) {
+    if (currentIndex == dest) {
       break;
     }
     // revisiting the node due to insertion of duplicate
