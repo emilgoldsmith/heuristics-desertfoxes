@@ -2,6 +2,7 @@
 #include "move.h"
 #include "../socket/socket_client.h"
 #include "../json/json.hpp"
+#include "asp_game_state.h"
 
 #include <iostream>
 #include <string>
