@@ -14,18 +14,21 @@ int main() {
     {2, 3, 5},
     {2, 4}
   };
-  ASPGameState gs(&graph);
+  ASPGameState gs(&graph, 0, 0);
   gs.updateCost(0, 1, 3);
   gs.updateCost(1, 2, 3);
   gs.updateCost(2, 5, 2);
   gs.updateCost(3, 4, 6);
 
-  auto pathWithCost = gs.getShortestPath(0, 5);
+  auto pathWithCost = gs.getShortestPath(0, 5, true);
   cout << "Cost: " << pathWithCost.first << endl;
   cout << "Shortest Path: " << endl;
   for (int node : pathWithCost.second) {
     cout << node << " ";
   }
   cout << endl;
+
+  gs.adversaryMakeMove(0, 3);
+  cout << gs.costs[0][3] << endl;
   return 0;
 }
