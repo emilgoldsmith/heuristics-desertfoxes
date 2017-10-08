@@ -6,8 +6,9 @@
 using namespace std;
 using namespace std::chrono;
 
-Timer::Timer() {
+Timer::Timer(double maxTime) {
   isRunning = false;
+  allowedTime = maxTime;
   currentDuration = duration<double>(0);
 }
 

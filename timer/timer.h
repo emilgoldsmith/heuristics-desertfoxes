@@ -8,10 +8,10 @@ class Timer {
   std::chrono::duration<double> currentDuration;
   bool isRunning;
   std::chrono::system_clock::time_point lastStart;
-  const double allowedTime = 60+55; // 1:55 minutes for a 5 second buffer
+  double allowedTime;
 
 public:
-  Timer();
+  Timer(double maxTime = 60 + 55); // 1:55 default for buffer
   void start();
   void pause();
   double getTime();
