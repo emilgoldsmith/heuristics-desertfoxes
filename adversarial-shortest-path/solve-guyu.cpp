@@ -9,15 +9,7 @@
 using namespace std;
 
 Move guyuTraverser(ASPGameState *gs) {
-  int minDistNode = -1;
-  long double minDist = gs->INF;
-  for (int neighbor : (*gs->graph)[gs->currentNode]) {
-    if (gs->distances[neighbor] < minDist) {
-      minDistNode = neighbor;
-      minDist = gs->distances[neighbor];
-    }
-  }
-  return { gs->currentNode, minDistNode };
+  return { gs->currentNode, gs->parentNodes[gs->currentNode] };
 }
 
 Move guyuAdversary(ASPGameState *gs) {
