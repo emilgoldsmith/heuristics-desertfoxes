@@ -15,7 +15,7 @@ test: asp_game_state.cpp test.cpp
 	$(CXX) -o test.out test.cpp asp_game_state.cpp $(CXXFLAGS)
 
 run_traverser:
-	./main.out 0
+	./main.out 127.0.0.1 8080 0
 
 run_adversary:
-	./main.out 1
+	./main.out 127.0.0.1 8080 1

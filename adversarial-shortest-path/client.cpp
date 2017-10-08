@@ -21,18 +21,27 @@ Client::Client(string ip, int port, int playerRole) {
   };
   socket->sendJSON(playerInfo);
   receiveGraph();
+  if (role == 1) {
+    // Receive the traversers first move
+    receiveUpdate(false);
+  }
 }
 
 void Client::receiveGraph() {
   json graphInfo = socket->receiveJSON(2000*1000);
-  targetNodes = make_pair(graphInfo["start_node"], graphInfo["end_node"]);
+
+  string startNodeString = graphInfo["start_node"];
+  string endNodeString = graphInfo["end_node"];
+  int startNode = startNodeString.substr(1, startNodeString.size() - 1);
+  int endNode = endNodeString.substr(1, endNodeString.size() - 1);
+
   json graph = graphInfo["graph"];
   string graph_string = graph.dump();
   int numNodes = 0;
   for (char c : graph_string) {
     if (c == '[') numNodes++;
   }
-  adjacencyList.resize(numNodes);
+  vector<vector<int> > adjacencyList(numNodes);
   bool inList = false;
   int currentEncodedNode = -1;
   bool inString = false;
@@ -66,6 +75,12 @@ void Client::receiveGraph() {
       nodeName += c;
     }
   }
+
+  state = new ASPGameState(&adjacencyList, startNode, endNode);
+}
+
+Client::~Client() {
+  delete state;
 }
 
 void Client::sendTraversal(int start, int end) {
@@ -76,26 +91,27 @@ void Client::sendTraversal(int start, int end) {
   socket->sendJSON(msg);
 }
 
-void Client::sendUpdate(int node1, int node2, double factor) {
+void Client::sendUpdate(int node1, int node2) {
   json msg = {
     {"node_1", decoder[node1]},
     {"node_2", decoder[node2]},
-    {"cost_factor", factor}
   };
   socket->sendJSON(msg);
 }
 
-void Client::makeMove(int node1_or_start, int node2_or_start, double factor) {
+void Client::makeMove(int node1_or_start, int node2_or_end) {
   if (role == 0) {
-    sendTraversal(node1_or_start, node2_or_start);
-  } else if (factor == -1) {
-    cerr << "DIDN'T SUPPLY FACTOR WITH ADVERSARY MOVE" << endl;
+    sendTraversal(node1_or_start, node2_or_end);
+    state->traverserMakeMove(node2_or_end);
   } else {
-    sendUpdate(node1_or_start, node2_or_start, factor);
+    sendUpdate(node1_or_start, node2_or_end);
+    state->adversaryMakeMove(node1_or_start, node2_or_end);
   }
+  receiveUpdate(true);
+  receiveUpdate(false);
 }
 
-Move Client::receiveUpdate(bool ourUpdate) {
+void Client::receiveUpdate(bool ourUpdate) {
   json info = socket->receiveJSON(500);
   if (info["done"]) {
     cout << "Game is over" << endl;
@@ -108,14 +124,36 @@ Move Client::receiveUpdate(bool ourUpdate) {
   }
   string node1 = info["edge"][0];
   string node2 = info["edge"][1];
+  string newPosition = info["position"];
   Move move = {
     encoder[node1.substr(1, node1.size() - 1)], // Remove quotes around number and encode
     encoder[node2.substr(1, node2.size() - 1)], // Remove quotes around number
-    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate)) ? info["add_cost"] : info["new_cost"]
   };
-  return move;
-}
+  string returnedCost =
+    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
+      ? info["add_cost"]
+      : info["new_cost"];
 
-pair<int, int> Client::getTargetNodes() {
-  return make_pair(encoder[targetNodes.first], encoder[targetNodes.second]);
+  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCost << endl;
+
+  if (returnedCost = 0) {
+    if (ourUpdate) {
+      cout << "Server deemed our move invalid" << endl;
+    } else {
+      cout << "Server deemed their move invalid" << endl;
+    }
+  }
+  if (!ourUpdate && returnedCost > 0) {
+    if (role == 0) {
+      state->adversaryMakeMove(move.node1, move.node2);
+    } else {
+      state->traverserMakeMove(move.node2);
+    }
+  }
+  if (state->curNode != encoder[newPosition.substr(1, newPosition.size() - 1)]) {
+    cerr << "curNode incoherent" << endl;
+  }
+  if ((role == 1 && ourUpdate) || (role == 0 && !ourUpdate)) {
+    // Check that the edge was correctly updated
+  }
 }
