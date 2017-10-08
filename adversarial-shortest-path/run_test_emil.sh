@@ -3,6 +3,6 @@ cd ~/code/heuristics-desertfoxes/myStuff/AdversarialShortestPathGame && python -
 
 sleep 1
 
-cd ~/code/heuristics-desertfoxes/adversarial-shortest-path && make run_adversary &
+cd ~/code/heuristics-desertfoxes/adversarial-shortest-path && make run_adversary > tmp.txt &
 
-cd ~/code/heuristics-desertfoxes/adversarial-shortest-path && make run_traverser &
+cd ~/code/heuristics-desertfoxes/adversarial-shortest-path && make run_traverser > tmp.txt &

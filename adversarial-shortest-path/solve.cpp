@@ -12,6 +12,13 @@ Move miniMaxAdversary(ASPGameState *state) {
   long double *distances = state->distances;
   int currentNode = state->currentNode;
   int destNode = state->destNode;
+  if (currentNode = destNode) {
+    return {
+      -1,
+      -1,
+      0
+    };
+  }
   Move bestMove = {
     -1,
     -1,
@@ -35,6 +42,13 @@ Move miniMaxAdversary(ASPGameState *state) {
 Move miniMaxTraverser(ASPGameState *state) {
   vector<vector<int> > *graph = state->graph;
   int currentNode = state->currentNode;
+  if (currentNode = state->destNode) {
+    return {
+      -1,
+      -1,
+      0
+    };
+  }
   Move bestMove = {
     -1,
     -1,
@@ -48,7 +62,7 @@ Move miniMaxTraverser(ASPGameState *state) {
       bestMove = {
         currentNode,
         neighbour,
-        pathLength
+        pathLength + (state->costs)[currentNode][neighbour]
       };
     }
   }
