@@ -18,6 +18,8 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   costs = new long double*[size];
   parentNodes = new int[size];
   distances = new long double[size];
+  // Tells destructor that it's supposed to free this
+  intDistancesOwner = true;
   intDistances = new int[size];
   for (int i = 0; i < size; i++) {
     costs[i] = new long double[size];
@@ -42,6 +44,7 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
 
 ASPGameState::ASPGameState(ASPGameState &gs) {
   graph = gs.graph;
+  intDistances = gs.intDistances;
   currentNode = gs.currentNode;
   destNode = gs.destNode;
 
@@ -50,13 +53,11 @@ ASPGameState::ASPGameState(ASPGameState &gs) {
   costs = new long double*[size];
   parentNodes = new int[size];
   distances = new long double[size];
-  intDistances = new int[size];
 
   for (int i = 0; i < size; i++) {
     costs[i] = new long double[size];
     parentNodes[i] = gs.parentNodes[i];
     distances[i] = gs.distances[i];
-    intDistances[i] = gs.intDistances[i];
     for (int j = 0; j < size; j++) {
       costs[i][j] = gs.costs[i][j];
     }
@@ -70,6 +71,9 @@ ASPGameState::~ASPGameState() {
   delete [] costs;
   delete [] parentNodes;
   delete [] distances;
+  if (intDistancesOwner) {
+    delete [] intDistances;
+  }
 }
 
 void ASPGameState::computeDijkstra(int source, bool bfs) {
@@ -80,7 +84,9 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
 
   // initializations
   distances[source] = 0;
-  intDistances[source] = 0;
+  if (bfs) {
+    intDistances[source] = 0;
+  }
   pq.push({ source, 0, 0});
   for (int i = 0; i < graph->size(); i++) {
     visited[i] = false;
@@ -89,7 +95,9 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
       // distance initialized to INF besides source node
       pq.push({ source, INF, INT_INF });
       distances[i] = INF;
-      intDistances[i] = INT_INF;
+      if (bfs) {
+        intDistances[i] = INT_INF;
+      }
     }
   }
 

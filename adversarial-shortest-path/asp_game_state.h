@@ -11,11 +11,11 @@ struct Node {
   int intDist; // number of edges from node to source
 };
 
-auto comp = [] (Node &a, Node &b) -> bool { 
+auto comp = [] (Node &a, Node &b) -> bool {
   if (a.doubleDist == -1 || b.doubleDist == -1) {
     return a.intDist > b.intDist;
   }
-  return a.doubleDist > b.doubleDist; 
+  return a.doubleDist > b.doubleDist;
 };
 
 class ASPGameState {
@@ -25,6 +25,7 @@ public:
   std::vector<std::vector<int>> *graph;
   int currentNode; // where the traverser is now
   int destNode; // destination node
+  bool intDistancesOwner = false;
 
   // stores cost of each edge of the graph
   long double **costs;
@@ -33,7 +34,7 @@ public:
   // stores the shortest distance of each node from the destination
   long double *distances; // double for edges with costs
   int *intDistances; // int for unit-length edges (bfs)
-  
+
   ASPGameState(std::vector<std::vector<int>> *g, int source, int dest);
   ASPGameState(ASPGameState &gs);
   ~ASPGameState();
