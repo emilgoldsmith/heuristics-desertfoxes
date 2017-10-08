@@ -21,7 +21,7 @@ int main() {
   gs.updateCost(3, 4, 6);
 
   auto pathWithCost = gs.getShortestPath(0, 5, true);
-  cout << "Cost: " << pathWithCost.first << endl;
+  cout << "Cost (BFS): " << pathWithCost.first << endl;
   cout << "Shortest Path: " << endl;
   for (int node : pathWithCost.second) {
     cout << node << " ";
@@ -30,5 +30,14 @@ int main() {
 
   gs.adversaryMakeMove(0, 3);
   cout << gs.costs[0][3] << endl;
+  
+  ASPGameState gsCopy(gs);
+  pathWithCost = gsCopy.getShortestPath(0, 5, false);
+  cout << "Cost (Dijkstra): " << pathWithCost.first << endl;
+  cout << "Shortest Path: " << endl;
+  for (int node : pathWithCost.second) {
+    cout << node << " ";
+  }
+  cout << endl;
   return 0;
 }

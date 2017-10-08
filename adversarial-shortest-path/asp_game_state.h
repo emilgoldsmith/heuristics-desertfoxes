@@ -35,6 +35,7 @@ public:
   int *intDistances; // int for unit-length edges (bfs)
   
   ASPGameState(std::vector<std::vector<int>> *g, int source, int dest);
+  ASPGameState(ASPGameState &gs);
   ~ASPGameState();
 
   void computeDijkstra(int source, bool bfs);

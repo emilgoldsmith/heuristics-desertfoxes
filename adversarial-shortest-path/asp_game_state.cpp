@@ -40,6 +40,29 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   computeDijkstra(destNode, false);
 }
 
+ASPGameState::ASPGameState(ASPGameState &gs) {
+  graph = gs.graph;
+  currentNode = gs.currentNode;
+  destNode = gs.destNode;
+
+  // deep copy of everything
+  int size = graph->size();
+  costs = new double*[size];
+  parentNodes = new int[size];
+  distances = new double[size];
+  intDistances = new int[size];
+
+  for (int i = 0; i < size; i++) {
+    costs[i] = new double[size];
+    parentNodes[i] = gs.parentNodes[i];
+    distances[i] = gs.distances[i];
+    intDistances[i] = gs.intDistances[i];
+    for (int j = 0; j < size; j++) {
+      costs[i][j] = gs.costs[i][j];
+    }
+  }
+}
+
 ASPGameState::~ASPGameState() {
   for (int i = 0; i < graph->size(); i++) {
     delete [] costs[i];
