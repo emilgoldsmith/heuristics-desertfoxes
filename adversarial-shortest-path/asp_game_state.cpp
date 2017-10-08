@@ -16,13 +16,11 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
 
   int size = g->size();
   costs = new double*[size];
-  factors = new int*[size];
   parentNodes = new int[size];
   distances = new double[size];
   intDistances = new int[size];
   for (int i = 0; i < size; i++) {
     costs[i] = new double[size];
-    factors[i] = new int[size];
   }
   
   // initialize costs
@@ -45,10 +43,8 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
 ASPGameState::~ASPGameState() {
   for (int i = 0; i < graph->size(); i++) {
     delete [] costs[i];
-    delete [] factors[i];
   }
   delete [] costs;
-  delete [] factors;
   delete [] parentNodes;
   delete [] distances;
 }

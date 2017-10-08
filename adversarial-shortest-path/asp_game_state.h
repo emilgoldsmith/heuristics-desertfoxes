@@ -28,8 +28,6 @@ public:
 
   // stores cost of each edge of the graph
   double **costs;
-  // stores the factor k of each edge (min distance to destination)
-  int **factors;
   // store the next node of each node's shortest path to destination
   int *parentNodes;
   // stores the shortest distance of each node from the destination
