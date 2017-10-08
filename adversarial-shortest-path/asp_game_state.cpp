@@ -22,7 +22,7 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   for (int i = 0; i < size; i++) {
     costs[i] = new double[size];
   }
-  
+
   // initialize costs
   for (int i = 0; i < size; i++) {
     for (int j = 0; j < size; j++) {
@@ -33,7 +33,7 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
       costs[n][i] = 1;
     }
   }
-  
+
   // populate intDistances first
   computeDijkstra(destNode, true);
   // then populate distances and parentNodes using edges with costs
@@ -77,7 +77,7 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
   bool *visited = new bool[graph->size()];
   // min heap sorted by distance
   priority_queue<Node, vector<Node>, decltype(comp)> pq(comp);
-  
+
   // initializations
   distances[source] = 0;
   intDistances[source] = 0;
@@ -105,12 +105,12 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
       continue;
     }
     // destination not reachable
-    if ((!bfs && distances[currentIndex] == INF) || 
+    if ((!bfs && distances[currentIndex] == INF) ||
         (bfs && intDistances[currentIndex] == INT_INF)) {
       cerr << "Error: destination not reachable" << endl;
       continue;
     }
-    
+
     // for each adjacent node
     for (int neighbor : (*graph)[currentIndex]) {
       if (!bfs) { // normal dijkstra
@@ -165,7 +165,7 @@ pair<double, vector<int>> ASPGameState::getShortestPath(int source, int dest, bo
   computeDijkstra(dest, bfs);
   vector<int> path;
   double pathCost = 0;
-  
+
   // construct shortest path
   if (parentNodes[source] == -1) {
     cerr << "Error: destination not reachable" << endl;

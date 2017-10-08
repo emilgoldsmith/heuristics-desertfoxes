@@ -42,7 +42,7 @@ void Client::receiveGraph() {
   for (char c : graph_string) {
     if (c == '[') numNodes++;
   }
-  vector<vector<int> > adjacencyList(numNodes);
+  adjacencyList = new vector<vector<int> >(numNodes);
   bool inList = false;
   int currentEncodedNode = -1;
   bool inString = false;
@@ -63,7 +63,7 @@ void Client::receiveGraph() {
           currentEncodedNode = encoder[nodeName];
         } else {
           // This is an adjacent node
-          adjacencyList[currentEncodedNode].push_back(encoder[nodeName]);
+          (*adjacencyList)[currentEncodedNode].push_back(encoder[nodeName]);
         }
       } else {
         // We are at the start of a nodeName
@@ -77,11 +77,12 @@ void Client::receiveGraph() {
     }
   }
 
-  state = new ASPGameState(&adjacencyList, startNode, endNode);
+  state = new ASPGameState(adjacencyList, startNode, endNode);
 }
 
 Client::~Client() {
   delete state;
+  delete adjacencyList;
 }
 
 void Client::sendTraversal(int start, int end) {
