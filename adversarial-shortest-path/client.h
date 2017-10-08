@@ -15,7 +15,7 @@ class Client {
   std::map<std::string, int> encoder;
   std::map<int, std::string> decoder;
   int role; // 0 for traverser, 1 for adversary
-  vector<vector<int> > *adjacencyList;
+  std::vector<std::vector<int> > *adjacencyList;
 
   void receiveGraph();
   void sendTraversal(int start, int end);
