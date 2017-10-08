@@ -136,6 +136,8 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
       }
     }
   }
+
+  delete [] visited;
 }
 
 void ASPGameState::traverserMakeMove(int nextNode) {
