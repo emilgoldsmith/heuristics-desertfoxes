@@ -13,7 +13,6 @@ class Client {
   SocketClient *socket;
   std::map<std::string, int> encoder;
   std::map<int, std::string> decoder;
-  std::pair<std::string, std::string> targetNodes;
   int role; // 0 for traverser, 1 for adversary
 
   void receiveGraph();
@@ -31,7 +30,6 @@ class Client {
     );
 
     ~Client();
-    std::pair<int, int> getTargetNodes();
     void makeMove(int node1_or_start, int node2_or_start, double factor = -1);
 };
 

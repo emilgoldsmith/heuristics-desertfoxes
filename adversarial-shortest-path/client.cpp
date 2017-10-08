@@ -29,7 +29,12 @@ Client::Client(string ip, int port, int playerRole) {
 
 void Client::receiveGraph() {
   json graphInfo = socket->receiveJSON(2000*1000);
-  targetNodes = make_pair(graphInfo["start_node"], graphInfo["end_node"]);
+
+  string startNodeString = graphInfo["start_node"];
+  string endNodeString = graphInfo["end_node"];
+  int startNode = startNodeString.substr(1, startNodeString.size() - 1);
+  int endNode = endNodeString.substr(1, endNodeString.size() - 1);
+
   json graph = graphInfo["graph"];
   string graph_string = graph.dump();
   int numNodes = 0;
@@ -71,7 +76,7 @@ void Client::receiveGraph() {
     }
   }
 
-  state = new ASPGameState(&adjacencyList, targetNodes.first, targetNodes.second);
+  state = new ASPGameState(&adjacencyList, startNode, endNode);
 }
 
 Client::~Client() {
@@ -123,24 +128,32 @@ void Client::receiveUpdate(bool ourUpdate) {
   Move move = {
     encoder[node1.substr(1, node1.size() - 1)], // Remove quotes around number and encode
     encoder[node2.substr(1, node2.size() - 1)], // Remove quotes around number
-    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate)) ? info["add_cost"] : info["new_cost"]
   };
-  if (move.costRelatedInfo == 0) {
+  string returnedCost =
+    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
+      ? info["add_cost"]
+      : info["new_cost"];
+
+  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCost << endl;
+
+  if (returnedCost = 0) {
     if (ourUpdate) {
       cout << "Server deemed our move invalid" << endl;
     } else {
       cout << "Server deemed their move invalid" << endl;
     }
   }
-  if (!ourUpdate && move.costRelatedInfo > 0) {
+  if (!ourUpdate && returnedCost > 0) {
     if (role == 0) {
       state->adversaryMakeMove(move.node1, move.node2);
     } else {
       state->traverserMakeMove(move.node2);
     }
   }
-}
-
-pair<int, int> Client::getTargetNodes() {
-  return make_pair(encoder[targetNodes.first], encoder[targetNodes.second]);
+  if (state->curNode != encoder[newPosition.substr(1, newPosition.size() - 1)]) {
+    cerr << "curNode incoherent" << endl;
+  }
+  if ((role == 1 && ourUpdate) || (role == 0 && !ourUpdate)) {
+    // Check that the edge was correctly updated
+  }
 }

@@ -26,6 +26,6 @@ int main(int argc, char const *argv[]) {
     } else {
       moveToMake = getAdversaryMove(client.state);
     }
-    client.makeMove(moveToMake.node1, moveToMake.node2, moveToMake.costRelatedInfo);
+    client.makeMove(moveToMake.node1, moveToMake.node2);
   }
 }

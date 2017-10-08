@@ -53,18 +53,16 @@ Move miniMaxTraverser(ASPGameState *state) {
   return bestMove;
 }
 
-Move getTraverseMove(vector<vector<int> > *adjacencyList) {
+Move getTraverseMove(ASPGameState *state) {
   return {
-    0,
-    (*adjacencyList)[0][0],
-    0
+    state->curNode,
+    (*(state->graph))[state->curNode][0]
   };
 }
 
 Move getAdversaryMove(vector<vector<int> > *adjacencyList) {
   return {
-    0,
-    (*adjacencyList)[0][0],
-    1.5
+    state->curNode,
+    (*(state->graph))[state->curNode][0]
   };
 }
