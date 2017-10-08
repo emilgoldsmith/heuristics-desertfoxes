@@ -18,7 +18,7 @@ class ASPGameState {
 public:
   std::vector<std::vector<int>> *graph;
   double **costs;
-  
+
   ASPGameState(std::vector<std::vector<int>> *g);
   ~ASPGameState();
   // return the shortest path cost, along with the shortest path (a list of nodes)
