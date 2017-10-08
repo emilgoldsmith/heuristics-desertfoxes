@@ -36,8 +36,6 @@ void Client::receiveGraph() {
   if (startNodeString[0] == '"' || endNodeString[0] == '"') {
     cout << "start and end node were correctly strings as expected" << endl;
   }
-  int startNode = encoder[startNodeString];
-  int endNode = encoder[endNodeString];
 
   json graph = graphInfo["graph"];
   string graph_string = graph.dump();
@@ -79,6 +77,9 @@ void Client::receiveGraph() {
       nodeName += c;
     }
   }
+
+  int startNode = encoder[startNodeString];
+  int endNode = encoder[endNodeString];
 
   state = new ASPGameState(adjacencyList, startNode, endNode);
 }
@@ -133,7 +134,7 @@ void Client::receiveUpdate(bool ourUpdate) {
   if (node1[0] == '"' || node2[0] == '"' || newPosition[0] == '"') {
     cout << "receiveUpdate had strings unexpectedly" << endl;
   }
-  int returnedCost =
+  long double returnedCost =
     ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
       ? info["add_cost"]
       : info["new_cost"];
