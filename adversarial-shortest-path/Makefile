@@ -9,7 +9,7 @@ else
 endif
 
 main: main.cpp client.cpp solve.cpp ../socket/socket_client.cpp
-	$(CXX) -o main.out main.cpp client.cpp solve.cpp ../socket/socket_client.cpp $(CXXFLAGS)
+	$(CXX) -o main.out main.cpp client.cpp solve.cpp asp_game_state.cpp ../socket/socket_client.cpp $(CXXFLAGS)
 
 test: asp_game_state.cpp test.cpp
 	$(CXX) -o test.out test.cpp asp_game_state.cpp $(CXXFLAGS)

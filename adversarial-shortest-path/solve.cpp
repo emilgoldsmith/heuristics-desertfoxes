@@ -1,4 +1,5 @@
 #include "move.h"
+#include "asp_game_state.h"
 
 #include <vector>
 #include <algorithm>
