@@ -1,5 +1,6 @@
 #include "move.h"
 #include "asp_game_state.h"
+#include "solve.h"
 
 #include <vector>
 #include <algorithm>
@@ -9,21 +10,21 @@ using namespace std;
 Move miniMaxAdversary(ASPGameState *state) {
   int *parentNodes = state->parentNodes;
   double *distances = state->distances;
-  int curNode = state->curNode;
+  int currentNode = state->currentNode;
   int destNode = state->destNode;
   Move bestMove = {
     -1,
     -1,
     -1
   };
-  for (; curNode != destNode && parentNodes[curNode] != -1; curNode = parentNodes[curNode]) {
+  for (; currentNode != destNode && parentNodes[currentNode] != -1; currentNode = parentNodes[currentNode]) {
     ASPGameState stateCopy(*state);
-    stateCopy->adversaryMakeMove(curNode, parentNodes[curNode]);
+    stateCopy.adversaryMakeMove(currentNode, parentNodes[currentNode]);
     double pathLength = miniMaxTraverser(&stateCopy).costRelatedInfo;
     if (pathLength > bestMove.costRelatedInfo) {
       bestMove = {
-        curNode,
-        parentNodes[curNode],
+        currentNode,
+        parentNodes[currentNode],
         pathLength
       };
     }
@@ -33,19 +34,19 @@ Move miniMaxAdversary(ASPGameState *state) {
 
 Move miniMaxTraverser(ASPGameState *state) {
   vector<vector<int> > *graph = state->graph;
-  int curNode = state->curNode;
+  int currentNode = state->currentNode;
   Move bestMove = {
     -1,
     -1,
     state->INF
   };
-  for (int neighbour : (*graph)[curNode]) {
+  for (int neighbour : (*graph)[currentNode]) {
     ASPGameState stateCopy(*state);
-    stateCopy->traverserMakeMove(neighbour);
+    stateCopy.traverserMakeMove(neighbour);
     double pathLength = miniMaxAdversary(&stateCopy).costRelatedInfo;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
-        curNode,
+        currentNode,
         neighbour,
         pathLength
       };
@@ -56,14 +57,14 @@ Move miniMaxTraverser(ASPGameState *state) {
 
 Move getTraverseMove(ASPGameState *state) {
   return {
-    state->curNode,
-    (*(state->graph))[state->curNode][0]
+    state->currentNode,
+    (*(state->graph))[state->currentNode][0]
   };
 }
 
-Move getAdversaryMove(vector<vector<int> > *adjacencyList) {
+Move getAdversaryMove(ASPGameState *state) {
   return {
-    state->curNode,
-    (*(state->graph))[state->curNode][0]
+    state->currentNode,
+    (*(state->graph))[state->currentNode][0]
   };
 }

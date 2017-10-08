@@ -3,6 +3,7 @@
 
 #include "../socket/socket_client.h"
 #include "move.h"
+#include "asp_game_state.h"
 
 #include <string>
 #include <map>
@@ -17,7 +18,7 @@ class Client {
 
   void receiveGraph();
   void sendTraversal(int start, int end);
-  void sendUpdate(int node1, int node2, double factor);
+  void sendUpdate(int node1, int node2);
   void receiveUpdate(bool ourUpdate);
 
   public:
@@ -30,7 +31,7 @@ class Client {
     );
 
     ~Client();
-    void makeMove(int node1_or_start, int node2_or_start, double factor = -1);
+    void makeMove(int node1_or_start, int node2_or_start);
 };
 
 #endif

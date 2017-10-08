@@ -33,8 +33,8 @@ void Client::receiveGraph() {
 
   string startNodeString = graphInfo["start_node"];
   string endNodeString = graphInfo["end_node"];
-  int startNode = startNodeString.substr(1, startNodeString.size() - 1);
-  int endNode = endNodeString.substr(1, endNodeString.size() - 1);
+  int startNode = stoi(startNodeString.substr(1, startNodeString.size() - 1));
+  int endNode = stoi(endNodeString.substr(1, endNodeString.size() - 1));
 
   json graph = graphInfo["graph"];
   string graph_string = graph.dump();
@@ -126,18 +126,19 @@ void Client::receiveUpdate(bool ourUpdate) {
   string node1 = info["edge"][0];
   string node2 = info["edge"][1];
   string newPosition = info["position"];
+  string returnedCostString =
+    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
+      ? info["add_cost"]
+      : info["new_cost"];
+  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCostString << endl;
+
   Move move = {
     encoder[node1.substr(1, node1.size() - 1)], // Remove quotes around number and encode
     encoder[node2.substr(1, node2.size() - 1)], // Remove quotes around number
   };
-  string returnedCost =
-    ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
-      ? info["add_cost"]
-      : info["new_cost"];
 
-  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCost << endl;
-
-  if (returnedCost = 0) {
+  int returnedCost = stoi(returnedCostString.substr(1, returnedCostString.size() - 1));
+  if (returnedCost == 0) {
     if (ourUpdate) {
       cout << "Server deemed our move invalid" << endl;
     } else {
@@ -151,8 +152,8 @@ void Client::receiveUpdate(bool ourUpdate) {
       state->traverserMakeMove(move.node2);
     }
   }
-  if (state->curNode != encoder[newPosition.substr(1, newPosition.size() - 1)]) {
-    cerr << "curNode incoherent" << endl;
+  if (state->currentNode != encoder[newPosition.substr(1, newPosition.size() - 1)]) {
+    cerr << "currentNode incoherent" << endl;
   }
   if ((role == 1 && ourUpdate) || (role == 0 && !ourUpdate)) {
     // Check that the edge was correctly updated
