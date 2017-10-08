@@ -171,6 +171,7 @@ void Client::receiveUpdate(bool ourUpdate) {
     }
     if (difference > epsilon) {
       cout << "ERROR: Incoherent cost edge" << endl;
+      cout << ourCost << ' ' << returnedCost << endl;
     }
   }
 }
