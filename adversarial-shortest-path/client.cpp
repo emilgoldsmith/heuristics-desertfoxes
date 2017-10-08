@@ -134,7 +134,7 @@ void Client::receiveUpdate(bool ourUpdate) {
   if (node1[0] == '"' || node2[0] == '"' || newPosition[0] == '"') {
     cout << "receiveUpdate had strings unexpectedly" << endl;
   }
-  double returnedCost =
+  long double returnedCost =
     ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
       ? info["add_cost"]
       : info["new_cost"];

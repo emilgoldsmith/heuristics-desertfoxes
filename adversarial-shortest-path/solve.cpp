@@ -9,7 +9,7 @@ using namespace std;
 
 Move miniMaxAdversary(ASPGameState *state) {
   int *parentNodes = state->parentNodes;
-  double *distances = state->distances;
+  long double *distances = state->distances;
   int currentNode = state->currentNode;
   int destNode = state->destNode;
   Move bestMove = {
@@ -20,7 +20,7 @@ Move miniMaxAdversary(ASPGameState *state) {
   for (; currentNode != destNode && parentNodes[currentNode] != -1; currentNode = parentNodes[currentNode]) {
     ASPGameState stateCopy(*state);
     stateCopy.adversaryMakeMove(currentNode, parentNodes[currentNode]);
-    double pathLength = miniMaxTraverser(&stateCopy).costRelatedInfo;
+    long double pathLength = miniMaxTraverser(&stateCopy).costRelatedInfo;
     if (pathLength > bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -43,7 +43,7 @@ Move miniMaxTraverser(ASPGameState *state) {
   for (int neighbour : (*graph)[currentNode]) {
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
-    double pathLength = miniMaxAdversary(&stateCopy).costRelatedInfo;
+    long double pathLength = miniMaxAdversary(&stateCopy).costRelatedInfo;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
