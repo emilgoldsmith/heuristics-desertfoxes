@@ -36,8 +36,8 @@ void Client::receiveGraph() {
   if (startNodeString[0] == '"' || endNodeString[0] == '"') {
     cout << "start and end node were correctly strings as expected" << endl;
   }
-  int startNode = stoi(startNodeString.substr(1, startNodeString.size() - 1));
-  int endNode = stoi(endNodeString.substr(1, endNodeString.size() - 1));
+  int startNode = encoder[startNodeString];
+  int endNode = encoder[endNodeString];
 
   json graph = graphInfo["graph"];
   string graph_string = graph.dump();
