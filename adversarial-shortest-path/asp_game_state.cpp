@@ -142,7 +142,7 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
 
 void ASPGameState::traverserMakeMove(int nextNode) {
   if (costs[currentNode][nextNode] == INF) {
-    cerr << "Error: trying to move to a non-adjacent node";
+    cerr << "Error: trying to move to a non-adjacent node" << endl;
   } else {
     currentNode = nextNode;
   }
@@ -150,7 +150,7 @@ void ASPGameState::traverserMakeMove(int nextNode) {
 
 void ASPGameState::adversaryMakeMove(int node1, int node2) {
   if (costs[node1][node2] == INF) {
-    cerr << "Error: trying to increase cost of a non-existent edge";
+    cerr << "Error: trying to increase cost of a non-existent edge" << endl;
   } else {
     int k = min(intDistances[node1], intDistances[node2]);
     double newCost = costs[node1][node2] * (1 + sqrt(k));
