@@ -163,6 +163,14 @@ void Client::receiveUpdate(bool ourUpdate) {
     cerr << "currentNode incoherent" << endl;
   }
   if ((role == 1 && ourUpdate) || (role == 0 && !ourUpdate)) {
-    // Check that the edge was correctly updated
+    long double ourCost = (state->costs)[move.node1][move.node2];
+    long double epsilon = 1.0e-6;
+    long double difference = ourCost - returnedCost;
+    if (difference < 0) {
+      difference *= -1;
+    }
+    if (difference > epsilon) {
+      cout << "ERROR: Incoherent cost edge" << endl;
+    }
   }
 }
