@@ -33,6 +33,9 @@ void Client::receiveGraph() {
 
   string startNodeString = graphInfo["start_node"];
   string endNodeString = graphInfo["end_node"];
+  if (startNodeString[0] == '"' || endNodeString[0] == '"') {
+    cout << "start and end node were correctly strings as expected" << endl;
+  }
   int startNode = stoi(startNodeString.substr(1, startNodeString.size() - 1));
   int endNode = stoi(endNodeString.substr(1, endNodeString.size() - 1));
 
@@ -127,18 +130,20 @@ void Client::receiveUpdate(bool ourUpdate) {
   string node1 = info["edge"][0];
   string node2 = info["edge"][1];
   string newPosition = info["position"];
-  string returnedCostString =
+  if (node1[0] == '"' || node2[0] == '"' || newPosition[0] == '"') {
+    cout << "receiveUpdate had strings unexpectedly" << endl;
+  }
+  int returnedCost =
     ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
       ? info["add_cost"]
       : info["new_cost"];
-  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCostString << endl;
+  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCost << endl;
 
   Move move = {
-    encoder[node1.substr(1, node1.size() - 1)], // Remove quotes around number and encode
-    encoder[node2.substr(1, node2.size() - 1)], // Remove quotes around number
+    encoder[node1], // Remove quotes around number and encode
+    encoder[node2], // Remove quotes around number
   };
 
-  int returnedCost = stoi(returnedCostString.substr(1, returnedCostString.size() - 1));
   if (returnedCost == 0) {
     if (ourUpdate) {
       cout << "Server deemed our move invalid" << endl;
@@ -153,7 +158,7 @@ void Client::receiveUpdate(bool ourUpdate) {
       state->traverserMakeMove(move.node2);
     }
   }
-  if (state->currentNode != encoder[newPosition.substr(1, newPosition.size() - 1)]) {
+  if (state->currentNode != encoder[newPosition]) {
     cerr << "currentNode incoherent" << endl;
   }
   if ((role == 1 && ourUpdate) || (role == 0 && !ourUpdate)) {
