@@ -154,6 +154,7 @@ void ASPGameState::adversaryMakeMove(int node1, int node2) {
     double newCost = costs[node1][node2] * (1 + sqrt(k));
     costs[node1][node2] = newCost;
     costs[node2][node1] = newCost;
+    computeDijkstra(destNode, false);
   }
 }
 
