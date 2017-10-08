@@ -15,12 +15,12 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   destNode = dest;
 
   int size = g->size();
-  costs = new double*[size];
+  costs = new long double*[size];
   parentNodes = new int[size];
-  distances = new double[size];
+  distances = new long double[size];
   intDistances = new int[size];
   for (int i = 0; i < size; i++) {
-    costs[i] = new double[size];
+    costs[i] = new long double[size];
   }
 
   // initialize costs
@@ -47,13 +47,13 @@ ASPGameState::ASPGameState(ASPGameState &gs) {
 
   // deep copy of everything
   int size = graph->size();
-  costs = new double*[size];
+  costs = new long double*[size];
   parentNodes = new int[size];
-  distances = new double[size];
+  distances = new long double[size];
   intDistances = new int[size];
 
   for (int i = 0; i < size; i++) {
-    costs[i] = new double[size];
+    costs[i] = new long double[size];
     parentNodes[i] = gs.parentNodes[i];
     distances[i] = gs.distances[i];
     intDistances[i] = gs.intDistances[i];
@@ -114,13 +114,13 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
     // for each adjacent node
     for (int neighbor : (*graph)[currentIndex]) {
       if (!bfs) { // normal dijkstra
-        double stepDist = costs[currentIndex][neighbor];
+        long double stepDist = costs[currentIndex][neighbor];
         // sanity check
         if (stepDist == INF) {
           cerr << "Error: edge has infinite cost" << endl;
         }
         // do something if new distance is less than recorded shortest distance
-        double newDist = distances[currentIndex] + stepDist;
+        long double newDist = distances[currentIndex] + stepDist;
         if (distances[neighbor] > newDist) {
           pq.push({ neighbor, newDist, -1 });
           distances[neighbor] = newDist;
@@ -153,18 +153,18 @@ void ASPGameState::adversaryMakeMove(int node1, int node2) {
     cerr << "Error: trying to increase cost of a non-existent edge" << endl;
   } else {
     int k = min(intDistances[node1], intDistances[node2]);
-    double newCost = costs[node1][node2] * (1 + sqrt(k));
+    long double newCost = costs[node1][node2] * (1 + sqrt(k));
     costs[node1][node2] = newCost;
     costs[node2][node1] = newCost;
     computeDijkstra(destNode, false);
   }
 }
 
-pair<double, vector<int>> ASPGameState::getShortestPath(int source, int dest, bool bfs) {
+pair<long double, vector<int>> ASPGameState::getShortestPath(int source, int dest, bool bfs) {
   // compute all shortest paths from destination
   computeDijkstra(dest, bfs);
   vector<int> path;
-  double pathCost = 0;
+  long double pathCost = 0;
 
   // construct shortest path
   if (parentNodes[source] == -1) {
@@ -190,7 +190,7 @@ pair<double, vector<int>> ASPGameState::getShortestPath(int source, int dest, bo
   return make_pair(pathCost, path);
 }
 
-void ASPGameState::updateCost(int node1, int node2, double newCost) {
+void ASPGameState::updateCost(int node1, int node2, long double newCost) {
   if (node1 < 0 || node2 < 0 || node1 >= graph->size() || node2 >= graph->size()) {
     cerr << "Error: cost update failed, node does not exist" << endl;
     return;
