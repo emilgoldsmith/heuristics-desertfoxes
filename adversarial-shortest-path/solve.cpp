@@ -72,6 +72,11 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
     // We can already now compute a lowerbound on the score we will get using Dijkstra
     alpha = max(alpha, currentCost + stateCopy.distances[stateCopy.currentNode]);
     if (alpha >= beta) {
+      bestMove = {
+        -1,
+        -1,
+        alpha
+      };
       break;
     }
 
