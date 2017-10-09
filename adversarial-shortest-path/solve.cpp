@@ -7,31 +7,31 @@
 #include <bitset>
 #include <set>
 #include <utility>
-#include <sstream>
+// #include <sstream>
 #include <string>
-#include <unordered_map>
+// #include <unordered_map>
 
 #include <iostream>
 
 using namespace std;
 
-string getStateString(int currentNode, bool isAdversary, customSet changedEdges) {
-  stringstream ss;
-  if (isAdversary) {
-    ss << "x";
-  } else {
-    ss << "y";
-  }
-  ss << currentNode << ' ';
-  for (piild node : changedEdges) {
-    ss << node.first << ' ' << node.second << ' ';
-  }
-  return ss.str();
-}
+// string getStateString(int currentNode, bool isAdversary, customSet changedEdges) {
+//   stringstream ss;
+//   if (isAdversary) {
+//     ss << "x";
+//   } else {
+//     ss << "y";
+//   }
+//   ss << currentNode << ' ';
+//   for (piild node : changedEdges) {
+//     ss << node.first << ' ' << node.second << ' ';
+//   }
+//   return ss.str();
+// }
 
-unordered_map<string, Move> mem;
-int cnt = 0;
-int cnt2 = 0;
+// unordered_map<string, Move> mem;
+// int cnt = 0;
+// int cnt2 = 0;
 
 Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost);
 
@@ -47,13 +47,13 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
       0
     };
   }
-  if (depth < 0 || (depth - state->intDistances[currentNode]) < 0) {
+//  if (depth < 0 || (depth - state->intDistances[currentNode]) < 0) {
 //     return {
 //       -1,
 //       -1,
 //       state->INF
 //     };
-  }
+//  }
 //   cnt++;
 //   string stateString = getStateString(currentNode, true, changedEdges);
  //  if (mem.count(stateString)) {
