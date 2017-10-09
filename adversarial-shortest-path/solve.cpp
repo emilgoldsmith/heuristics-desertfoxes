@@ -69,6 +69,11 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
     // Copy game state
     ASPGameState stateCopy(*state);
     stateCopy.adversaryMakeMove(currentNode, parentNodes[currentNode]);
+    // We can already now compute a lowerbound on the score we will get using Dijkstra
+    alpha = max(alpha, currentCost + stateCopy.distances[stateCopy.currentNode]);
+    if (alpha >= beta) {
+      break;
+    }
 
     // Copy set, and add new info (as it's a set duplicates will be ignored)
    //  customSet changedEdgesCopy(changedEdges);
@@ -86,9 +91,7 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
         parentNodes[currentNode],
         pathLength
       };
-      if (pathLength + currentCost > alpha) {
-        alpha = pathLength + currentCost;
-      }
+      alpha = max(alpha, currentCost + pathLength);
       if (beta <= alpha) {
         break;
       }
@@ -123,15 +126,6 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
       0
     };
   }
-  // We know of a lowerbound on the length we can go
-  if (state->distances[currentNode] + currentCost >= beta) {
-    // Not worth it as it's impossible improving beta
-    return {
-      -1,
-      -1,
-      -1
-    };
-  }
 //   string stateString = getStateString(currentNode, false, changedEdges);
   // cnt++;
  //  if (mem.count(stateString)) {
@@ -162,16 +156,14 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
     long double addedCost = state->costs[currentNode][neighbour];
-    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost).costRelatedInfo;
+    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost).costRelatedInfo + addedCost;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
         neighbour,
-        pathLength + addedCost
+        pathLength
       };
-      if (pathLength + currentCost + addedCost < beta) {
-        beta = pathLength + currentCost + addedCost;
-      }
+      beta = min(beta, pathLength + currentCost);
       if (beta <= alpha) {
         break;
       }
