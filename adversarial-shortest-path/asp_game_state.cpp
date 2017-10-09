@@ -53,7 +53,7 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   }
 }
 
-ASPGameState::ASPGameState(ASPGameState &gs) {
+ASPGameState::ASPGameState(ASPGameState &gs) : changedEdges(gs.changedEdges) {
   graph = gs.graph;
   intDistances = gs.intDistances;
   currentNode = gs.currentNode;
@@ -187,5 +187,10 @@ void ASPGameState::adversaryMakeMove(int node1, int node2) {
     costs[node1][node2] = newCost;
     costs[node2][node1] = newCost;
     computeDijkstra(destNode, false, true, node1, node2);
+
+    // Keep track of the changed edges
+    if (node1 < node2) swap(node1, node2);
+    pii node = {node1, node2};
+    changedEdges.insert(node);
   }
 }

@@ -4,6 +4,10 @@
 #include <vector>
 #include <utility>
 #include <limits>
+#include <set>
+
+typedef std::pair<int, int> pii;
+typedef std::set<pii> customSet;
 
 struct Node {
   int index; // up to 1000 nodes
@@ -34,6 +38,7 @@ public:
   // stores the shortest distance of each node from the destination
   long double *distances; // double for edges with costs
   int *intDistances; // int for unit-length edges (bfs)
+  customSet changedEdges;
 
   ASPGameState(std::vector<std::vector<int>> *g, int source, int dest);
   ASPGameState(ASPGameState &gs);
