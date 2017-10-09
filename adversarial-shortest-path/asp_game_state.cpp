@@ -21,9 +21,12 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   // Tells destructor that it's supposed to free this
   intDistancesOwner = true;
   intDistances = new int[size];
+  traversedNodes = new bool[size];
   for (int i = 0; i < size; i++) {
     costs[i] = new long double[size];
+    traversedNodes[i] = false;
   }
+  traversedNodes[currentNode] = true;
 
   // initialize costs
   for (int i = 0; i < size; i++) {
@@ -53,11 +56,13 @@ ASPGameState::ASPGameState(ASPGameState &gs) {
   costs = new long double*[size];
   parentNodes = new int[size];
   distances = new long double[size];
+  traversedNodes = new bool[size];
 
   for (int i = 0; i < size; i++) {
     costs[i] = new long double[size];
     parentNodes[i] = gs.parentNodes[i];
     distances[i] = gs.distances[i];
+    traversedNodes[i] = gs.traversedNodes[i];
     for (int j = 0; j < size; j++) {
       costs[i][j] = gs.costs[i][j];
     }
@@ -71,6 +76,7 @@ ASPGameState::~ASPGameState() {
   delete [] costs;
   delete [] parentNodes;
   delete [] distances;
+  delete [] traversedNodes;
   if (intDistancesOwner) {
     delete [] intDistances;
   }
@@ -150,15 +156,18 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
 
 void ASPGameState::traverserMakeMove(int nextNode) {
   if (costs[currentNode][nextNode] == INF) {
-    cerr << "Error: trying to move to a non-adjacent node" << endl;
+    cerr << "Error: trying to move to a non-adjacent node: ";
+    cerr << currentNode << "->" << nextNode << endl;
   } else {
     currentNode = nextNode;
+    traversedNodes[currentNode] = true;
   }
 }
 
 void ASPGameState::adversaryMakeMove(int node1, int node2) {
   if (costs[node1][node2] == INF) {
-    cerr << "Error: trying to increase cost of a non-existent edge" << endl;
+    cerr << "Error: trying to increase cost of a non-existent edge: ";
+    cerr << node1 << " " << node2 << endl;
   } else {
     int k = min(intDistances[node1], intDistances[node2]);
     long double newCost = costs[node1][node2] * (1 + sqrt(k));

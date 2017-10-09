@@ -34,6 +34,7 @@ public:
   // stores the shortest distance of each node from the destination
   long double *distances; // double for edges with costs
   int *intDistances; // int for unit-length edges (bfs)
+  bool *traversedNodes; // nodes visited by traverser
 
   ASPGameState(std::vector<std::vector<int>> *g, int source, int dest);
   ASPGameState(ASPGameState &gs);
