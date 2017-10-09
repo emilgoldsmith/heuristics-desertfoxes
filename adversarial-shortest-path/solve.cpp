@@ -14,6 +14,11 @@
 
 using namespace std;
 
+struct MemoEntry {
+  Move move;
+  bool wasCut;
+};
+
 string getStateString(int currentNode, bool isAdversary, ASPGameState *state) {
   stringstream ss;
   if (isAdversary) {
@@ -28,7 +33,7 @@ string getStateString(int currentNode, bool isAdversary, ASPGameState *state) {
   return ss.str();
 }
 
-unordered_map<string, Move> mem(1000 * 1000);
+unordered_map<string, MemoEntry> mem(1000 * 1000);
 // int cnt = 0;
 // int cnt2 = 0;
 
@@ -54,15 +59,22 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
 //     };
 //  }
 //   cnt++;
-  string stateString = getStateString(currentNode, true, state);
-  if (mem.count(stateString)) {
-    return mem[stateString];
-  }
   Move bestMove = {
     -1,
     -1,
     -1
   };
+  string stateString = getStateString(currentNode, true, state);
+  if (mem.count(stateString)) {
+    MemoEntry cached_entry = mem[stateString];
+    if (!cached_entry.wasCut) {
+      return cached_entry.move;
+    } else {
+      alpha = max(alpha, cached_entry.move.costRelatedInfo);
+      bestMove = cached_entry.move;
+    }
+  }
+  bool pruned = false;
   for (; currentNode != destNode && parentNodes[currentNode] != -1; currentNode = parentNodes[currentNode]) {
     // Copy game state
     ASPGameState stateCopy(*state);
@@ -71,10 +83,11 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
     alpha = max(alpha, currentCost + stateCopy.distances[stateCopy.currentNode]);
     if (alpha >= beta) {
       bestMove = {
-        -1,
-        -1,
+        currentNode,
+        parentNodes[currentNode],
         alpha
       };
+      pruned = true;
       break;
     }
 
@@ -89,11 +102,13 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
       };
       alpha = max(alpha, currentCost + pathLength);
       if (beta <= alpha) {
+        pruned = true;
         break;
       }
     }
   }
-  mem[stateString] = bestMove;
+  MemoEntry entry = {bestMove, pruned};
+  mem[stateString] = entry;
   return bestMove;
 }
 
@@ -123,17 +138,24 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     };
   }
   string stateString = getStateString(currentNode, false, state);
-  if (mem.count(stateString)) {
-    return mem[stateString];
-  }
   Move bestMove = {
     -1,
     -1,
     state->INF
   };
+  if (mem.count(stateString)) {
+    MemoEntry cached_entry = mem[stateString];
+    if (!cached_entry.wasCut) {
+      return cached_entry.move;
+    } else {
+      beta = min(beta, cached_entry.move.costRelatedInfo);
+      bestMove = cached_entry.move;
+    }
+  }
 
   bubbleSort(state, currentNode); // This outperforms std::sort for our usecase
 
+  bool pruned = false;
   for (int neighbour : (*graph)[currentNode]) {
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
@@ -147,11 +169,13 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
       };
       beta = min(beta, pathLength + currentCost);
       if (beta <= alpha) {
+        pruned = true;
         break;
       }
     }
   }
-  mem[stateString] = bestMove;
+  MemoEntry entry = {bestMove, pruned};
+  mem[stateString] = entry;
   return bestMove;
 }
 
