@@ -18,6 +18,7 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   costs = new long double*[size];
   parentNodes = new int[size];
   distances = new long double[size];
+  visited = new bool[size];
   // Tells destructor that it's supposed to free this
   intDistancesOwner = true;
   intDistances = new int[size];
@@ -57,12 +58,14 @@ ASPGameState::ASPGameState(ASPGameState &gs) {
   parentNodes = new int[size];
   distances = new long double[size];
   traversedNodes = new bool[size];
+  visited = new bool[size];
 
   for (int i = 0; i < size; i++) {
     costs[i] = new long double[size];
     parentNodes[i] = gs.parentNodes[i];
     distances[i] = gs.distances[i];
     traversedNodes[i] = gs.traversedNodes[i];
+    visited[i] = gs.visited[i];
     for (int j = 0; j < size; j++) {
       costs[i][j] = gs.costs[i][j];
     }
@@ -77,17 +80,56 @@ ASPGameState::~ASPGameState() {
   delete [] parentNodes;
   delete [] distances;
   delete [] traversedNodes;
+  delete [] visited;
   if (intDistancesOwner) {
     delete [] intDistances;
   }
 }
 
-void ASPGameState::computeDijkstra(int source, bool bfs) {
-  // if node has been included in shortest path already
-  bool *visited = new bool[graph->size()];
+void ASPGameState::computeDijkstra(int source, bool bfs, bool invalidator, int node1, int node2) {
+  if (invalidator) {
+    if (parentNodes[node1] != node2 && parentNodes[node2] != node1) {
+      // Refer to Emil for proof
+      return;
+    }
+    if (distances[node2] > distances[node1]) swap(node1, node2);
+    // now node1 is furthest away, as one must be further away since the edge lies on a shortest path
+    for (int& nb : (*graph)[node1]) {
+      if ((costs[node1][nb] + distances[nb]) == distances[node1]) {
+        // we have an alternative path, right now distances[node1] refers to the old best path
+        return;
+      }
+    }
+  }
+    // Node completeNode1 = {node1, distances[node1], -1};
+    // auto it1 = lower_bound(dijkstraOrder.begin(), dijkstraOrder.end(), completeNode1, compOpposite);
+    // while ((*it1).index != node1) it1++;
+    // Node completeNode2 = {node2, distances[node2], -1};
+    // auto it2 = lower_bound(dijkstraOrder.begin(), dijkstraOrder.end(), completeNode2, compOpposite);
+    // while ((*it2).index != node2) it2++;
+    // // We want it1 to be furthest along in the vector
+    // if (distance(it1, it2) > 0) swap(it1, it2);
+    // for (; it1 != dijkstraOrder.end(); it1++) {
+    //   visited[(*it1).index] = false;
+    //   parentNodes[(*it1).index] = -1;
+    //   distances[(*it1).index] = INF;
+    // }
+    // dijkstraOrder.erase(it1, dijkstraOrder.end());
+    // for (Node& finishedNode : dijkstraOrder) {
+    //   int finishedIndex = finishedNode.index;
+    //   for (int& nb : (*graph)[finishedIndex]) {
+    //     long double newDist = distances[finishedIndex] + costs[finishedIndex][nb];
+    //     if (!visited[nb] && distances[nb] > newDist) {
+    //       pq.push({ nb, newDist, -1});
+    //       distances[nb] = newDist;
+    //       parentNodes[nb] = finishedIndex;
+    //     }
+    //   }
+    // }
+
+
   // min heap sorted by distance
   priority_queue<Node, vector<Node>, decltype(comp)> pq(comp);
-
   // initializations
   distances[source] = 0;
   if (bfs) {
@@ -99,7 +141,6 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
     parentNodes[i] = -1;
     if (i != source) {
       // distance initialized to INF besides source node
-      pq.push({ source, INF, INT_INF });
       distances[i] = INF;
       if (bfs) {
         intDistances[i] = INT_INF;
@@ -150,8 +191,6 @@ void ASPGameState::computeDijkstra(int source, bool bfs) {
       }
     }
   }
-
-  delete [] visited;
 }
 
 void ASPGameState::traverserMakeMove(int nextNode) {
@@ -173,7 +212,7 @@ void ASPGameState::adversaryMakeMove(int node1, int node2) {
     long double newCost = costs[node1][node2] * (1 + sqrt(k));
     costs[node1][node2] = newCost;
     costs[node2][node1] = newCost;
-    computeDijkstra(destNode, false);
+    computeDijkstra(destNode, false, true, node1, node2);
   }
 }
 

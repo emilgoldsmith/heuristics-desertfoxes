@@ -27,6 +27,8 @@ public:
   int destNode; // destination node
   bool intDistancesOwner = false;
 
+  // stores visited nodes for Dijkstra
+  bool *visited;
   // stores cost of each edge of the graph
   long double **costs;
   // store the next node of each node's shortest path to destination
@@ -40,7 +42,7 @@ public:
   ASPGameState(ASPGameState &gs);
   ~ASPGameState();
 
-  void computeDijkstra(int source, bool bfs);
+  void computeDijkstra(int source, bool bfs, bool invalidator = false, int node1 = -1, int node2 = -1);
   void traverserMakeMove(int nextNode);
   void adversaryMakeMove(int node1, int node2);
   std::pair<long double, std::vector<int>> getShortestPath(int source, int dest, bool bfs);
