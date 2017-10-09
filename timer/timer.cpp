@@ -6,6 +6,12 @@
 using namespace std;
 using namespace std::chrono;
 
+Timer::Timer() {
+  isRunning = false;
+  allowedTime = 60 + 55;
+  currentDuration = duration<double>(0);
+}
+
 Timer::Timer(double maxTime) {
   isRunning = false;
   allowedTime = maxTime;

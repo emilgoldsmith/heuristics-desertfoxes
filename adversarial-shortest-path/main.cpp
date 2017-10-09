@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <limits>
 
 using namespace std;
 
@@ -30,7 +31,7 @@ int main(int argc, char const *argv[]) {
       moveToMake = guyuTraverser(client.state);
     } else {
       // moveToMake = getAdversaryMove(client.state);
-      moveToMake = miniMaxAdversary(client.state, emptyVisited);
+      moveToMake = miniMaxAdversary(client.state, emptyVisited, numeric_limits<long double>::min(), numeric_limits<long double>::max());
       cout << moveToMake.node1 << ' ' << moveToMake.node2 << ' ' << moveToMake.costRelatedInfo << endl;
     }
     client.makeMove(moveToMake.node1, moveToMake.node2);

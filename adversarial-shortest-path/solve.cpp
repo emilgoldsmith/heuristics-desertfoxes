@@ -8,7 +8,7 @@
 
 using namespace std;
 
-Move miniMaxAdversary(ASPGameState *state, bitset<1010> visited) {
+Move miniMaxAdversary(ASPGameState *state, bitset<1010> visited, long double alpha, long double beta) {
   int *parentNodes = state->parentNodes;
   long double *distances = state->distances;
   int currentNode = state->currentNode;
@@ -28,19 +28,25 @@ Move miniMaxAdversary(ASPGameState *state, bitset<1010> visited) {
   for (; currentNode != destNode && parentNodes[currentNode] != -1; currentNode = parentNodes[currentNode]) {
     ASPGameState stateCopy(*state);
     stateCopy.adversaryMakeMove(currentNode, parentNodes[currentNode]);
-    long double pathLength = miniMaxTraverser(&stateCopy, visited).costRelatedInfo;
+    long double pathLength = miniMaxTraverser(&stateCopy, visited, alpha, beta).costRelatedInfo;
     if (pathLength > bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
         parentNodes[currentNode],
         pathLength
       };
+      if (pathLength > alpha) {
+        alpha = pathLength;
+      }
+      if (beta <= alpha) {
+        break;
+      }
     }
   }
   return bestMove;
 }
 
-Move miniMaxTraverser(ASPGameState *state, bitset<1010> visited) {
+Move miniMaxTraverser(ASPGameState *state, bitset<1010> visited, long double alpha, long double beta) {
   vector<vector<int> > *graph = state->graph;
   int currentNode = state->currentNode;
   if (currentNode == state->destNode) {
@@ -62,13 +68,19 @@ Move miniMaxTraverser(ASPGameState *state, bitset<1010> visited) {
     }
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
-    long double pathLength = miniMaxAdversary(&stateCopy, visited).costRelatedInfo;
+    long double pathLength = miniMaxAdversary(&stateCopy, visited, alpha, beta).costRelatedInfo;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
         neighbour,
         pathLength + (state->costs)[currentNode][neighbour]
       };
+      if (pathLength < beta) {
+        beta = pathLength;
+      }
+      if (beta <= alpha) {
+        break;
+      }
     }
   }
   return bestMove;
