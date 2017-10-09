@@ -33,16 +33,15 @@ void dfsHelper(ASPGameState *gs, int depth, multiset<pair<int, int>> *edgeSet) {
     // edge should be the same regardless of order of nodes
     // always default to "right first"
     pair<int, int> leftFirst = make_pair(currentNode, parentNodes[currentNode]);
-    if (edgeSet.count(leftFirst) != 0) {
-      edgeSet.insert(leftFirst);
+    if (edgeSet->count(leftFirst) != 0) {
+      edgeSet->insert(leftFirst);
     } else {
-      edgeSet.insert(make_pair(parentNodes[currentNode], currentNode));
+      edgeSet->insert(make_pair(parentNodes[currentNode], currentNode));
     }
   }
 
   // recursively insert shortest paths at the next level
-  vector<int> adjacentNodes = gs->graph[currentNode];
-  for (int neighbor: adjacentNodes) {
+  for (int neighbor: (*gs->graph)[currentNode]) {
     ASPGameState gsCopy(*gs);
     gsCopy.traverserMakeMove(neighbor);
     dfsHelper(&gsCopy, depth - 1, edgeSet);
@@ -51,7 +50,7 @@ void dfsHelper(ASPGameState *gs, int depth, multiset<pair<int, int>> *edgeSet) {
 
 Move smartGuyuAdversary(ASPGameState *gs, int depth) {
   multiset<pair<int, int>> edgeSet;
-  dfsHelper(gs, &edgeSet);
+  dfsHelper(gs, depth, &edgeSet);
   pair<int, int> chosenEdge = make_pair(-1, -1);
   int maxFrequency = -1;
   long double maxCost = -1;

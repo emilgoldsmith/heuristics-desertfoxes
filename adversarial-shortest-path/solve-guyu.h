@@ -7,6 +7,6 @@
 Move guyuTraverser(ASPGameState *gs);
 Move guyuAdversary(ASPGameState *gs);
 Move smartGuyuTraverser(ASPGameState *gs);
-Move smartGuyuAdversary(ASPGameState *gs);
+Move smartGuyuAdversary(ASPGameState *gs, int depth);
 
 #endif
