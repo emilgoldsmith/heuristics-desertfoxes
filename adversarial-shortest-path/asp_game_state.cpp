@@ -6,6 +6,7 @@
 #include <queue>
 #include <limits>
 #include <cmath>
+#include <cstring>
 
 using namespace std;
 
@@ -16,6 +17,11 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
 
   int size = g->size();
   costs = new long double*[size];
+  // contiguous memory allocation hack
+  costs[0] = new long double[size * size];
+  for (int i = 1; i < size; i++) {
+    costs[i] = costs[i-1] + size;
+  }
   parentNodes = new int[size];
   distances = new long double[size];
   visited = new bool[size];
@@ -24,7 +30,6 @@ ASPGameState::ASPGameState(vector<vector<int>> *g, int source, int dest) {
   intDistances = new int[size];
   traversedNodes = new bool[size];
   for (int i = 0; i < size; i++) {
-    costs[i] = new long double[size];
     traversedNodes[i] = false;
   }
   traversedNodes[currentNode] = true;
@@ -55,27 +60,25 @@ ASPGameState::ASPGameState(ASPGameState &gs) {
   // deep copy of everything
   int size = graph->size();
   costs = new long double*[size];
+  // contiguous memory allocation hack
+  costs[0] = new long double[size * size];
+  for (int i = 1; i < size; i++) {
+    costs[i] = costs[i-1] + size;
+  }
   parentNodes = new int[size];
   distances = new long double[size];
   traversedNodes = new bool[size];
-  visited = new bool[size];
 
-  for (int i = 0; i < size; i++) {
-    costs[i] = new long double[size];
-    parentNodes[i] = gs.parentNodes[i];
-    distances[i] = gs.distances[i];
-    traversedNodes[i] = gs.traversedNodes[i];
-    visited[i] = gs.visited[i];
-    for (int j = 0; j < size; j++) {
-      costs[i][j] = gs.costs[i][j];
-    }
-  }
+  memcpy(costs[0], gs.costs[0], size*size*sizeof(long double));
+  memcpy(parentNodes, gs.parentNodes, size*sizeof(int));
+  memcpy(distances, gs.distances, size*sizeof(long double));
+  memcpy(traversedNodes, gs.traversedNodes, size*sizeof(bool));
+
+  visited = new bool[size];
 }
 
 ASPGameState::~ASPGameState() {
-  for (int i = 0; i < graph->size(); i++) {
-    delete [] costs[i];
-  }
+  delete [] costs[0];
   delete [] costs;
   delete [] parentNodes;
   delete [] distances;
