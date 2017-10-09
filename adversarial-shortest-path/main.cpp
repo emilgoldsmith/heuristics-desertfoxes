@@ -29,10 +29,19 @@ int main(int argc, char const *argv[]) {
     if (role == 0) {
       // moveToMake = getTraverseMove(client.state);
       moveToMake = guyuTraverser(client.state);
+      cout << "Traverser: " << moveToMake.node1 << " " << moveToMake.node2 << endl;
     } else {
-      // moveToMake = getAdversaryMove(client.state);
-      moveToMake = miniMaxAdversary(client.state, emptyVisited, numeric_limits<long double>::min(), numeric_limits<long double>::max());
-      cout << moveToMake.node1 << ' ' << moveToMake.node2 << ' ' << moveToMake.costRelatedInfo << endl;
+      bool guyu = true; // change this to toggle between our strats
+     
+      if (!guyu) { // emil
+        // moveToMake = getAdversaryMove(client.state);
+        moveToMake = miniMaxAdversary(client.state, emptyVisited, numeric_limits<long double>::min(), numeric_limits<long double>::max());
+        cout << moveToMake.node1 << ' ' << moveToMake.node2 << ' ' << moveToMake.costRelatedInfo << endl;
+      } else { // guyu
+        // moveToMake = guyuAdversary(client.state);
+        moveToMake = smartGuyuAdversary(client.state);
+        cout << "Adversary: " << moveToMake.node1 << " " << moveToMake.node2 << endl;
+      }
     }
     client.makeMove(moveToMake.node1, moveToMake.node2);
   }
