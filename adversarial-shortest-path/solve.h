@@ -6,10 +6,13 @@
 
 #include <vector>
 #include <bitset>
+#include <utility>
+#include <set>
 
-Move miniMaxAdversary(ASPGameState *state, std::bitset<1010> visited, long double alpha, long double beta);
-Move miniMaxTraverser(ASPGameState *state, std::bitset<1010> visited, long double alpha, long double beta);
-Move getTraverseMove(ASPGameState *state);
-Move getAdversaryMove(ASPGameState *state);
+typedef std::pair<int, int> piild;
+typedef std::set<piild> customSet;
+
+Move getTraverseMove(ASPGameState *state, int minimax);
+Move getAdversaryMove(ASPGameState *state, int minimax);
 
 #endif

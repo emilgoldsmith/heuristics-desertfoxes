@@ -34,7 +34,7 @@ void Client::receiveGraph() {
   string startNodeString = graphInfo["start_node"];
   string endNodeString = graphInfo["end_node"];
   if (startNodeString[0] == '"' || endNodeString[0] == '"') {
-    cout << "start and end node were correctly strings as expected" << endl;
+    cout << "start and end node were unexpectedly strings" << endl;
   }
 
   json graph = graphInfo["graph"];
@@ -119,13 +119,13 @@ void Client::makeMove(int node1_or_start, int node2_or_end) {
 
 void Client::receiveUpdate(bool ourUpdate) {
   json info = socket->receiveJSON(500);
-  if (info["done"]) {
-    cout << "Game is over" << endl;
-    exit(0);
-  }
   if (info["error"]) {
     string player = ourUpdate ? "we" : "they";
     cout << player << " ran out of time" << endl;
+    exit(0);
+  }
+  if (info["done"]) {
+    cout << "Game is over" << endl;
     exit(0);
   }
   string node1 = info["edge"][0];
@@ -138,7 +138,6 @@ void Client::receiveUpdate(bool ourUpdate) {
     ((role == 0 && ourUpdate) || (role == 1 && !ourUpdate))
       ? info["add_cost"]
       : info["new_cost"];
-  cout << node1 << ' ' << node2 << ' ' << newPosition << ' ' << returnedCost << endl;
 
   Move move = {
     encoder[node1], // Remove quotes around number and encode
