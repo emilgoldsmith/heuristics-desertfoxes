@@ -58,6 +58,7 @@ int SocketClient::sendAll(char *buf, int len) {
 string SocketClient::receive(int bufferSize) {
   char *data = new char [bufferSize];
   int bytesReceived = recv(sockFD, data, bufferSize, 0);
+  cout << bytesReceived << " of " << bufferSize << endl;
   string dataString(data, bytesReceived);
   delete[] data;
   return dataString;
