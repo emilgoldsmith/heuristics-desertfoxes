@@ -127,6 +127,21 @@ void bubbleSort(ASPGameState *state, int currentNode) {
   }
 }
 
+void insertionSort(ASPGameState *state, int currentNode) {
+  vector<int>& v = (*(state->graph))[currentNode];
+  long double *distances = state->distances;
+  for (int i = v.size() - 2; i >= 0; i--) {
+    if (distances[v[i]] > distances[v[i + 1]]) {
+      for (int j = v.size() - 1; j >= 0; j--) {
+        if (distances[v[i]] > distances[v[j]]) {
+          v.insert(v.begin() + j + 1, v[i]);
+          v.erase(v.begin() + i);
+        }
+      }
+    }
+  }
+}
+
 Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost) {
   vector<vector<int> > *graph = state->graph;
   int currentNode = state->currentNode;
@@ -153,7 +168,8 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     }
   }
 
-  bubbleSort(state, currentNode); // This outperforms std::sort for our usecase
+  // bubbleSort(state, currentNode); // This outperforms std::sort for our usecase
+  insertionSort(state, currentNode);
 
   bool pruned = false;
   for (int neighbour : (*graph)[currentNode]) {
