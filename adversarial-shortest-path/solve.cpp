@@ -41,9 +41,11 @@ unordered_map<string, MemoEntry> mem(1000 * 1000);
 // int cnt2 = 0;
 bool depthUsed = false;
 
-Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic = false);
+const long double ALPHA_FACTOR = 1.5;
 
-Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic = false) {
+Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic = false, bool emilHeuristic = false);
+
+Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic = false, bool emilHeuristic = false) {
   int *parentNodes = state->parentNodes;
   long double *distances = state->distances;
   int currentNode = state->currentNode;
@@ -55,7 +57,15 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
       0
     };
   }
-  if (depth > 0 && (depth - state->intDistances[currentNode]) < 0) {
+  if (depth < 0 && emilHeuristic) {
+    depthUsed = true;
+    return {
+      -1,
+      -1,
+      distances[currentNode] * ALPHA_FACTOR
+    };
+  }
+  if (!emilHeuristic && depth > 0 && (depth - state->intDistances[currentNode]) < 0) {
     depthUsed = true;
     return {
       -1,
@@ -121,7 +131,7 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
 
 
     // Call the Traverser recursively
-    long double pathLength = miniMaxTraverser(&stateCopy, alpha, beta, depth, currentCost, t, deadline, guyuHeuristic).costRelatedInfo;
+    long double pathLength = miniMaxTraverser(&stateCopy, alpha, beta, depth, currentCost, t, deadline, guyuHeuristic, emilHeuristic).costRelatedInfo;
     if (pathLength > bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -244,7 +254,7 @@ long double getBetaEstimate(ASPGameState *state) {
   return currentCost;
 }
 
-Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic) {
+Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic, bool emilHeuristic) {
   vector<vector<int> > *graph = state->graph;
   int currentNode = state->currentNode;
   if (currentNode == state->destNode) {
@@ -295,7 +305,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     stateCopy.traverserMakeMove(neighbour);
 
     long double addedCost = state->costs[currentNode][neighbour];
-    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost, t, deadline, guyuHeuristic).costRelatedInfo + addedCost;
+    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost, t, deadline, guyuHeuristic, emilHeuristic).costRelatedInfo + addedCost;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -340,11 +350,15 @@ Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline)
     case 2:
       depthUsed = true;
       for (i = 1; t->getTime() < deadline && depthUsed; i++) {
+        Move candidateMove;
         depthUsed = false;
         if (role == 0)
-          bestMove = miniMaxTraverser(state, state->distances[state->currentNode], getBetaEstimate(state), i, 0, t, deadline);
+          candidateMove = miniMaxTraverser(state, state->distances[state->currentNode], getBetaEstimate(state), i, 0, t, deadline);
         else
-          bestMove = miniMaxAdversary(state, state->distances[state->currentNode], getBetaEstimate(state), i, 0, t, deadline);
+          candidateMove = miniMaxAdversary(state, state->distances[state->currentNode], getBetaEstimate(state), i, 0, t, deadline);
+        if (t->getTime() < deadline) {
+          bestMove = candidateMove;
+        }
       }
       cout << "Ended with i = " << i << endl;
       return bestMove;
@@ -364,5 +378,21 @@ Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline)
         cerr << "Type 4 is not currently supported for adversaries" << endl;
         exit(1);
       }
+
+    case 5:
+      depthUsed = true;
+      for (i = 1; t->getTime() < deadline && depthUsed; i++) {
+        depthUsed = false;
+        Move candidateMove;
+        if (role == 0)
+          candidateMove = miniMaxTraverser(state, state->distances[state->currentNode], getBetaEstimate(state), i, 0, t, deadline, false, true);
+        else
+          candidateMove = miniMaxAdversary(state, state->distances[state->currentNode], getBetaEstimate(state), i, 0, t, deadline, false, true);
+        if (t->getTime() < deadline) {
+          bestMove = candidateMove;
+        }
+      }
+      cout << "Ended with i = " << i << endl;
+      return bestMove;
   }
 }

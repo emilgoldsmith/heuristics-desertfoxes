@@ -36,15 +36,18 @@ int main(int argc, char const *argv[]) {
     if (type == 0 || type == 1) {
       moveToMake = getMove(client.state, role, type, &t, 60 + 57);
     } else {
-      if (t.timeLeft() < 0) {
+      if (t.timeLeft() < -1) {
         moveToMake = getMove(client.state, role, 0, &t, -1);
+      } else if (t.timeLeft() < 0.5) {
+        if (role == 0)
+          moveToMake = getMove(client.state, role, 0, &t, -1);
+        else
+          moveToMake = getMove(client.state, role, 3, &t, -1);
       } else if (stepsAway <= completeSearchLimit) {
-        double deadline = t.getTime() + min(10.0, t.timeLeft() * 0.8);
-        moveToMake = getMove(client.state, role, 1, &t, deadline);
-        if (t.getTime() > deadline) {
-          completeSearchLimit--;
-          int instantMoveType = role == 0 ? 0 : 3;
-          moveToMake = getMove(client.state, role, instantMoveType, &t, -1);
+        double deadline = t.getTime() + max(0.5, min(20.0, t.timeLeft() * 0.4));
+        moveToMake = getMove(client.state, role, 5, &t, deadline);
+        if (role == 1 && type == 3 && t.getTime() > deadline) {
+          moveToMake = getMove(client.state, role, 3, &t, deadline);
         }
       } else {
         double luckyAttemptIncrement;
