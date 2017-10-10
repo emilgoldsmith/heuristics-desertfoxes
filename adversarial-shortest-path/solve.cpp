@@ -1,10 +1,10 @@
 #include "move.h"
 #include "asp_game_state.h"
 #include "solve.h"
+#include "../timer/timer.h"
 
 #include <vector>
 #include <algorithm>
-#include <bitset>
 #include <utility>
 #include <sstream>
 #include <string>
@@ -36,10 +36,11 @@ string getStateString(int currentNode, bool isAdversary, ASPGameState *state) {
 unordered_map<string, MemoEntry> mem(1000 * 1000);
 // int cnt = 0;
 // int cnt2 = 0;
+bool depthUsed = false;
 
-Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost);
+Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline);
 
-Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost) {
+Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline) {
   int *parentNodes = state->parentNodes;
   long double *distances = state->distances;
   int currentNode = state->currentNode;
@@ -51,27 +52,38 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
       0
     };
   }
-//  if (depth < 0 || (depth - state->intDistances[currentNode]) < 0) {
-//     return {
-//       -1,
-//       -1,
-//       state->INF
-//     };
-//  }
-//   cnt++;
+  if (depth > 0 && (depth - state->intDistances[currentNode]) < 0) {
+    depthUsed = true;
+    return {
+      -1,
+      -1,
+      state->INF
+    };
+  }
+  if (t->getTime() > deadline) {
+    return {
+      -1,
+      -1,
+      state->INF
+    };
+  }
   Move bestMove = {
     -1,
     -1,
     -1
   };
-  string stateString = getStateString(currentNode, true, state);
-  if (mem.count(stateString)) {
-    MemoEntry cached_entry = mem[stateString];
-    if (!cached_entry.wasCut) {
-      return cached_entry.move;
-    } else {
-      alpha = max(alpha, cached_entry.move.costRelatedInfo);
-      bestMove = cached_entry.move;
+  string stateString;
+  if (depth < 0) {
+    // We are using heuristics so then we don't use transposition table
+    string stateString = getStateString(currentNode, true, state);
+    if (mem.count(stateString)) {
+      MemoEntry cached_entry = mem[stateString];
+      if (!cached_entry.wasCut) {
+        return cached_entry.move;
+      } else {
+        alpha = max(alpha, cached_entry.move.costRelatedInfo);
+        bestMove = cached_entry.move;
+      }
     }
   }
   bool pruned = false;
@@ -93,7 +105,7 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
 
 
     // Call the Traverser recursively
-    long double pathLength = miniMaxTraverser(&stateCopy, alpha, beta, depth, currentCost).costRelatedInfo;
+    long double pathLength = miniMaxTraverser(&stateCopy, alpha, beta, depth, currentCost, t, deadline).costRelatedInfo;
     if (pathLength > bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -107,8 +119,15 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
       }
     }
   }
-  MemoEntry entry = {bestMove, pruned};
-  mem[stateString] = entry;
+  if (depth < 0) {
+    if (t->getTime() > deadline) {
+      // This means we didn't do a full search and this is not perfect
+      pruned = true;
+    }
+    // Only use this when we're not doing heuristics
+    MemoEntry entry = {bestMove, pruned};
+    mem[stateString] = entry;
+  }
   return bestMove;
 }
 
@@ -165,7 +184,7 @@ void insertionSort(ASPGameState *state, int currentNode, bool useBinarySearch) {
   }
 }
 
-Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost) {
+Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline) {
   vector<vector<int> > *graph = state->graph;
   int currentNode = state->currentNode;
   if (currentNode == state->destNode) {
@@ -175,19 +194,30 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
       0
     };
   }
-  string stateString = getStateString(currentNode, false, state);
   Move bestMove = {
     -1,
     -1,
     state->INF
   };
-  if (mem.count(stateString)) {
-    MemoEntry cached_entry = mem[stateString];
-    if (!cached_entry.wasCut) {
-      return cached_entry.move;
-    } else {
-      beta = min(beta, cached_entry.move.costRelatedInfo);
-      bestMove = cached_entry.move;
+  if (t->getTime() > deadline) {
+    return {
+      -1,
+      -1,
+      -10
+    };
+  }
+  string stateString;
+  if (depth < 0) {
+    // Only do this if we're not doing heuristics
+    string stateString = getStateString(currentNode, false, state);
+    if (mem.count(stateString)) {
+      MemoEntry cached_entry = mem[stateString];
+      if (!cached_entry.wasCut) {
+        return cached_entry.move;
+      } else {
+        beta = min(beta, cached_entry.move.costRelatedInfo);
+        bestMove = cached_entry.move;
+      }
     }
   }
 
@@ -199,7 +229,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
     long double addedCost = state->costs[currentNode][neighbour];
-    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost).costRelatedInfo + addedCost;
+    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost, t, deadline).costRelatedInfo + addedCost;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -213,29 +243,43 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
       }
     }
   }
-  MemoEntry entry = {bestMove, pruned};
-  mem[stateString] = entry;
+  if (depth < 0) {
+    if (t->timeLeft() > deadline) {
+      pruned = true;
+    }
+    MemoEntry entry = {bestMove, pruned};
+    mem[stateString] = entry;
+  }
   return bestMove;
 }
 
-Move getTraverseMove(ASPGameState *state, int minimax) {
-  if (minimax) {
-    return miniMaxTraverser(state, state->distances[state->currentNode], state->INF, -1, 0);
-  } else {
-    return {
-      state->currentNode,
-      state->parentNodes[state->currentNode]
-    };
-  }
-}
+Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline) {
+  Move bestMove;
+  int i;
+  switch (type) {
+    case 0:
+      return {
+        state->currentNode,
+        state->parentNodes[state->currentNode]
+      };
 
-Move getAdversaryMove(ASPGameState *state, int minimax) {
-  if (minimax) {
-    return miniMaxAdversary(state, state->distances[state->currentNode], state->INF, -1, 0);
-  } else {
-    return {
-      state->currentNode,
-      state->parentNodes[state->currentNode]
-    };
+    case 1:
+      if (role == 0)
+        return miniMaxTraverser(state, state->distances[state->currentNode], state->INF, -1, 0, t, deadline);
+      else
+        return miniMaxAdversary(state, state->distances[state->currentNode], state->INF, -1, 0, t, deadline);
+
+
+    case 2:
+      depthUsed = true;
+      for (i = 1; t->getTime() < deadline && depthUsed; i++) {
+        depthUsed = false;
+        if (role == 0)
+          bestMove = miniMaxTraverser(state, state->distances[state->currentNode], state->INF, i, 0, t, deadline);
+        else
+          bestMove = miniMaxAdversary(state, state->distances[state->currentNode], state->INF, i, 0, t, deadline);
+      }
+      cout << "Ended with i = " << i << endl;
+      return bestMove;
   }
 }

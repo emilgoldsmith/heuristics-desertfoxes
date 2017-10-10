@@ -25,18 +25,28 @@ int main(int argc, char const *argv[]) {
   Client client(ip, port, role);
   cout << "Connected" << endl;
 
+  Timer t(60 + 57); // give us a 3 second buffer
   while (true) { // This loop will be terminated by exit(0) in the client class
     Move moveToMake;
-    Timer t;
     t.start();
+    double timeMoveStarted = t.getTime();
+    double deadline = t.getTime() + 3;
     if (role == 0) {
-      moveToMake = getTraverseMove(client.state, type);
+      moveToMake = getMove(client.state, role, type, &t, deadline);
     } else {
-      moveToMake = getAdversaryMove(client.state, type);
+      moveToMake = getMove(client.state, role, type, &t, deadline);
     }
     int bfsDist = client.state->intDistances[client.state->currentNode];
     t.pause();
-    cout << "Time taken with distance " << client.state->intDistances[client.state->currentNode] << " was: " << t.getTime() << endl;
-    client.makeMove(moveToMake.node1, moveToMake.node2);
+    double timeTakenForMove = t.getTime() - timeMoveStarted;
+    if (timeTakenForMove > 0.5) {
+      cout << "Time taken with distance " << client.state->intDistances[client.state->currentNode] << " was: " << timeTakenForMove << endl;
+      cout << "Time Left: " << (t.timeLeft() + 3) << endl;
+    }
+    if (moveToMake.node1 == -1 || moveToMake.node2 == -1) {
+      client.makeMove(0, 1);
+    } else {
+      client.makeMove(moveToMake.node1, moveToMake.node2);
+    }
   }
 }
