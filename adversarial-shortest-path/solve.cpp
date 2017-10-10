@@ -225,6 +225,7 @@ long double getBetaEstimate(ASPGameState *state) {
     long double factor = sqrt(state->intDistances[parent]) + 1;
     long double curCost = state->costs[currentNode][parent] * factor;
     long double dif = factor * curCost - curCost;
+    int increments = 1;
     while (s.size()) {
       M p = s.top();
       int candidateParent = state->parentNodes[p.node];
@@ -235,8 +236,10 @@ long double getBetaEstimate(ASPGameState *state) {
       long double computedFactor = pow(candidateFactor, p.increments);
       currentCost -= state->costs[p.node][candidateParent] * (computedFactor - 1) / computedFactor;
       curCost *= pow(factor, p.increments);
+      increments += p.increments;
     }
     currentCost += curCost;
+    s.push({ increments, currentNode });
   }
   return currentCost;
 }
@@ -290,16 +293,6 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     int neighbour = (*graph)[currentNode][i];
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
-    beta = min(beta, getBetaEstimate(&stateCopy));
-    if (alpha >= beta) {
-      bestMove = {
-        currentNode,
-        neighbour,
-        beta
-      };
-      pruned = true;
-      break;
-    }
 
     long double addedCost = state->costs[currentNode][neighbour];
     long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost, t, deadline, guyuHeuristic).costRelatedInfo + addedCost;
