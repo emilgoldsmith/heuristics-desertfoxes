@@ -29,7 +29,7 @@ Client::Client(string ip, int port, int playerRole) {
 }
 
 void Client::receiveGraph() {
-  json graphInfo = socket->receiveJSON(5000*1000);
+  json graphInfo = socket->receiveASP(5000*1000);
 
   string startNodeString = graphInfo["start_node"];
   string endNodeString = graphInfo["end_node"];

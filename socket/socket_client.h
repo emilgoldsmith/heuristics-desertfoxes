@@ -19,6 +19,9 @@ public:
   nlohmann::json receiveJSON(int bufferSize);
   int sendString(std::string s);
   void closeSocket();
+
+  // specific receives
+  nlohmann::json receiveASP(int bufferSize);
 };
 
 #endif

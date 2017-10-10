@@ -58,7 +58,6 @@ int SocketClient::sendAll(char *buf, int len) {
 string SocketClient::receive(int bufferSize) {
   char *data = new char [bufferSize];
   int bytesReceived = recv(sockFD, data, bufferSize, 0);
-  cout << bytesReceived << " of " << bufferSize << endl;
   string dataString(data, bytesReceived);
   delete[] data;
   return dataString;
@@ -84,4 +83,22 @@ json SocketClient::receiveJSON(int bufferSize) {
 
 void SocketClient::closeSocket() {
   close(sockFD);
+}
+
+// receive a potentially large graph from server
+// the last two characters to be received are "}}"
+json SocketClient::receiveASP(int bufferSize) {
+  char *data = new char [bufferSize];
+  int totalReceived = 0;
+  while (true) {
+    int bytesReceived = recv(sockFD, data + totalReceived, bufferSize, 0);
+    totalReceived += bytesReceived;
+    if (data[totalReceived - 1] == '}' && data[totalReceived - 2] == '}') {
+      break;
+    }
+  }
+  
+  string dataString(data, totalReceived);
+  delete [] data;
+  return json::parse(dataString);
 }
