@@ -43,38 +43,12 @@ int main(int argc, char const *argv[]) {
           moveToMake = getMove(client.state, role, 0, &t, -1);
         else
           moveToMake = getMove(client.state, role, 3, &t, -1);
-      } else if (stepsAway <= completeSearchLimit) {
-        double deadline = t.getTime() + max(0.5, min(20.0, t.timeLeft() * 0.4));
-        moveToMake = getMove(client.state, role, 5, &t, deadline);
-        if (role == 1 && type == 3 && t.getTime() > deadline) {
-          moveToMake = getMove(client.state, role, 3, &t, deadline);
-        }
       } else {
-        double luckyAttemptIncrement;
-        double heuristicIncrement;
-        if (t.timeLeft() > 60) {
-          luckyAttemptIncrement = 0.25;
-          heuristicIncrement = 5;
-        } else if (t.timeLeft() > 30) {
-          luckyAttemptIncrement = 0.25;
-          heuristicIncrement = 3;
-        } else if (t.timeLeft() > 10) {
-          luckyAttemptIncrement = 0;
-          heuristicIncrement = 1.5;
+        double deadline = t.getTime() + max(0.5, t.timeLeft() / (stepsAway * 2));
+        // Here it actually matters what type you chose, you choose the heuristic here
+        if (role == 1 && (deadline - t.getTime()) < 1) {
+          moveToMake = getMove(client.state, role, 3, &t, deadline);
         } else {
-          // In this case we might want to switch strategy completely and not follow this structure
-          // Hopefully we never get here though
-          // Though if it's a 1000 move game or something crazy like that it could easily happen
-          luckyAttemptIncrement = 0;
-          heuristicIncrement = 0.5;
-        }
-
-        double deadline = t.getTime() + luckyAttemptIncrement;
-        moveToMake = getMove(client.state, role, 1, &t, deadline);
-        if (t.getTime() > deadline) {
-          // Our hopeful attempt at perfect searching didn't work
-          deadline = t.getTime() + min(heuristicIncrement, t.timeLeft() / stepsAway);
-          // Here it actually matters what type you chose, you choose the heuristic here
           moveToMake = getMove(client.state, role, type, &t, deadline);
         }
       }
