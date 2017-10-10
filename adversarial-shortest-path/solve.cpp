@@ -2,6 +2,7 @@
 #include "asp_game_state.h"
 #include "solve.h"
 #include "../timer/timer.h"
+#include "solve-guyu.h"
 
 #include <vector>
 #include <algorithm>
@@ -225,7 +226,8 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
   insertionSort(state, currentNode, true);
 
   bool pruned = false;
-  for (int neighbour : (*graph)[currentNode]) {
+  for (int i = 0; i < (*graph)[currentNode].size(); i++) {
+    int neighbour = (*graph)[currentNode][i];
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
     long double addedCost = state->costs[currentNode][neighbour];
@@ -281,5 +283,13 @@ Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline)
       }
       cout << "Ended with i = " << i << endl;
       return bestMove;
+
+    case 3:
+      if (role == 0) {
+        cerr << "Can't use type 3 with traverser atm" << endl;
+        exit(1);
+      } else {
+        return smartGuyuAdversary(state);
+      }
   }
 }

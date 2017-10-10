@@ -43,7 +43,7 @@ int main(int argc, char const *argv[]) {
         moveToMake = getMove(client.state, role, 1, &t, deadline);
         if (t.getTime() > deadline) {
           completeSearchLimit--;
-          moveToMake = getMove(client.state, role, 0, &t, -1);
+          moveToMake = getMove(client.state, role, type, &t, t.getTime() + 0.2);
         }
       } else {
         double luckyAttemptIncrement;
