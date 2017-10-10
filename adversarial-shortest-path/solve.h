@@ -3,13 +3,8 @@
 
 #include "move.h"
 #include "asp_game_state.h"
+#include "../timer/timer.h"
 
-#include <vector>
-#include <bitset>
-#include <utility>
-#include <set>
-
-Move getTraverseMove(ASPGameState *state, int minimax);
-Move getAdversaryMove(ASPGameState *state, int minimax);
+Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline);
 
 #endif
