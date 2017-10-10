@@ -91,13 +91,15 @@ json SocketClient::receiveASP(int bufferSize) {
   char *data = new char [bufferSize];
   int totalReceived = 0;
   while (true) {
+    cout << "Receiving" << endl;
     int bytesReceived = recv(sockFD, data + totalReceived, bufferSize, 0);
+    cout << "Received" << endl;
     totalReceived += bytesReceived;
     if (data[totalReceived - 1] == '}' && data[totalReceived - 2] == '}') {
       break;
     }
   }
-  
+
   string dataString(data, totalReceived);
   delete [] data;
   return json::parse(dataString);

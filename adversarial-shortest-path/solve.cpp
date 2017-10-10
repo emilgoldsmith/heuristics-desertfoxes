@@ -144,6 +144,11 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
     }
     // Only use this when we're not doing heuristics
     MemoEntry entry = {bestMove, pruned};
+    if (!pruned) {
+      // cout << "Shortest path: " << distances[currentNode] << endl;
+      // cout << "Actual cost: " << bestMove.costRelatedInfo << endl;
+      // cout << "Ratio: " << bestMove.costRelatedInfo / distances[currentNode] << endl;
+    }
     mem[stateString] = entry;
   }
   return bestMove;
@@ -277,6 +282,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
 }
 
 Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline) {
+  cout << "Using type " << type << " with deadline " << (deadline - t->getTime()) << " seconds" << endl;
   Move bestMove;
   int i;
   switch (type) {
