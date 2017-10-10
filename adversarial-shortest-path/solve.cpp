@@ -74,7 +74,7 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
   };
   string stateString;
   if (depth < 0) {
-    // We are using heuristics so then we don't use transposition table
+    // We only use this for perfect search
     string stateString = getStateString(currentNode, true, state);
     if (mem.count(stateString)) {
       MemoEntry cached_entry = mem[stateString];
@@ -244,7 +244,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     }
   }
   if (depth < 0) {
-    if (t->timeLeft() > deadline) {
+    if (t->getTime() > deadline) {
       pruned = true;
     }
     MemoEntry entry = {bestMove, pruned};

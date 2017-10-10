@@ -26,21 +26,60 @@ int main(int argc, char const *argv[]) {
   cout << "Connected" << endl;
 
   Timer t(60 + 57); // give us a 3 second buffer
+  int completeSearchLimit = 7;
   while (true) { // This loop will be terminated by exit(0) in the client class
     Move moveToMake;
     t.start();
     double timeMoveStarted = t.getTime();
-    double deadline = t.getTime() + 3;
-    if (role == 0) {
-      moveToMake = getMove(client.state, role, type, &t, deadline);
+    int stepsAway = client.state->intDistances[client.state->currentNode];
+
+    if (type == 0 || type == 1) {
+      moveToMake = getMove(client.state, role, type, &t, 60 + 57);
     } else {
-      moveToMake = getMove(client.state, role, type, &t, deadline);
+      if (t.timeLeft() < 0) {
+        moveToMake = getMove(client.state, role, 0, &t, -1);
+      } else if (stepsAway <= completeSearchLimit) {
+        double deadline = t.getTime() + min(10.0, t.timeLeft() * 0.8);
+        moveToMake = getMove(client.state, role, 1, &t, deadline);
+        if (t.getTime() > deadline) {
+          completeSearchLimit--;
+          moveToMake = getMove(client.state, role, 0, &t, -1);
+        }
+      } else {
+        double luckyAttemptIncrement;
+        double heuristicIncrement;
+        if (t.timeLeft() > 60) {
+          luckyAttemptIncrement = 0.25;
+          heuristicIncrement = 5;
+        } else if (t.timeLeft() > 30) {
+          luckyAttemptIncrement = 0.25;
+          heuristicIncrement = 3;
+        } else if (t.timeLeft() > 10) {
+          luckyAttemptIncrement = 0;
+          heuristicIncrement = 1.5;
+        } else {
+          // In this case we might want to switch strategy completely and not follow this structure
+          // Hopefully we never get here though
+          // Though if it's a 1000 move game or something crazy like that it could easily happen
+          luckyAttemptIncrement = 0;
+          heuristicIncrement = 0.5;
+        }
+
+        double deadline = t.getTime() + luckyAttemptIncrement;
+        moveToMake = getMove(client.state, role, 1, &t, deadline);
+        if (t.getTime() > deadline) {
+          // Our hopeful attempt at perfect searching didn't work
+          deadline = t.getTime() + min(heuristicIncrement, t.timeLeft() / stepsAway);
+          // Here it actually matters what type you chose, you choose the heuristic here
+          moveToMake = getMove(client.state, role, type, &t, deadline);
+        }
+      }
     }
-    int bfsDist = client.state->intDistances[client.state->currentNode];
+
     t.pause();
     double timeTakenForMove = t.getTime() - timeMoveStarted;
     if (timeTakenForMove > 0.5) {
-      cout << "Time taken with distance " << client.state->intDistances[client.state->currentNode] << " was: " << timeTakenForMove << endl;
+      cout << "Time taken with distance " << stepsAway << " was: " << timeTakenForMove << endl;
       cout << "Time Left: " << (t.timeLeft() + 3) << endl;
     }
     if (moveToMake.node1 == -1 || moveToMake.node2 == -1) {
