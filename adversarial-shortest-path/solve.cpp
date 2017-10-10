@@ -39,9 +39,9 @@ unordered_map<string, MemoEntry> mem(1000 * 1000);
 // int cnt2 = 0;
 bool depthUsed = false;
 
-Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline);
+Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic = false);
 
-Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline) {
+Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic = false) {
   int *parentNodes = state->parentNodes;
   long double *distances = state->distances;
   int currentNode = state->currentNode;
@@ -74,7 +74,7 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
     -1
   };
   string stateString;
-  if (depth < 0) {
+  if (depth < 0 && !guyuHeuristic) {
     // We only use this for perfect search
     string stateString = getStateString(currentNode, true, state);
     if (mem.count(stateString)) {
@@ -87,13 +87,26 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
       }
     }
   }
+
   bool pruned = false;
   for (; currentNode != destNode && parentNodes[currentNode] != -1; currentNode = parentNodes[currentNode]) {
+    Move guyuMove;
+    if (guyuHeuristic) {
+      guyuMove = smartGuyuAdversary(state);
+    }
     // Copy game state
     ASPGameState stateCopy(*state);
-    stateCopy.adversaryMakeMove(currentNode, parentNodes[currentNode]);
+    if (guyuHeuristic) {
+      stateCopy.adversaryMakeMove(guyuMove.node1, guyuMove.node2);
+    } else {
+      stateCopy.adversaryMakeMove(currentNode, parentNodes[currentNode]);
+    }
     // We can already now compute a lowerbound on the score we will get using Dijkstra
     alpha = max(alpha, currentCost + stateCopy.distances[stateCopy.currentNode]);
+    if (guyuHeuristic) {
+      // We make a more "hardcore" estimate
+      alpha = max(alpha, currentCost + stateCopy.distances[stateCopy.currentNode] * 2);
+    }
     if (alpha >= beta) {
       bestMove = {
         currentNode,
@@ -106,7 +119,7 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
 
 
     // Call the Traverser recursively
-    long double pathLength = miniMaxTraverser(&stateCopy, alpha, beta, depth, currentCost, t, deadline).costRelatedInfo;
+    long double pathLength = miniMaxTraverser(&stateCopy, alpha, beta, depth, currentCost, t, deadline, guyuHeuristic).costRelatedInfo;
     if (pathLength > bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -118,9 +131,13 @@ Move miniMaxAdversary(ASPGameState *state, long double alpha, long double beta, 
         pruned = true;
         break;
       }
+      if (guyuHeuristic) {
+        // with guyuHeuristic we just do one iteration not the whole loop
+        break;
+      }
     }
   }
-  if (depth < 0) {
+  if (depth < 0 && !guyuHeuristic) {
     if (t->getTime() > deadline) {
       // This means we didn't do a full search and this is not perfect
       pruned = true;
@@ -185,7 +202,7 @@ void insertionSort(ASPGameState *state, int currentNode, bool useBinarySearch) {
   }
 }
 
-Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline) {
+Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, int depth, long double currentCost, Timer *t, double deadline, bool guyuHeuristic) {
   vector<vector<int> > *graph = state->graph;
   int currentNode = state->currentNode;
   if (currentNode == state->destNode) {
@@ -208,7 +225,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
     };
   }
   string stateString;
-  if (depth < 0) {
+  if (depth < 0 && !guyuHeuristic) {
     // Only do this if we're not doing heuristics
     string stateString = getStateString(currentNode, false, state);
     if (mem.count(stateString)) {
@@ -227,11 +244,15 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
 
   bool pruned = false;
   for (int i = 0; i < (*graph)[currentNode].size(); i++) {
+    if (guyuHeuristic && i >= 2) {
+      // Only check first 3 when doing heuristic
+      break;
+    }
     int neighbour = (*graph)[currentNode][i];
     ASPGameState stateCopy(*state);
     stateCopy.traverserMakeMove(neighbour);
     long double addedCost = state->costs[currentNode][neighbour];
-    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost, t, deadline).costRelatedInfo + addedCost;
+    long double pathLength = miniMaxAdversary(&stateCopy, alpha, beta, depth - 1, currentCost + addedCost, t, deadline, guyuHeuristic).costRelatedInfo + addedCost;
     if (pathLength < bestMove.costRelatedInfo) {
       bestMove = {
         currentNode,
@@ -245,7 +266,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
       }
     }
   }
-  if (depth < 0) {
+  if (depth < 0 && !guyuHeuristic) {
     if (t->getTime() > deadline) {
       pruned = true;
     }
@@ -290,6 +311,14 @@ Move getMove(ASPGameState *state, int role, int type, Timer *t, double deadline)
         exit(1);
       } else {
         return smartGuyuAdversary(state);
+      }
+
+    case 4:
+      if (role == 0) {
+        return miniMaxTraverser(state, state->distances[state->currentNode], state->INF, -1, 0, t, deadline, true);
+      } else {
+        cerr << "Type 4 is not currently supported for adversaries" << endl;
+        exit(1);
       }
   }
 }
