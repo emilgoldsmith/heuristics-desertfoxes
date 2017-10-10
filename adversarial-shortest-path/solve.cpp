@@ -127,15 +127,38 @@ void bubbleSort(ASPGameState *state, int currentNode) {
   }
 }
 
-void insertionSort(ASPGameState *state, int currentNode) {
+void insertionSort(ASPGameState *state, int currentNode, bool useBinarySearch) {
   vector<int>& v = (*(state->graph))[currentNode];
   long double *distances = state->distances;
   for (int i = v.size() - 2; i >= 0; i--) {
     if (distances[v[i]] > distances[v[i + 1]]) {
-      for (int j = v.size() - 1; j >= 0; j--) {
-        if (distances[v[i]] > distances[v[j]]) {
-          v.insert(v.begin() + j + 1, v[i]);
-          v.erase(v.begin() + i);
+      if (useBinarySearch) {
+        int high = v.size() - 1;
+        int low = i + 1;
+        for (int j = 0; j < 3; j++) {
+          if (distances[v[i]] >= distances[v[high - j]]) {
+            // We're done, we do this check as it seems likely
+            low = high = high - j;
+            break;
+          }
+        }
+        while (low < high) {
+          int mid = (low + high) >> 1;
+          if (distances[v[i]] >= distances[v[mid]]) {
+            high = mid;
+          } else {
+            low = mid + 1;
+          }
+        }
+        v.insert(v.begin() + low + 1, v[i]);
+        v.erase(v.begin() + i);
+      } else {
+        for (int j = v.size() - 1; j >= 0; j--) {
+          if (distances[v[i]] >= distances[v[j]]) {
+            v.insert(v.begin() + j + 1, v[i]);
+            v.erase(v.begin() + i);
+            break;
+          }
         }
       }
     }
@@ -169,7 +192,7 @@ Move miniMaxTraverser(ASPGameState *state, long double alpha, long double beta, 
   }
 
   // bubbleSort(state, currentNode); // This outperforms std::sort for our usecase
-  insertionSort(state, currentNode);
+  insertionSort(state, currentNode, true);
 
   bool pruned = false;
   for (int neighbour : (*graph)[currentNode]) {
