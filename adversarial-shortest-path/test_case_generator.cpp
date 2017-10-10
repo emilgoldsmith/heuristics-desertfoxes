@@ -8,22 +8,7 @@
 using namespace std;
 
 bool adj[1010][1010];
-
-bool visited[1010];
-
-pair<int, int> dfs(int n, int depth, int numNodes) {
-  visited[n] = true;
-  pair<int, int> best = {depth, n};
-  for (int i = 0; i < numNodes; i++) {
-    if (adj[n][i] && !visited[i]) {
-      pair<int, int> candidate = dfs(i, depth + 1, numNodes);
-      if (candidate > best) {
-        best = candidate;
-      }
-    }
-  }
-  return best;
-}
+int costs[1010][1010];
 
 int main() {
   unsigned seed = chrono::system_clock::now().time_since_epoch().count();
@@ -57,11 +42,34 @@ int main() {
   }
 
   for (int i = 0; i < numNodes; i++) {
-    visited[i] = false;
+    for (int j = 0; j < numNodes; j++) {
+      if (i == j) {
+        costs[i][j] = 0;
+      } else {
+        if (adj[i][j]) {
+          costs[i][j] = 1;
+        } else {
+          costs[i][j] = 101000;
+        }
+      }
+    }
   }
-  pair<int, int>  endPair = dfs(startNode, 0, numNodes);
+  // Floyd-Warshall
+  for (int k = 0; k < numNodes; k++) {
+    for (int i = 0; i < numNodes; i++) {
+      for (int j = 0; j < numNodes; j++) {
+        costs[i][j] = max(costs[i][j], costs[i][k] + costs[k][j]);
+      }
+    }
+  }
+  int endNode = 0;
+  for (int i = 0; i < numNodes; i++) {
+    if (costs[startNode][endNode] < costs[startNode][i]) {
+      endNode = i;
+    }
+  }
   cout << "Starting node: " << startNode << endl;
-  cout << "Ending node: " << endPair.second << endl;
+  cout << "Ending node: " << endNode << endl;
   cout << "Edges:" << endl;
   for (int i = 0; i < numNodes; i++) {
     for (int j = i + 1; j < numNodes; j++) {
