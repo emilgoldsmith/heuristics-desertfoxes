@@ -41,61 +41,62 @@ int main() {
     adj[a][b] = adj[b][a] = true;
   }
 
-  for (int i = 0; i < numNodes; i++) {
-    for (int j = 0; j < numNodes; j++) {
-      if (i == j) {
-        costs[i][j] = 0;
-      } else {
-        if (adj[i][j]) {
-          costs[i][j] = 1;
-        } else {
-          costs[i][j] = 101000;
-        }
-      }
-    }
-  }
-  // Floyd-Warshall
-  for (int k = 0; k < numNodes; k++) {
-    for (int i = 0; i < numNodes; i++) {
-      for (int j = 0; j < numNodes; j++) {
-        costs[i][j] = max(costs[i][j], costs[i][k] + costs[k][j]);
-      }
-    }
-  }
-  int endNode = 0;
-  for (int i = 0; i < numNodes; i++) {
-    if (costs[startNode][endNode] < costs[startNode][i]) {
-      endNode = i;
-    }
-  }
-  // Find diameter
-  startNode = endNode;
-  for (int i = 0; i < numNodes; i++) {
-    for (int j = 0; j < numNodes; j++) {
-      if (i == j) {
-        costs[i][j] = 0;
-      } else {
-        if (adj[i][j]) {
-          costs[i][j] = 1;
-        } else {
-          costs[i][j] = 101000;
-        }
-      }
-    }
-  }
-  for (int k = 0; k < numNodes; k++) {
-    for (int i = 0; i < numNodes; i++) {
-      for (int j = 0; j < numNodes; j++) {
-        costs[i][j] = max(costs[i][j], costs[i][k] + costs[k][j]);
-      }
-    }
-  }
-  endNode = 0;
-  for (int i = 0; i < numNodes; i++) {
-    if (costs[startNode][endNode] < costs[startNode][i]) {
-      endNode = i;
-    }
-  }
+  // for (int i = 0; i < numNodes; i++) {
+  //   for (int j = 0; j < numNodes; j++) {
+  //     if (i == j) {
+  //       costs[i][j] = 0;
+  //     } else {
+  //       if (adj[i][j]) {
+  //         costs[i][j] = 1;
+  //       } else {
+  //         costs[i][j] = 101000;
+  //       }
+  //     }
+  //   }
+  // }
+  // // Floyd-Warshall
+  // for (int k = 0; k < numNodes; k++) {
+  //   for (int i = 0; i < numNodes; i++) {
+  //     for (int j = 0; j < numNodes; j++) {
+  //       costs[i][j] = max(costs[i][j], costs[i][k] + costs[k][j]);
+  //     }
+  //   }
+  // }
+  // int endNode = 0;
+  // for (int i = 0; i < numNodes; i++) {
+  //   if (costs[startNode][endNode] < costs[startNode][i]) {
+  //     endNode = i;
+  //   }
+  // }
+  // // Find diameter
+  // startNode = endNode;
+  // for (int i = 0; i < numNodes; i++) {
+  //   for (int j = 0; j < numNodes; j++) {
+  //     if (i == j) {
+  //       costs[i][j] = 0;
+  //     } else {
+  //       if (adj[i][j]) {
+  //         costs[i][j] = 1;
+  //       } else {
+  //         costs[i][j] = 101000;
+  //       }
+  //     }
+  //   }
+  // }
+  // for (int k = 0; k < numNodes; k++) {
+  //   for (int i = 0; i < numNodes; i++) {
+  //     for (int j = 0; j < numNodes; j++) {
+  //       costs[i][j] = max(costs[i][j], costs[i][k] + costs[k][j]);
+  //     }
+  //   }
+  // }
+  // endNode = 0;
+  // for (int i = 0; i < numNodes; i++) {
+  //   if (costs[startNode][endNode] < costs[startNode][i]) {
+  //     endNode = i;
+  //   }
+  // }
+  int endNode = nodeDist(generator);
   cout << "Starting node: " << startNode << endl;
   cout << "Ending node: " << endNode << endl;
   cout << "Edges:" << endl;
