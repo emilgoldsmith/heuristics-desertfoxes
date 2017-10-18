@@ -8,3 +8,5 @@ else
   CXXFLAGS += -O2
 endif
 
+emil_test: emil_test.cpp
+	$(CXX) -o emil_test.out emil_test.cpp $(CXXFLAGS)
