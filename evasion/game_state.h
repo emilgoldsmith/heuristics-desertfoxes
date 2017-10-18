@@ -18,9 +18,7 @@ class GameState {
     short int cooldownTimer = 0;
 
     /* METHODS */
-    GameState(short int cooldownVariable, short int maxWallsVariable): cooldown(cooldownVariable),
-                                                                    maxWalls(maxWallsVariable)
-    {}
+    GameState(short int cooldownVariable, short int maxWallsVariable);
     /**
      * The implicit copy constructor should be good enough for this game state
      * so we don't define one but can still use it.
