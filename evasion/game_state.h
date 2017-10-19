@@ -4,6 +4,7 @@
 #include "structs.h"
 
 #include <vector>
+#include <utility>
 
 class GameState {
   public:
@@ -16,6 +17,9 @@ class GameState {
     const short int cooldown;
     const short int maxWalls;
     short int cooldownTimer = 0;
+    constexpr const static Position boardSize = {300, 300};
+    bool gameOver = false;
+    int score = 0;
 
     /* METHODS */
     GameState(short int cooldownVariable, short int maxWallsVariable);
@@ -24,11 +28,23 @@ class GameState {
      * so we don't define one but can still use it.
      */
     /**
-     * For positions where the prey can't move moveForPrey should be {2, 2}.
+     * For positions where the prey can't move preyDirection should be {2, 2}.
      * Also, for moveForHunter it's assumed that the client itself parses which walls
      * the hunter added / deleted
      */
-    void makeMove(HunterMove moveForHunter, Position moveForPrey);
+    void makeMove(HunterMove moveForHunter, Position preyDirection);
+
+  private:
+    void movePrey(Position preyDirection);
+    void moveHunter(HunterMove moveForHunter);
+    /**
+     * Returned pair is {newPosition, newDirection}
+     */
+    std::pair<Position, Position> bounce(Position curPosition, Position direction);
+    bool isOccupied(Position p);
+    void removeWalls(std::vector<short int> indicesToDelete);
+    void buildWall(short int wallType, Position startPosition);
+    void checkCapture();
 };
 
 #endif

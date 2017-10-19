@@ -8,5 +8,5 @@ else
   CXXFLAGS += -O2
 endif
 
-emil_test: emil_test.cpp game_state.cpp
-	$(CXX) -o emil_test.out emil_test.cpp game_state.cpp $(CXXFLAGS)
+emil_test: emil_test.cpp game_state.cpp bresenham.cpp
+	$(CXX) -o emil_test.out emil_test.cpp game_state.cpp bresenham.cpp $(CXXFLAGS)
