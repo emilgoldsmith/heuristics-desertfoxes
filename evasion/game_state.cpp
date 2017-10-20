@@ -157,14 +157,12 @@ void GameState::buildWall(short int wallType, Position startPosition) {
       }
       goVertical = !goVertical;
     }
-    /*
     if (goVertical) {
       // We went horizontal last time
       start.x++;
     } else {
       start.y++;
     }
-    */
     goVertical = false;
     while(!isOccupied(end)) {
       if (end == prey) {
@@ -181,19 +179,12 @@ void GameState::buildWall(short int wallType, Position startPosition) {
       }
       goVertical = !goVertical;
     }
-    /*
     if (goVertical) {
       // We went horizontal last time
       start.x--;
     } else {
       start.y--;
     }
-    */
-    // Delete this if she changes implementation
-    start.x++;
-    start.y++;
-    end.x--;
-    end.y--;
   } else if (wallType == 4) {
     // Counterdiagonal wall
     bool goVertical = true;
@@ -212,14 +203,12 @@ void GameState::buildWall(short int wallType, Position startPosition) {
       }
       goVertical = !goVertical;
     }
-    /*
     if (goVertical) {
       // We went horizontal last time
       start.x++;
     } else {
       start.y--;
     }
-    */
     goVertical = false;
     while(!isOccupied(end)) {
       if (end == prey) {
@@ -236,19 +225,12 @@ void GameState::buildWall(short int wallType, Position startPosition) {
       }
       goVertical = !goVertical;
     }
-    /*
     if (goVertical) {
       // We went horizontal last time
       start.x--;
     } else {
       start.y++;
     }
-    */
-    // Delete this if she changes implementation
-    start.x++;
-    start.y--;
-    end.x--;
-    end.y++;
   }
   walls.push_back({start, end, startPosition});
 }
