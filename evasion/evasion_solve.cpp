@@ -1,6 +1,7 @@
 #include "evasion_solve.h"
 #include "structs.h"
 #include "constants.h"
+#include "bresenham.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -31,6 +32,19 @@ Position solvePreyHeuristic(GameState *state) {
   return { rand() % 2, rand() % 2 };
 }
 
+int findWallBetween(GameState *state) {
+  Position p1 = state->hunter;
+  Position p2 = p1 + state->hunterDirection + state->hunterDirection + state->hunterDirection;
+  vector<Position> pointsToConsider = bresenham(p1, p2);
+  for (Position point : pointsToConsider) {
+    int wallIndex = -1;
+    if (state->isOccupied(point, wallIndex) && wallIndex >= 0) {
+      return wallIndex;
+    }
+  }
+  return -1;
+}
+
 Score miniMax(GameState *state, int currentBest) {
   if (state->gameOver) {
     return {{0}, state->score};
@@ -42,21 +56,23 @@ Score miniMax(GameState *state, int currentBest) {
   if (state->preyMoves) {
     moveForPrey = solvePreyRandom(state);
   }
+  int wallBetweenIndex = findWallBetween(state);
   if (state->cooldownTimer > 0) {
     GameState newState(*state);
-    // Implement something here that checks if there's a wall between the two and then delete it or don't
     HunterMove moveForHunter = {0}; // And default vector will be created
+    if (wallBetweenIndex != -1) {
+      vector<int> indicesToDelete(1, wallBetweenIndex);
+      moveForHunter.indicesToDelete = indicesToDelete;
+    }
     newState.makeMove(moveForHunter, moveForPrey);
     return miniMax(&newState, currentBest);
   }
   Score bestScore = {{0}, currentBest};
   HunterMove bestMove = {0};
   for (int type = 0; type <= 4; type++) {
-    // Check here if there's a wall in front of us and do something
-
     if (((type == 3 && state->hunterDirection.x == state->hunterDirection.y) ||
         (type == 4 && state->hunterDirection.x != state->hunterDirection.y)) &&
-        state->bounce(state->hunter, state->hunterDirection).second == hunterDirection) {
+        state->bounce(state->hunter, state->hunterDirection).second == state->hunterDirection) {
       continue;
     }
 
@@ -73,6 +89,16 @@ Score miniMax(GameState *state, int currentBest) {
         }
       }
     } else {
+      if (wallBetweenIndex != -1) {
+        GameState firstNewState(*state);
+        vector<int> indicesToDelete(1, wallBetweenIndex);
+        HunterMove firstMoveForHunter = {type, indicesToDelete};
+        firstNewState.makeMove(firstMoveForHunter, moveForPrey);
+        Score firstCandidateScore = miniMax(&firstNewState, bestScore.score);
+        if (firstCandidateScore.score > bestScore.score) {
+          bestScore = {firstMoveForHunter, firstCandidateScore.score};
+        }
+      }
       GameState newState(*state);
       HunterMove moveForHunter = {type};
       newState.makeMove(moveForHunter, moveForPrey);

@@ -6,6 +6,8 @@
 #include <vector>
 #include <utility>
 
+static int placeholder = 1;
+
 class GameState {
   public:
     /* PROPERTIES */
@@ -37,11 +39,11 @@ class GameState {
      * Returned pair is {newPosition, newDirection}
      */
     std::pair<Position, Position> bounce(Position curPosition, Position direction);
+    bool isOccupied(Position p, int& output = placeholder);
 
   private:
     void movePrey(Position preyDirection);
     void moveHunter(HunterMove moveForHunter);
-    bool isOccupied(Position p);
     void removeWalls(std::vector<int> indicesToDelete);
     void buildWall(int wallType, Position startPosition);
     void checkCapture();

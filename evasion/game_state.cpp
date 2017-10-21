@@ -286,25 +286,32 @@ pair<Position, Position> GameState::bounce(Position curPosition, Position direct
   return {curPosition, direction};
 }
 
-bool GameState::isOccupied(Position p) {
+bool GameState::isOccupied(Position p, int& output) {
   // We first check if we're on the edge of the board
-  if (p.x < 0 || p.x >= boardSize.x || p.y < 0 || p.y >= boardSize.y) return true;
+  if (p.x < 0 || p.x >= boardSize.x || p.y < 0 || p.y >= boardSize.y) {
+    output = -1;
+    return true;
+  }
   // Now we check for collissions with walls
-  for (Wall curWall : walls) {
+  for (int index = 0; index < walls.size(); index++) {
+    Wall curWall = walls[index];
     // We always order start and end so that start has lower values than end with priority on x
     if (curWall.start == curWall.end) {
       // wall is just 1 point for crazy reasons
       if (curWall.start == p) {
+        output = index;
         return true;
       }
     } else if (curWall.start.x == curWall.end.x) {
       // It is vertical or 2-length diagonal which is the same
       if (p.x == curWall.start.x && p.y >= curWall.start.y && p.y <= curWall.end.y) {
+        output = index;
         return true;
       }
     } else if (curWall.start.y == curWall.end.y) {
       // It is horizontal or 2-length diagonal which is the same
       if (p.y == curWall.start.y && p.x >= curWall.start.x && p.x <= curWall.end.x) {
+        output = index;
         return true;
       }
     } else if (curWall.end.y > curWall.start.y) {
@@ -316,6 +323,7 @@ bool GameState::isOccupied(Position p) {
         // p is in the "square" of the diagonal
         if (pDiagonalIndex == wallDiagonalIndex1 || pDiagonalIndex == wallDiagonalIndex2) {
           // p is also on one of the diagonals
+          output = index;
           return true;
         }
       }
@@ -328,11 +336,13 @@ bool GameState::isOccupied(Position p) {
         // p is in the "square" of the diagonal
         if (pDiagonalIndex == wallDiagonalIndex1 || pDiagonalIndex == wallDiagonalIndex2) {
           // p is also on one of the diagonals
+          output = index;
           return true;
         }
       }
     }
   }
   // No wall was found that collides with the point
+  output = -1;
   return false;
 }
