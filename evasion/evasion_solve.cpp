@@ -17,11 +17,10 @@ Position solvePreyRandom(GameState *state) {
 }
 
 HunterMove solveHunterRandom(GameState *state) {
-  srand(time(0));
-  bool rm = rand() % 2 == 1;
+  bool rm = r.randInt(0, 1) == 1;
   int numWalls = state->walls.size();
   int wallTypeToAdd = rand() % 5;
-  short int wallToRemove = (short) (rand() % numWalls);
+  int wallToRemove = r.randInt(0, numWalls - 1);
 
   if (rm && numWalls > 0) {
     return { wallTypeToAdd, { wallToRemove } };
