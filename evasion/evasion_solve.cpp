@@ -27,7 +27,39 @@ HunterMove solveHunterRandom(GameState *state) {
   return { wallTypeToAdd, {} };
 }
 
+Position linePointPoint(Position a, Position b, Position c) {
+  int lambda = ((b-a)*(c-b))/((b-a)*(b-a));
+  return b+(lambda*(b-a));
+}
+
 Position solvePreyHeuristic(GameState *state) {
+  // First check if we're in danger of dying
+  Position closestPoint = linePointPoint(state->hunter, state->hunter + state->hunterDirection, state->prey);
+  int dist = closestPoint.x * closestPoint.x + closestPoint.y * closestPoint.y;
+  if (dist <= 16) {
+    // WE ARE GONNA DIE!!!! ARRRRGGGGHHHH
+    Position hunterDif = closestPoint - state->prey;
+    if (hunterDif.x == 0 && hunterDif.y == 0) {
+      return {-state->hunter.x, -state->hunter.y};
+    } else {
+      if (hunterDif.x > 0) {
+        hunterDif.x = 1;
+      } else {
+        hunterDif.x = -1;
+      }
+      if (hunterDif.y > 0) {
+        hunterDif.y = 1;
+      } else {
+        hunterDif.y = -1;
+      }
+      return {-hunterDif.x, -hunterDif.y};
+    }
+  }
+  if (dist <= 25) {
+    // We are too close so just stand still
+    return {0, 0};
+  }
+  // Since we're not in danger of dying we compute our move to middle heuristic
   int highestDiff = 0;
   Position velocityToMove = {0, 0};
   int dx[4] = {1, 0, 1, -1}; // horizontal, vertical, diagonal, counterdiagonal
