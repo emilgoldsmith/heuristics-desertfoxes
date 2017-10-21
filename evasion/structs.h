@@ -4,8 +4,8 @@
 #include <vector>
 
 struct Position {
-  short int x;
-  short int y;
+  int x;
+  int y;
 
   Position operator+(const Position& a) {
     return {x + a.x, y + a.y};
@@ -23,8 +23,8 @@ struct Wall {
 };
 
 struct HunterMove {
-  short int wallType;
-  std::vector<short int> indicesToDelete;
+  int wallType;
+  std::vector<int> indicesToDelete;
 };
 
 #endif

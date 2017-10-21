@@ -14,15 +14,15 @@ class GameState {
     Position hunter = {0, 0};
     Position hunterDirection = {1, 1};
     std::vector<Wall> walls;
-    const short int cooldown;
-    const short int maxWalls;
-    short int cooldownTimer = 0;
+    const int cooldown;
+    const int maxWalls;
+    int cooldownTimer = 0;
     constexpr const static Position boardSize = {300, 300};
     bool gameOver = false;
     int score = 0;
 
     /* METHODS */
-    GameState(short int cooldownVariable, short int maxWallsVariable);
+    GameState(int cooldownVariable, int maxWallsVariable);
     /**
      * The implicit copy constructor should be good enough for this game state
      * so we don't define one but can still use it.
@@ -42,8 +42,8 @@ class GameState {
      */
     std::pair<Position, Position> bounce(Position curPosition, Position direction);
     bool isOccupied(Position p);
-    void removeWalls(std::vector<short int> indicesToDelete);
-    void buildWall(short int wallType, Position startPosition);
+    void removeWalls(std::vector<int> indicesToDelete);
+    void buildWall(int wallType, Position startPosition);
     void checkCapture();
 };
 

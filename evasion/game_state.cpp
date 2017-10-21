@@ -8,7 +8,7 @@
 
 using namespace std;
 
-GameState::GameState(short int cooldownVariable, short int maxWallsVariable):
+GameState::GameState(int cooldownVariable, int maxWallsVariable):
   cooldown(cooldownVariable),
   maxWalls(maxWallsVariable)
 {}
@@ -24,7 +24,7 @@ void GameState::makeMove(HunterMove moveForHunter, Position preyDirection) {
   if (moveForHunter.wallType != 0 && cooldownTimer > 0) {
     cerr << "Attempted to create wall while on cooldown" << endl;
   }
-  for (short int index : moveForHunter.indicesToDelete) {
+  for (int index : moveForHunter.indicesToDelete) {
     if (index >= walls.size() || index < 0) {
       cerr << "Attempted to remove wall with incorrect index" << endl;
     }
@@ -43,8 +43,8 @@ void GameState::makeMove(HunterMove moveForHunter, Position preyDirection) {
 }
 
 void GameState::checkCapture() {
-  int dx = (int)hunter.x - (int)prey.x;
-  int dy = (int)hunter.y - (int)prey.y;
+  int dx = hunter.x - prey.x;
+  int dy = hunter.y - prey.y;
   int squaredDistance = dx*dx + dy*dy;
   if (squaredDistance <= 16) {
     vector<Position> pointsToConsider = bresenham(hunter, prey);
@@ -74,11 +74,11 @@ void GameState::moveHunter(HunterMove moveForHunter) {
   buildWall(moveForHunter.wallType, prevHunterPosition);
 }
 
-void GameState::removeWalls(vector<short int> indicesToDelete) {
+void GameState::removeWalls(vector<int> indicesToDelete) {
   vector<Wall> newWalls;
-  for (short int i = 0; i < walls.size(); i++) {
+  for (int i = 0; i < walls.size(); i++) {
     bool shouldDelete = false;
-    for (short int index : indicesToDelete) {
+    for (int index : indicesToDelete) {
       if (i == index) {
         shouldDelete = true;
         break;
@@ -91,7 +91,7 @@ void GameState::removeWalls(vector<short int> indicesToDelete) {
   walls = newWalls;
 }
 
-void GameState::buildWall(short int wallType, Position startPosition) {
+void GameState::buildWall(int wallType, Position startPosition) {
   Position start = startPosition, end = startPosition;
   if (wallType == 0) {
     // Don't do anything
@@ -309,9 +309,9 @@ bool GameState::isOccupied(Position p) {
       }
     } else if (curWall.end.y > curWall.start.y) {
       // Since we know start has lower value of x we know this is a diagonal (type 3)
-      short int pDiagonalIndex = p.x - p.y;
-      short int wallDiagonalIndex1 = curWall.creationPoint.x - curWall.creationPoint.y;
-      short int wallDiagonalIndex2 = wallDiagonalIndex1 - 1;
+      int pDiagonalIndex = p.x - p.y;
+      int wallDiagonalIndex1 = curWall.creationPoint.x - curWall.creationPoint.y;
+      int wallDiagonalIndex2 = wallDiagonalIndex1 - 1;
       if (p.x >= curWall.start.x && p.x <= curWall.end.x && p.y >= curWall.start.y && p.y <= curWall.end.y) {
         // p is in the "square" of the diagonal
         if (pDiagonalIndex == wallDiagonalIndex1 || pDiagonalIndex == wallDiagonalIndex2) {
@@ -321,9 +321,9 @@ bool GameState::isOccupied(Position p) {
       }
     } else if (curWall.end.y < curWall.start.y) {
       // Since we know start has lower value of x we know this is a counterdiagonal (type 4)
-      short int pDiagonalIndex = p.x - p.y;
-      short int wallDiagonalIndex1 = curWall.creationPoint.x + curWall.creationPoint.y;
-      short int wallDiagonalIndex2 = wallDiagonalIndex1 - 1;
+      int pDiagonalIndex = p.x - p.y;
+      int wallDiagonalIndex1 = curWall.creationPoint.x + curWall.creationPoint.y;
+      int wallDiagonalIndex2 = wallDiagonalIndex1 - 1;
       if (p.x >= curWall.start.x && p.x <= curWall.end.x && p.y >= curWall.end.y && p.y <= curWall.start.y) {
         // p is in the "square" of the diagonal
         if (pDiagonalIndex == wallDiagonalIndex1 || pDiagonalIndex == wallDiagonalIndex2) {
