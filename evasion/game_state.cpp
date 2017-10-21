@@ -233,6 +233,7 @@ void GameState::buildWall(int wallType, Position startPosition) {
       start.y++;
     }
   }
+  cooldownTimer = cooldown;
   walls.push_back({start, end, startPosition});
 }
 
