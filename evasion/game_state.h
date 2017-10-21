@@ -33,14 +33,14 @@ class GameState {
      * the hunter added / deleted
      */
     void makeMove(HunterMove moveForHunter, Position preyDirection);
-
-  private:
-    void movePrey(Position preyDirection);
-    void moveHunter(HunterMove moveForHunter);
     /**
      * Returned pair is {newPosition, newDirection}
      */
     std::pair<Position, Position> bounce(Position curPosition, Position direction);
+
+  private:
+    void movePrey(Position preyDirection);
+    void moveHunter(HunterMove moveForHunter);
     bool isOccupied(Position p);
     void removeWalls(std::vector<int> indicesToDelete);
     void buildWall(int wallType, Position startPosition);

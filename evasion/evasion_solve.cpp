@@ -54,6 +54,12 @@ Score miniMax(GameState *state, int currentBest) {
   for (int type = 0; type <= 4; type++) {
     // Check here if there's a wall in front of us and do something
 
+    if (((type == 3 && state->hunterDirection.x == state->hunterDirection.y) ||
+        (type == 4 && state->hunterDirection.x != state->hunterDirection.y)) &&
+        state->bounce(state->hunter, state->hunterDirection).second == hunterDirection) {
+      continue;
+    }
+
     if (state->walls.size() == state->maxWalls && type > 0) {
       // We need to delete a wall
       for (int wallIndex = 0; wallIndex < state->walls.size(); wallIndex++) {
