@@ -38,6 +38,7 @@ void EvasionClient::receiveUpdate() {
   // check if a new game is starting
   if (updateString == "hunter\n" || updateString == "prey\n") {
     isHunter = updateString == "hunter";
+    state = new GameState(state->cooldown, state->maxWalls);
     // receive the first update of the new game
     receiveUpdate();
     return;
@@ -131,8 +132,12 @@ Position EvasionClient::preyMakeMove() {
   int x = (rand() % 3) - 1;
   int y = (rand() % 3) - 1;
   string move = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " " + to_string(x) + " " + to_string (y);
+  cout << "Sending: " << move << endl;
   sock->sendString(move + "\n");
-  return { x, y };
+  if (state->preyMoves) {
+    return { x, y };
+  }
+  return { 2, 2 };
 }
 
 Wall EvasionClient::wallInfoToWall(WallInfo clientWall) {
@@ -211,7 +216,7 @@ bool EvasionClient::isConsistent() {
     return false;
   }
   if (latestUpdate.tickNum != state->score) {
-    cerr << "TickNum/score Mismatch" << endl;
+    cerr << "TickNum/score Mismatch: " << latestUpdate.tickNum << ", " << state->score << endl;
     return false;
   }
   if (latestUpdate.currentWallTimer != state->cooldownTimer) {
@@ -240,31 +245,38 @@ bool EvasionClient::isConsistent() {
     // horizontal, y, x1, x2
     if (clientWall.type == 0) {
       if (stateWall.start.x != clientWall.info[1] || stateWall.start.y != clientWall.info[0]) {
+        cerr << "Horizontal wall start/end mismatch" << endl;
         return false;
       }
       if (stateWall.end.x != clientWall.info[2] || stateWall.end.y != clientWall.info[0]) {
+        cerr << "Horizontal wall start/end mismatch" << endl;
         return false;
       }
     // vertical, x, y1, y2
     } else if (clientWall.type == 1) {
       if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[1]) {
+        cerr << "Vertical wall start/end mismatch" << endl;
         return false;
       }
       if (stateWall.end.x != clientWall.info[0] || stateWall.end.y != clientWall.info[2]) {
+        cerr << "Vertical wall start/end mismatch" << endl;
         return false;
       }
     // diagonal/counterdiagonal, x1, x2, y1, y2, build-direction
     } else if (clientWall.type == 3 || clientWall.type == 4) {
       // check start/end points
       if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[2]) {
+        cerr << "(Counter)diagonal wall start/end mismatch" << endl;
         return false;
       }
       if (stateWall.end.x != clientWall.info[1] || stateWall.end.y != clientWall.info[3]) {
+        cerr << "(Counter)diagonal wall start/end mismatch" << endl;
         return false;
       }
       // check diagonal vs. counterdiagonal
       int parity = (stateWall.end.x - stateWall.start.x) * (stateWall.end.y - stateWall.start.y);
       if ((clientWall.type == 3 && parity < 0) || (clientWall.type == 4 && parity > 0)) {
+        cerr << "Diagonality and coordinates mismatch" << endl;
         return false;
       }
       // check build direction
