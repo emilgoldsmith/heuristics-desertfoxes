@@ -85,6 +85,9 @@ Position solvePreyHeuristic(GameState *state) {
 }
 
 HunterMove solveHunterHeuristic(GameState *state) {
+  if (state->cooldownTimer > 0) {
+    return {{0}};
+  }
   int dx = state->prey.x - state->hunter.x;
   bool canBuildVertical = dx != 0 && (dx > 0) == (state->hunterDirection.x > 0);
   int dy = state->prey.y - state->hunter.y;
