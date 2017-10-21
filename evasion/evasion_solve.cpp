@@ -2,6 +2,7 @@
 #include "structs.h"
 #include "constants.h"
 #include "bresenham.h"
+#include "../random/random.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -9,9 +10,10 @@
 
 using namespace std;
 
+static Random r;
+
 Position solvePreyRandom(GameState *state) {
-  srand(time(0));
-  return { rand() % 2, rand() % 2 };
+  return { r.randInt(-1, 1), r.randInt(-1, 1) };
 }
 
 HunterMove solveHunterRandom(GameState *state) {

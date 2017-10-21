@@ -5,11 +5,11 @@
 #include <random>
 
 class Random {
-  std::default_random_engine* generator;
+  std::default_random_engine generator;
   public:
     Random();
 
     int randInt(int a, int b); // the values are inclusive
-}
+};
 
 #endif
