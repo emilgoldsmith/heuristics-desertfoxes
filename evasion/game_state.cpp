@@ -228,9 +228,9 @@ void GameState::buildWall(int wallType, Position startPosition) {
     }
     if (goVertical) {
       // We went horizontal last time
-      start.x--;
+      end.x--;
     } else {
-      start.y++;
+      end.y++;
     }
   }
   cooldownTimer = cooldown;
