@@ -188,7 +188,7 @@ void GameState::buildWall(int wallType, Position startPosition) {
     }
   } else if (wallType == 4) {
     // Counterdiagonal wall
-    bool goVertical = true;
+    bool goVertical = false;
     while(!isOccupied(start)) {
       if (start == prey) {
         cerr << "Wall collided with prey" << endl;
@@ -210,7 +210,7 @@ void GameState::buildWall(int wallType, Position startPosition) {
     } else {
       start.y--;
     }
-    goVertical = false;
+    goVertical = true;
     while(!isOccupied(end)) {
       if (end == prey) {
         cerr << "Wall collided with prey" << endl;
