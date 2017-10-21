@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++11
 
-DEBUG ?= 0
+DEBUG ?= 1
 ifeq ($(DEBUG), 1)
 	CXXFLAGS += -DDEBUG -g -O0
 else
