@@ -27,13 +27,14 @@ EvasionClient::EvasionClient(string serverIP, int serverPort) {
 
   // receive first update
   receiveUpdate();
-  cooldown = (short int) latestUpdate.wallPlacementDelay;
-  maxWalls = (short int) latestUpdate.maxWalls;
+  cooldown = latestUpdate.wallPlacementDelay;
+  maxWalls = latestUpdate.maxWalls;
   state = new GameState(cooldown, maxWalls);
 }
 
 void EvasionClient::receiveUpdate() {
   string updateString = sock->receive(BUFFER_SIZE, '\n');
+  cout << "Received: " << updateString << endl;
   // check if a new game is starting
   if (updateString == "hunter\n" || updateString == "prey\n") {
     isHunter = updateString == "hunter";
@@ -106,22 +107,182 @@ void EvasionClient::receiveUpdate() {
   };
 }
 
-void EvasionClient::hunterMakeMove() {
+HunterMove EvasionClient::hunterMakeMove() {
   srand(time(0));
   int wallTypeToAdd = rand() % 5;
   bool removeWall = rand() % 4 == 0;
-  int wallToRemove = rand() % latestUpdate.walls.size();
+  int wallToRemove = -1;
+  if (latestUpdate.walls.size() > 0) {
+    wallToRemove = rand() % latestUpdate.walls.size();
+  }
   string move = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " " + to_string(wallTypeToAdd);
+  HunterMove m = { wallTypeToAdd, {} };
   if (removeWall && latestUpdate.walls.size() > 0) {
     move += " " + to_string(wallToRemove);
+    m.indicesToDelete.push_back(wallToRemove);
   }
+  cout << "Sending: " << move << endl;
   sock->sendString(move + "\n");
+  return m;
 }
 
-void EvasionClient::preyMakeMove() {
+Position EvasionClient::preyMakeMove() {
   srand(time(0));
-  int x = rand() % 2;
-  int y = rand() % 2;
+  int x = (rand() % 3) - 1;
+  int y = (rand() % 3) - 1;
   string move = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " " + to_string(x) + " " + to_string (y);
   sock->sendString(move + "\n");
+  return { x, y };
+}
+
+Wall EvasionClient::wallInfoToWall(WallInfo clientWall) {
+  Position cwStart, cwEnd;
+  // y x1 x2
+  if (clientWall.type == 0) {
+    cwStart = { clientWall.info[1], clientWall.info[0] };
+    cwEnd = { clientWall.info[2], clientWall.info[0] };
+  // x y1 y2
+  } else if (clientWall.type == 1) {
+    cwStart = { clientWall.info[0], clientWall.info[1] };
+    cwEnd = { clientWall.info[0], clientWall.info[2] };
+  // x1 x2 y1 y2 build-direction
+  } else {
+    cwStart = { clientWall.info[0], clientWall.info[1] };
+    cwEnd = { clientWall.info[2], clientWall.info[3] };
+  }
+
+  // we are disregarding the creationPoint entry
+  return {cwStart, cwEnd, -1};
+}
+
+HunterMove EvasionClient::parseHunterMove() {
+  // compare game state with latest update
+  vector<WallInfo> clientWalls = latestUpdate.walls;
+  vector<Wall> stateWalls = state->walls;
+  int newWallType = 0;
+  vector<int> deletedWallIndices;
+  // check for new wall
+  for (WallInfo cw : clientWalls) {
+    Wall cwall = wallInfoToWall(cw);
+    bool found = false;
+    for (Wall sw : stateWalls) {
+      if (cwall.start == sw.start && cwall.end == sw.end) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      newWallType = cw.type + 1;
+      break;
+    }
+  }
+  // check for deleted walls
+  for (int i = 0; i < stateWalls.size(); i++) {
+    Wall sw = stateWalls[i];
+    bool found = false;
+    for (WallInfo cw: clientWalls) {
+      Wall cwall = wallInfoToWall(cw);
+      if (sw.start == cwall.start && sw.end == cwall.end) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      deletedWallIndices.push_back(i);
+    }
+  }
+  
+  return { newWallType, deletedWallIndices };
+}
+
+Position EvasionClient::parsePreyMove() {
+  // compare game state with latest update
+  int dx = latestUpdate.preyXPos - state->prey.x;
+  int dy = latestUpdate.preyYPos - state->prey.y;
+  if (dx == 0 && dy == 0) {
+    return {2, 2};
+  }
+  return {dx, dy};
+}
+
+bool EvasionClient::isConsistent() {
+  if (latestUpdate.boardSizeX != state->boardSize.x || latestUpdate.boardSizeY != state->boardSize.y) {
+    cerr << "Board size mismatch" << endl;
+    return false;
+  }
+  if (latestUpdate.tickNum != state->score) {
+    cerr << "TickNum/score Mismatch" << endl;
+    return false;
+  }
+  if (latestUpdate.currentWallTimer != state->cooldownTimer) {
+    cerr << "Wall cooldown mismatch" << endl;
+    return false;
+  }
+  if (latestUpdate.hunterXPos != state->hunter.x || latestUpdate.hunterYPos != state->hunter.y) {
+    cerr << "Hunter position mismatch" << endl;
+    return false;
+  }
+  if (latestUpdate.hunterXVel != state->hunterDirection.x || latestUpdate.hunterYVel != state->hunterDirection.y) {
+    cerr << "Hunter velocity/direction mismatch" << endl;
+    return false;
+  }
+  if (latestUpdate.preyXPos != state->prey.x ||latestUpdate.preyYPos != state->prey.y) {
+    cerr << "Prey position mismatch" << endl;
+    return false;
+  }
+  if (latestUpdate.walls.size() != state->walls.size()) {
+    cerr << "Wall number mismatch" << endl;
+    return false;
+  }
+  for (int i = 0; i < latestUpdate.walls.size(); i++) {
+    WallInfo clientWall = latestUpdate.walls[i];
+    Wall stateWall = state->walls[i];
+    // horizontal, y, x1, x2
+    if (clientWall.type == 0) {
+      if (stateWall.start.x != clientWall.info[1] || stateWall.start.y != clientWall.info[0]) {
+        return false;
+      }
+      if (stateWall.end.x != clientWall.info[2] || stateWall.end.y != clientWall.info[0]) {
+        return false;
+      }
+    // vertical, x, y1, y2
+    } else if (clientWall.type == 1) {
+      if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[1]) {
+        return false;
+      }
+      if (stateWall.end.x != clientWall.info[0] || stateWall.end.y != clientWall.info[2]) {
+        return false;
+      }
+    // diagonal/counterdiagonal, x1, x2, y1, y2, build-direction
+    } else if (clientWall.type == 3 || clientWall.type == 4) {
+      // check start/end points
+      if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[2]) {
+        return false;
+      }
+      if (stateWall.end.x != clientWall.info[1] || stateWall.end.y != clientWall.info[3]) {
+        return false;
+      }
+      // check diagonal vs. counterdiagonal
+      int parity = (stateWall.end.x - stateWall.start.x) * (stateWall.end.y - stateWall.start.y);
+      if ((clientWall.type == 3 && parity < 0) || (clientWall.type == 4 && parity > 0)) {
+        return false;
+      }
+      // check build direction
+      // diagonal and build x first
+      if (clientWall.type == 3 && clientWall.info[4] == 0) {
+      
+      // diagonal and build y first
+      } else if (clientWall.type == 3 && clientWall.info[4] == 1)  {
+
+      // counter diagonal and build x first
+      } else if (clientWall.type == 4 && clientWall.info[4] == 0)  {
+
+      // counter diagonal and build y first
+      } else if (clientWall.type == 4 && clientWall.info[4] == 1)  {
+
+      }
+    }
+  }
+
+  return true;
 }

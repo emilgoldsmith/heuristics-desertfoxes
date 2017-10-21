@@ -10,12 +10,28 @@ int main() {
   int port = 9001;
   EvasionClient client(ip, port);
 
+  HunterMove hm;
+  Position pm;
   while (true) {
     if (client.isHunter) {
-      client.hunterMakeMove();
+      hm = client.hunterMakeMove();
+      client.receiveUpdate();
+      pm = client.parsePreyMove();
+      cout << "Parsed prey move: " << pm.x << ", " << pm.y << endl;
+      client.state->makeMove(hm, pm);
     } else {
-      client.preyMakeMove();
+      pm = client.preyMakeMove();
+      client.receiveUpdate();
+      hm = client.parseHunterMove();
+      cout << "Parsed hunter move: " << hm.wallType << " ";
+      for (int i : hm.indicesToDelete) {
+        cout << i << " ";
+      }
+      cout << endl;
+      client.state->makeMove(hm, pm);
     }
-    client.receiveUpdate();
+    if (!client.isConsistent()) {
+      cerr << "NOPE" << endl;
+    }
   }
 }

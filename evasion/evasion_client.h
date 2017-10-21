@@ -12,7 +12,7 @@ struct WallInfo {
 };
 
 struct EvasionGameUpdate {
-  double playerTimeLeft;
+  int playerTimeLeft;
   int gameNum;
   int tickNum;
   int maxWalls;
@@ -39,16 +39,20 @@ public:
 
   // game
   bool isHunter;
-  short int cooldown;
-  short int maxWalls;
+  int cooldown;
+  int maxWalls;
   GameState *state;
   EvasionGameUpdate latestUpdate;
 
   // methods
   EvasionClient(std::string serverIP, int serverPort);
   void receiveUpdate();
-  void hunterMakeMove();
-  void preyMakeMove();
+  HunterMove hunterMakeMove();
+  Position preyMakeMove();
+  Wall wallInfoToWall(WallInfo clientWall);
+  HunterMove parseHunterMove();
+  Position parsePreyMove();
+  bool isConsistent();
 };
 
 #endif
