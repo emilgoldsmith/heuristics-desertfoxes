@@ -1,5 +1,6 @@
 #include "evasion_solve.h"
 #include "structs.h"
+#include "constants.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -30,9 +31,12 @@ Position solvePreyHeuristic(GameState *state) {
   return { rand() % 2, rand() % 2 };
 }
 
-Score miniMax(GameState *state) {
+Score miniMax(GameState *state, int currentBest) {
   if (state->gameOver) {
-    return score;
+    return {{0}, state->score};
+  }
+  if (state->score >= currentBest) {
+    return {{0}, INF};
   }
   Position moveForPrey = {2, 2};
   if (state->preyMoves) {
@@ -43,21 +47,21 @@ Score miniMax(GameState *state) {
     // Implement something here that checks if there's a wall between the two and then delete it or don't
     HunterMove moveForHunter = {0}; // And default vector will be created
     newState.makeMove(moveForHunter, moveForPrey);
-    return miniMax(&newState);
+    return miniMax(&newState, currentBest);
   }
-  Score bestScore = {{0}, 1000 * 1000 * 1000};
+  Score bestScore = {{0}, currentBest};
   HunterMove bestMove = {0};
   for (int type = 0; type <= 4; type++) {
     // Check here if there's a wall in front of us and do something
 
-    if (walls.size() == maxWalls && type > 0) {
+    if (state->walls.size() == state->maxWalls && type > 0) {
       // We need to delete a wall
-      for (int wallIndex = 0; wallIndex < walls.size(); wallIndex++) {
+      for (int wallIndex = 0; wallIndex < state->walls.size(); wallIndex++) {
         vector<int> indicesToDelete(1, wallIndex);
         GameState newState(*state);
         HunterMove moveForHunter = {type, indicesToDelete};
         newState.makeMove(moveForHunter, moveForPrey);
-        Score candidateScore = miniMax(&newState);
+        Score candidateScore = miniMax(&newState, bestScore.score);
         if (candidateScore.score > bestScore.score) {
           bestScore = {moveForHunter, candidateScore.score};
         }
@@ -66,7 +70,7 @@ Score miniMax(GameState *state) {
       GameState newState(*state);
       HunterMove moveForHunter = {type};
       newState.makeMove(moveForHunter, moveForPrey);
-      Score candidateScore = miniMax(&newState);
+      Score candidateScore = miniMax(&newState, bestScore.score);
       if (candidateScore.score > bestScore.score) {
         bestScore = {moveForHunter, candidateScore.score};
       }
