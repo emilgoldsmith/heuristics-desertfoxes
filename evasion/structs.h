@@ -27,4 +27,9 @@ struct HunterMove {
   std::vector<int> indicesToDelete;
 };
 
+struct Score {
+  HunterMove move;
+  int score;
+};
+
 #endif
