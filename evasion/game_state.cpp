@@ -95,6 +95,7 @@ void GameState::buildWall(int wallType, Position startPosition) {
   Position start = startPosition, end = startPosition;
   if (wallType == 0) {
     // Don't do anything
+    return;
   } else if (wallType == 1) {
     // Horizontal wall
     for (; !isOccupied(start); start.x--) {
