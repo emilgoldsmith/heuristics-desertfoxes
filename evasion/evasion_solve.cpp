@@ -17,6 +17,9 @@ Position solvePreyRandom(GameState *state) {
 }
 
 HunterMove solveHunterRandom(GameState *state) {
+  if (state->cooldownTimer > 0) {
+    return {{0}};
+  }
   bool rm = r.randInt(0, 1) == 1;
   int numWalls = state->walls.size();
   int wallTypeToAdd = r.randInt(0, 4);
