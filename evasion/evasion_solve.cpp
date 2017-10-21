@@ -18,7 +18,7 @@ Position solvePreyRandom(GameState *state) {
 
 HunterMove solveHunterRandom(GameState *state) {
   if (state->cooldownTimer > 0) {
-    return {{0}};
+    return {0};
   }
   bool rm = r.randInt(0, 1) == 1;
   int numWalls = state->walls.size();
@@ -89,7 +89,7 @@ Position solvePreyHeuristic(GameState *state) {
 
 HunterMove solveHunterHeuristic(GameState *state) {
   if (state->cooldownTimer > 0) {
-    return {{0}};
+    return {0};
   }
   int dx = state->prey.x - state->hunter.x;
   bool canBuildVertical = dx != 0 && (dx > 0) == (state->hunterDirection.x > 0);
