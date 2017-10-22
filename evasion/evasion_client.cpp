@@ -225,9 +225,26 @@ Position EvasionClient::parsePreyMove() {
   return {dx, dy};
 }
 
+static void printErr(vector<int> v) {
+  for (int s : v) {
+    cerr << s << ' ';
+  }
+  cerr << endl;
+}
+
+static void printErr(string s) {
+  cerr << s << endl;
+}
+
 bool EvasionClient::isConsistent() {
   if (latestUpdate.boardSizeX != state->boardSize.x || latestUpdate.boardSizeY != state->boardSize.y) {
     cerr << "Board size mismatch" << endl;
+    printErr("Server:");
+    vector<int> v1 = {latestUpdate.boardSizeX, latestUpdate.boardSizeY};
+    printErr(v1);
+    printErr("Our State:");
+    vector<int> v2 = {state->boardSize.x, state->boardSize.y};
+    printErr(v2);
     return false;
   }
   if (latestUpdate.tickNum != state->score) {
@@ -236,22 +253,52 @@ bool EvasionClient::isConsistent() {
   }
   if (latestUpdate.currentWallTimer != state->cooldownTimer) {
     cerr << "Wall cooldown mismatch" << endl;
+    printErr("Server:");
+    vector<int> v1 = {latestUpdate.currentWallTimer};
+    printErr(v1);
+    printErr("Our State:");
+    vector<int> v2 = {state->cooldownTimer};
+    printErr(v2);
     return false;
   }
   if (latestUpdate.hunterXPos != state->hunter.x || latestUpdate.hunterYPos != state->hunter.y) {
     cerr << "Hunter position mismatch" << endl;
+    printErr("Server:");
+    vector<int> v1 = {latestUpdate.hunterXPos, latestUpdate.hunterYPos};
+    printErr(v1);
+    printErr("Our State:");
+    vector<int> v2 = {state->hunter.x, state->hunter.y};
+    printErr(v2);
     return false;
   }
   if (latestUpdate.hunterXVel != state->hunterDirection.x || latestUpdate.hunterYVel != state->hunterDirection.y) {
     cerr << "Hunter velocity/direction mismatch" << endl;
+    printErr("Server:");
+    vector<int> v1 = {latestUpdate.hunterXVel, latestUpdate.hunterYVel};
+    printErr(v1);
+    printErr("Our State:");
+    vector<int> v2 = {state->hunterDirection.x, state->hunterDirection.y};
+    printErr(v2);
     return false;
   }
   if (latestUpdate.preyXPos != state->prey.x ||latestUpdate.preyYPos != state->prey.y) {
     cerr << "Prey position mismatch" << endl;
+    printErr("Server:");
+    vector<int> v1 = {latestUpdate.preyXPos, latestUpdate.preyYPos};
+    printErr(v1);
+    printErr("Our State:");
+    vector<int> v2 = {state->prey.x, state->prey.y};
+    printErr(v2);
     return false;
   }
   if (latestUpdate.walls.size() != state->walls.size()) {
     cerr << "Wall number mismatch" << endl;
+    printErr("Server:");
+    vector<int> v1 = {(int)latestUpdate.walls.size()};
+    printErr(v1);
+    printErr("Our State:");
+    vector<int> v2 = {(int)state->walls.size()};
+    printErr(v2);
     return false;
   }
   for (int i = 0; i < latestUpdate.walls.size(); i++) {
@@ -261,20 +308,44 @@ bool EvasionClient::isConsistent() {
     if (clientWall.type == 0) {
       if (stateWall.start.x != clientWall.info[1] || stateWall.start.y != clientWall.info[0]) {
         cerr << "Horizontal wall start/end mismatch" << endl;
+        printErr("Server:");
+        vector<int> v1 = {clientWall.info[1], clientWall.info[0]};
+        printErr(v1);
+        printErr("Our State:");
+        vector<int> v2 = {stateWall.start.x, stateWall.start.y};
+        printErr(v2);
         return false;
       }
       if (stateWall.end.x != clientWall.info[2] || stateWall.end.y != clientWall.info[0]) {
         cerr << "Horizontal wall start/end mismatch" << endl;
+        printErr("Server:");
+        vector<int> v1 = {clientWall.info[2], clientWall.info[0]};
+        printErr(v1);
+        printErr("Our State:");
+        vector<int> v2 = {stateWall.end.x, stateWall.end.y};
+        printErr(v2);
         return false;
       }
     // vertical, x, y1, y2
     } else if (clientWall.type == 1) {
       if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[1]) {
         cerr << "Vertical wall start/end mismatch" << endl;
+        printErr("Server:");
+        vector<int> v1 = {clientWall.info[0], clientWall.info[1]};
+        printErr(v1);
+        printErr("Our State:");
+        vector<int> v2 = {stateWall.start.x, stateWall.start.y};
+        printErr(v2);
         return false;
       }
       if (stateWall.end.x != clientWall.info[0] || stateWall.end.y != clientWall.info[2]) {
         cerr << "Vertical wall start/end mismatch" << endl;
+        printErr("Server:");
+        vector<int> v1 = {clientWall.info[0], clientWall.info[2]};
+        printErr(v1);
+        printErr("Our State:");
+        vector<int> v2 = {stateWall.end.x, stateWall.end.y};
+        printErr(v2);
         return false;
       }
     // diagonal/counterdiagonal, x1, x2, y1, y2, build-direction
@@ -282,16 +353,46 @@ bool EvasionClient::isConsistent() {
       // check start/end points
       if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[2]) {
         cerr << "(Counter)diagonal wall start/end mismatch" << endl;
+        printErr("Server:");
+        vector<int> v1 = {clientWall.info[0], clientWall.info[2]};
+        printErr(v1);
+        printErr("Our State:");
+        vector<int> v2 = {stateWall.start.x, stateWall.start.y};
+        printErr(v2);
         return false;
       }
       if (stateWall.end.x != clientWall.info[1] || stateWall.end.y != clientWall.info[3]) {
         cerr << "(Counter)diagonal wall start/end mismatch" << endl;
+        printErr("Server:");
+        vector<int> v1 = {clientWall.info[1], clientWall.info[3]};
+        printErr(v1);
+        printErr("Our State:");
+        vector<int> v2 = {stateWall.end.x, stateWall.end.y};
+        printErr(v2);
         return false;
       }
       // check diagonal vs. counterdiagonal
       int parity = (stateWall.end.x - stateWall.start.x) * (stateWall.end.y - stateWall.start.y);
       if ((clientWall.type == 3 && parity < 0) || (clientWall.type == 4 && parity > 0)) {
         cerr << "Diagonality and coordinates mismatch" << endl;
+        printErr("Type:");
+        vector<int> v1 = {3};
+        printErr(v1);
+        printErr("Our parity:");
+        vector<int> v2 = {parity};
+        printErr(v2);
+        printErr("Server Start:");
+        vector<int> v3 = {clientWall.info[0], clientWall.info[2]};
+        printErr(v3);
+        printErr("Our State Start:");
+        vector<int> v4 = {stateWall.start.x, stateWall.start.y};
+        printErr(v4);
+        printErr("Server End:");
+        vector<int> v5 = {clientWall.info[1], clientWall.info[3]};
+        printErr(v5);
+        printErr("Our State End:");
+        vector<int> v6 = {stateWall.end.x, stateWall.end.y};
+        printErr(v6);
         return false;
       }
       // check build direction
