@@ -14,13 +14,13 @@ int main() {
   Position pm;
   while (true) {
     if (client.isHunter) {
-      hm = client.hunterMakeMove();
+      hm = client.hunterMakeMove(solveHunterRandom);
       client.receiveUpdate();
       pm = client.parsePreyMove();
       cout << "Parsed prey move: " << pm.x << ", " << pm.y << endl;
       client.state->makeMove(hm, pm);
     } else {
-      pm = client.preyMakeMove();
+      pm = client.preyMakeMove(solvePreyRandom);
       client.receiveUpdate();
       hm = client.parseHunterMove();
       cout << "Parsed hunter move: " << hm.wallType << " ";

@@ -80,64 +80,71 @@ void EvasionClient::receiveUpdate() {
   iss >> entry;
   int numWalls = stoi(entry);
 
-  vector<WallInfo> walls(numWalls);
+  vector<WallInfo> *walls = new vector<WallInfo>(numWalls);
   for (int i = 0; i < numWalls; i++) {
     iss >> entry;
     int type = stoi(entry);
     int *info;
     if (type == 0 || type == 1) {
+      // x, y1, y2 or y, x1, x2
       info = new int[3];
       for (int j = 0; j < 3; j++) {
         iss >> entry;
         info[j] = stoi(entry);
       }
-    } else { // type == 3 || 4
+    } else {
+      // x1, x2, y1, y2, build-direction
       info = new int[5];
       for (int j = 0; j < 5; j++) {
         iss >> entry;
         info[j] = stoi(entry);
       }
     }
-    walls[i] = { type, info };
+    (*walls)[i] = { type, info };
   }
 
   latestUpdate = {
     playerTimeLeft, gameNum, tickNum, maxWalls, wallPlacementDelay,
     boardSizeX, boardSizeY, currentWallTimer, hunterXPos, hunterYPos,
-    hunterXVel, hunterYVel, preyXPos, preyYPos, numWalls, walls
+    hunterXVel, hunterYVel, preyXPos, preyYPos, numWalls, *walls
   };
 }
 
-HunterMove EvasionClient::hunterMakeMove() {
-  srand(time(0));
-  int wallTypeToAdd = rand() % 5;
-  bool removeWall = rand() % 4 == 0;
-  int wallToRemove = -1;
-  if (latestUpdate.walls.size() > 0) {
-    wallToRemove = rand() % latestUpdate.walls.size();
+string EvasionClient::toString(HunterMove move)  {
+  string moveString = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " ";
+  moveString += to_string(move.wallType);
+  for (int i : move.indicesToDelete) {
+    moveString += " " + to_string(i);
   }
-  string move = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " " + to_string(wallTypeToAdd);
-  HunterMove m = { wallTypeToAdd, {} };
-  if (removeWall && latestUpdate.walls.size() > 0) {
-    move += " " + to_string(wallToRemove);
-    m.indicesToDelete.push_back(wallToRemove);
-  }
-  cout << "Sending: " << move << endl;
-  sock->sendString(move + "\n");
-  return m;
+  moveString += "\n";
+  return moveString;
 }
 
-Position EvasionClient::preyMakeMove() {
-  srand(time(0));
-  int x = (rand() % 3) - 1;
-  int y = (rand() % 3) - 1;
-  string move = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " " + to_string(x) + " " + to_string (y);
-  cout << "Sending: " << move << endl;
-  sock->sendString(move + "\n");
-  if (state->preyMoves) {
-    return { x, y };
+string EvasionClient::toString(Position move) {
+  string moveString = to_string(latestUpdate.gameNum) + " " + to_string(latestUpdate.tickNum) + " ";
+  moveString += to_string(move.x) + " " + to_string(move.y) + "\n";
+  return moveString;
+}
+
+HunterMove EvasionClient::hunterMakeMove(HunterMove (*hunterSolve)(GameState*)) {
+  HunterMove move = hunterSolve(state);
+  string moveString = toString(move);
+  cout << "Sending: " << moveString << endl;
+  sock->sendString(moveString);
+  return move;
+}
+
+Position EvasionClient::preyMakeMove(Position (*preySolve)(GameState*)) {
+  if (!state->preyMoves) {
+    Position move = { 2, 2 };
+    sock->sendString(toString(move));
+    return move;
   }
-  return { 2, 2 };
+  Position move = preySolve(state);
+  string moveString = toString(move);
+  cout << "Sending: " << moveString << endl;
+  sock->sendString(moveString);
+  return move;
 }
 
 Wall EvasionClient::wallInfoToWall(WallInfo clientWall) {

@@ -47,8 +47,10 @@ public:
   // methods
   EvasionClient(std::string serverIP, int serverPort);
   void receiveUpdate();
-  HunterMove hunterMakeMove();
-  Position preyMakeMove();
+  std::string toString(HunterMove move);
+  std::string toString(Position move);
+  HunterMove hunterMakeMove(HunterMove (*hunterSolve)(GameState*));
+  Position preyMakeMove(Position (*preySolve)(GameState*));
   Wall wallInfoToWall(WallInfo clientWall);
   HunterMove parseHunterMove();
   Position parsePreyMove();
