@@ -33,7 +33,7 @@ struct EvasionGameUpdate {
 class EvasionClient {
 public:
   // network
-  const std::string TEAM = "desertfoxes";
+  const std::string TEAM = "DesertFoxes";
   const int BUFFER_SIZE = 4096;
   SocketClient *sock;
 
