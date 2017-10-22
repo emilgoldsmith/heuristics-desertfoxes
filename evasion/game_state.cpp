@@ -14,12 +14,16 @@ GameState::GameState(int cooldownVariable, int maxWallsVariable):
 {}
 
 void GameState::makeMove(HunterMove moveForHunter, Position preyDirection) {
+#ifdef DEBUG
   if (gameOver) {
     cerr << "Attempted making a move after game is over" << endl;
   }
   // Simple move validations
   if ((preyDirection.x != 2 || preyDirection.y != 2) && !preyMoves) {
     cerr << "Tried to make move for prey while not allowed" << endl;
+  }
+  if ((preyDirection.x > 1 || preyDirection.x < -1 || preyDirection.y > 1 || preyDirection.y < -1) && preyMoves) {
+    cerr << "Prey invalid move" << endl;
   }
   if (moveForHunter.wallType != 0 && cooldownTimer > 0) {
     cerr << "Attempted to create wall while on cooldown" << endl;
@@ -29,6 +33,7 @@ void GameState::makeMove(HunterMove moveForHunter, Position preyDirection) {
       cerr << "Attempted to remove wall with incorrect index" << endl;
     }
   }
+#endif
 
   moveHunter(moveForHunter);
   if (preyMoves) {
@@ -100,20 +105,30 @@ void GameState::buildWall(int wallType, Position startPosition) {
     // Horizontal wall
     for (; !isOccupied(start); start.x--) {
       if (start == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (start == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
     }
     for (; !isOccupied(end); end.x++) {
       if (end == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (end == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
     }
     start.x++;
@@ -122,20 +137,30 @@ void GameState::buildWall(int wallType, Position startPosition) {
     // Vertical wall
     for (; !isOccupied(start); start.y--) {
       if (start == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (start == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
     }
     for (; !isOccupied(end); end.y++) {
       if (end == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (end == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
     }
     start.y++;
@@ -145,11 +170,16 @@ void GameState::buildWall(int wallType, Position startPosition) {
     bool goVertical = true;
     while(!isOccupied(start)) {
       if (start == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (start == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
       if (goVertical) {
         start.y--;
@@ -167,11 +197,16 @@ void GameState::buildWall(int wallType, Position startPosition) {
     goVertical = false;
     while(!isOccupied(end)) {
       if (end == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (end == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
       if (goVertical) {
         end.y++;
@@ -191,11 +226,16 @@ void GameState::buildWall(int wallType, Position startPosition) {
     bool goVertical = false;
     while(!isOccupied(start)) {
       if (start == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (start == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
       if (goVertical) {
         start.y++;
@@ -213,11 +253,16 @@ void GameState::buildWall(int wallType, Position startPosition) {
     goVertical = true;
     while(!isOccupied(end)) {
       if (end == prey) {
+#ifdef DEBUG
         cerr << "Wall collided with prey" << endl;
+#endif
         return;
       }
       if (end == hunter) {
+#ifdef DEBUG
         cerr << "Wall collided with hunter" << endl;
+#endif
+        return;
       }
       if (goVertical) {
         end.y--;
@@ -284,7 +329,9 @@ pair<Position, Position> GameState::bounce(Position curPosition, Position direct
     return {{curPosition.x, target.y}, {-direction.x, direction.y}};
   }
   // This should've exhausted all cases
+#ifdef DEBUG
   cerr << "Reached the end of bounce function when all cases should've been exhausted" << endl;
+#endif
   return {curPosition, direction};
 }
 

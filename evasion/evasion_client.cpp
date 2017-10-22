@@ -13,16 +13,20 @@ EvasionClient::EvasionClient(string serverIP, int serverPort) {
 
   // send team name prompt and send team name
   string prompt = sock->receive(BUFFER_SIZE, '\n');
+#ifdef DEBUG
   if (prompt != "sendname\n") {
     cerr << "Error: send name prompt incorrect" << endl;
   }
+#endif
   sock->sendString(TEAM + "\n");
 
   // receive role
   string role = sock->receive(BUFFER_SIZE, '\n');
+#ifdef DEBUG
   if (role != "hunter\n" && role != "prey\n") {
     cerr << "Error: role information incorrect" << endl;
   }
+#endif
   isHunter = role == "hunter";
 
   // receive first update
@@ -289,7 +293,7 @@ bool EvasionClient::isConsistent() {
       // check build direction
       // diagonal and build x first
       if (clientWall.type == 3 && clientWall.info[4] == 0) {
-      
+
       // diagonal and build y first
       } else if (clientWall.type == 3 && clientWall.info[4] == 1)  {
 

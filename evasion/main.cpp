@@ -30,8 +30,10 @@ int main() {
       cout << endl;
       client.state->makeMove(hm, pm);
     }
+#ifdef DEBUG
     if (!client.isConsistent()) {
       cerr << "NOPE" << endl;
     }
+#endif
   }
 }
