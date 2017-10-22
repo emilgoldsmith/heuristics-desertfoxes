@@ -84,7 +84,7 @@ void EvasionClient::receiveUpdate() {
   iss >> entry;
   int numWalls = stoi(entry);
 
-  vector<WallInfo> *walls = new vector<WallInfo>(numWalls);
+  vector<WallInfo> walls(numWalls);
   for (int i = 0; i < numWalls; i++) {
     iss >> entry;
     int type = stoi(entry);
@@ -104,13 +104,16 @@ void EvasionClient::receiveUpdate() {
         info[j] = stoi(entry);
       }
     }
-    (*walls)[i] = { type, info };
+    walls[i] = { type, info };
   }
 
+  prevUpdate = latestUpdate; // This should also work fine for first moves as by the time
+  // parse(Prey/Hunter) move has been called 2 receiveUpdates have already been called, 1 in constructor
+  // and one in the while loop
   latestUpdate = {
     playerTimeLeft, gameNum, tickNum, maxWalls, wallPlacementDelay,
     boardSizeX, boardSizeY, currentWallTimer, hunterXPos, hunterYPos,
-    hunterXVel, hunterYVel, preyXPos, preyYPos, numWalls, *walls
+    hunterXVel, hunterYVel, preyXPos, preyYPos, numWalls, walls
   };
 }
 
@@ -172,16 +175,17 @@ Wall EvasionClient::wallInfoToWall(WallInfo clientWall) {
 }
 
 HunterMove EvasionClient::parseHunterMove() {
-  // compare game state with latest update
-  vector<WallInfo> clientWalls = latestUpdate.walls;
-  vector<Wall> stateWalls = state->walls;
+  // compare prev update with latest update
+  vector<WallInfo> latestWalls = latestUpdate.walls;
+  vector<WallInfo> prevWalls = prevUpdate.walls;
   int newWallType = 0;
   vector<int> deletedWallIndices;
   // check for new wall
-  for (WallInfo cw : clientWalls) {
+  for (WallInfo cw : latestWalls) {
     Wall cwall = wallInfoToWall(cw);
     bool found = false;
-    for (Wall sw : stateWalls) {
+    for (WallInfo wallRepresentation : prevWalls) {
+      Wall sw = wallInfoToWall(wallRepresentation);
       if (cwall.start == sw.start && cwall.end == sw.end) {
         found = true;
         break;
@@ -193,10 +197,10 @@ HunterMove EvasionClient::parseHunterMove() {
     }
   }
   // check for deleted walls
-  for (int i = 0; i < stateWalls.size(); i++) {
-    Wall sw = stateWalls[i];
+  for (int i = 0; i < prevWalls.size(); i++) {
+    Wall sw = wallInfoToWall(prevWalls[i]);
     bool found = false;
-    for (WallInfo cw: clientWalls) {
+    for (WallInfo cw: latestWalls) {
       Wall cwall = wallInfoToWall(cw);
       if (sw.start == cwall.start && sw.end == cwall.end) {
         found = true;
@@ -207,15 +211,15 @@ HunterMove EvasionClient::parseHunterMove() {
       deletedWallIndices.push_back(i);
     }
   }
-  
+
   return { newWallType, deletedWallIndices };
 }
 
 Position EvasionClient::parsePreyMove() {
-  // compare game state with latest update
-  int dx = latestUpdate.preyXPos - state->prey.x;
-  int dy = latestUpdate.preyYPos - state->prey.y;
-  if (dx == 0 && dy == 0) {
+  // Compare prev update with latest update
+  int dx = latestUpdate.preyXPos - prevUpdate.preyXPos;
+  int dy = latestUpdate.preyYPos - prevUpdate.preyYPos;
+  if (latestUpdate.tickNum % 2 == 0) {
     return {2, 2};
   }
   return {dx, dy};

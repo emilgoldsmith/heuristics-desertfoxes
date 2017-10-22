@@ -42,6 +42,7 @@ public:
   int cooldown;
   int maxWalls;
   GameState *state;
+  EvasionGameUpdate prevUpdate;
   EvasionGameUpdate latestUpdate;
 
   // methods
