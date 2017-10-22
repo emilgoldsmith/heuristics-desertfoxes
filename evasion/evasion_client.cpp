@@ -373,7 +373,7 @@ bool EvasionClient::isConsistent() {
       }
       // check diagonal vs. counterdiagonal
       int parity = (stateWall.end.x - stateWall.start.x) * (stateWall.end.y - stateWall.start.y);
-      if ((clientWall.type == 3 && parity < 0) || (clientWall.type == 4 && parity > 0)) {
+      if ((clientWall.type == 2 && parity < 0) || (clientWall.type == 3 && parity > 0)) {
         cerr << "Diagonality and coordinates mismatch" << endl;
         printErr("Type:");
         vector<int> v1 = {3};
@@ -397,16 +397,16 @@ bool EvasionClient::isConsistent() {
       }
       // check build direction
       // diagonal and build x first
-      if (clientWall.type == 3 && clientWall.info[4] == 0) {
+      if (clientWall.type == 2 && clientWall.info[4] == 0) {
 
       // diagonal and build y first
-      } else if (clientWall.type == 3 && clientWall.info[4] == 1)  {
+      } else if (clientWall.type == 2 && clientWall.info[4] == 1)  {
 
       // counter diagonal and build x first
-      } else if (clientWall.type == 4 && clientWall.info[4] == 0)  {
+      } else if (clientWall.type == 3 && clientWall.info[4] == 0)  {
 
       // counter diagonal and build y first
-      } else if (clientWall.type == 4 && clientWall.info[4] == 1)  {
+      } else if (clientWall.type == 3 && clientWall.info[4] == 1)  {
 
       }
     }
