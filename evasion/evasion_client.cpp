@@ -21,13 +21,13 @@ EvasionClient::EvasionClient(string serverIP, int serverPort) {
   sock->sendString(TEAM + "\n");
 
   // receive role
-  string role = sock->receive(BUFFER_SIZE, '\n');
+  string role = sock->receive(1, '\n');
 #ifdef DEBUG
   if (role != "hunter\n" && role != "prey\n") {
     cerr << "Error: role information incorrect" << endl;
   }
 #endif
-  isHunter = role == "hunter";
+  isHunter = role == "hunter\n";
 
   // receive first update
   receiveUpdate();
@@ -37,11 +37,16 @@ EvasionClient::EvasionClient(string serverIP, int serverPort) {
 }
 
 void EvasionClient::receiveUpdate() {
-  string updateString = sock->receive(BUFFER_SIZE, '\n');
+  int buffer = BUFFER_SIZE;
+  if (state->gameOver) {
+    // Game is over so we have to receive the new roles
+    buffer = 1;
+  }
+  string updateString = sock->receive(buffer, '\n');
   cout << "Received: " << updateString << endl;
   // check if a new game is starting
   if (updateString == "hunter\n" || updateString == "prey\n") {
-    isHunter = updateString == "hunter";
+    isHunter = updateString == "hunter\n";
     state = new GameState(state->cooldown, state->maxWalls);
     // receive the first update of the new game
     receiveUpdate();
@@ -403,9 +408,9 @@ bool EvasionClient::isConsistent() {
       // diagonal
       if (clientWall.type == 2) {
         int stateDiagonalIndex = stateWall.creationPoint.x - stateWall.creationPoint.y;
-        int clientDiagonalIndex = clientWall.info[0] - clientWall.info[1];
+        int clientDiagonalIndex = clientWall.info[0] - clientWall.info[2];
         bool invalid = false;
-        if (clientWall.info[4] == 0) {
+        if (clientWall.info[4] == 1) {
           // We should be on the creation point diagonal
           if (stateDiagonalIndex != clientDiagonalIndex) {
             invalid = true;
@@ -421,16 +426,21 @@ bool EvasionClient::isConsistent() {
       // counter diagonal
       } else if (clientWall.type == 3)  {
         int stateDiagonalIndex = stateWall.creationPoint.x + stateWall.creationPoint.y;
-        int clientDiagonalIndex = clientWall.info[0] + clientWall.info[1];
+        int clientDiagonalIndex = clientWall.info[0] + clientWall.info[2];
         bool invalid = false;
-        if (clientWall.info[4] == 0) {
+        if (clientWall.info[4] == 1) {
           // We should be on the creation point diagonal
           if (stateDiagonalIndex != clientDiagonalIndex) {
             invalid = true;
           }
         // We should be on the padding diagonal
-        } else if (stateDiagonalIndex - 1 != clientDiagonalIndex) {
-          invalid = true;
+        } else if (clientWall.info[4] == 0) {
+          if (stateDiagonalIndex - 1 != clientDiagonalIndex) {
+            invalid = true;
+          }
+        } else {
+          cerr << "Weird stuff happening, clientWall.info[4] not matching 0 or 1, actual value is " << clientWall.info[4] << endl;
+          return false;
         }
         if (invalid) {
           printErr("Build direction mismatch for counter diagonal");
