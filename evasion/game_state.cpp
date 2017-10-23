@@ -378,7 +378,7 @@ bool GameState::isOccupied(Position p, int& output) {
       }
     } else if (curWall.end.y < curWall.start.y) {
       // Since we know start has lower value of x we know this is a counterdiagonal (type 4)
-      int pDiagonalIndex = p.x - p.y;
+      int pDiagonalIndex = p.x + p.y;
       int wallDiagonalIndex1 = curWall.creationPoint.x + curWall.creationPoint.y;
       int wallDiagonalIndex2 = wallDiagonalIndex1 - 1;
       if (p.x >= curWall.start.x && p.x <= curWall.end.x && p.y >= curWall.end.y && p.y <= curWall.start.y) {
