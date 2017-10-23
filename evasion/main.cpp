@@ -2,25 +2,29 @@
 #include "evasion_solve.h"
 
 #include <string>
+#include <iostream>
 
 using namespace std;
 
-int main() {
-  string ip = "127.0.0.1";
-  int port = 9000;
+int main(int argc, char** argv) {
+  if (argc != 3) {
+    cerr << "usage: ./main.out IP PORT" << endl;
+  }
+  string ip = argv[1];
+  int port = atoi(argv[2]);
   EvasionClient client(ip, port);
 
   HunterMove hm;
   Position pm;
   while (true) {
     if (client.isHunter) {
-      hm = client.hunterMakeMove(solveHunterRandom);
+      hm = client.hunterMakeMove(solveHunterHeuristic);
       client.receiveUpdate();
       pm = client.parsePreyMove();
       cout << "Parsed prey move: " << pm.x << ", " << pm.y << endl;
       client.state->makeMove(hm, pm);
     } else {
-      pm = client.preyMakeMove(solvePreyRandom);
+      pm = client.preyMakeMove(solvePreyHeuristic);
       client.receiveUpdate();
       hm = client.parseHunterMove();
       cout << "Parsed hunter move: " << hm.wallType << " ";
