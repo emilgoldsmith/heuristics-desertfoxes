@@ -418,8 +418,6 @@ bool EvasionClient::isConsistent() {
           printErr("Build direction mismatch for diagonal");
           return false;
         }
-      }
-
       // counter diagonal
       } else if (clientWall.type == 3)  {
         int stateDiagonalIndex = stateWall.creationPoint.x + stateWall.creationPoint.y;
