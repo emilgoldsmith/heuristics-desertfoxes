@@ -224,7 +224,7 @@ Position EvasionClient::parsePreyMove() {
   // Compare prev update with latest update
   int dx = latestUpdate.preyXPos - prevUpdate.preyXPos;
   int dy = latestUpdate.preyYPos - prevUpdate.preyYPos;
-  if (latestUpdate.tickNum % 2 == 0) {
+  if (latestUpdate.tickNum % 2 == 1) {
     return {2, 2};
   }
   return {dx, dy};
