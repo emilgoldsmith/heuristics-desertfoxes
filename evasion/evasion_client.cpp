@@ -242,6 +242,7 @@ static void printErr(string s) {
 }
 
 bool EvasionClient::isConsistent() {
+  bool invalid = false;
   if (latestUpdate.boardSizeX != state->boardSize.x || latestUpdate.boardSizeY != state->boardSize.y) {
     cerr << "Board size mismatch" << endl;
     printErr("Server:");
@@ -250,11 +251,11 @@ bool EvasionClient::isConsistent() {
     printErr("Our State:");
     vector<int> v2 = {state->boardSize.x, state->boardSize.y};
     printErr(v2);
-    return false;
+    invalid = true;
   }
   if (latestUpdate.tickNum != state->score) {
     cerr << "TickNum/score Mismatch: " << latestUpdate.tickNum << ", " << state->score << endl;
-    return false;
+    invalid = true;
   }
   if (latestUpdate.currentWallTimer != state->cooldownTimer) {
     cerr << "Wall cooldown mismatch" << endl;
@@ -264,7 +265,7 @@ bool EvasionClient::isConsistent() {
     printErr("Our State:");
     vector<int> v2 = {state->cooldownTimer};
     printErr(v2);
-    return false;
+    invalid = true;
   }
   if (latestUpdate.hunterXPos != state->hunter.x || latestUpdate.hunterYPos != state->hunter.y) {
     cerr << "Hunter position mismatch" << endl;
@@ -274,7 +275,7 @@ bool EvasionClient::isConsistent() {
     printErr("Our State:");
     vector<int> v2 = {state->hunter.x, state->hunter.y};
     printErr(v2);
-    return false;
+    invalid = true;
   }
   if (latestUpdate.hunterXVel != state->hunterDirection.x || latestUpdate.hunterYVel != state->hunterDirection.y) {
     cerr << "Hunter velocity/direction mismatch" << endl;
@@ -284,7 +285,7 @@ bool EvasionClient::isConsistent() {
     printErr("Our State:");
     vector<int> v2 = {state->hunterDirection.x, state->hunterDirection.y};
     printErr(v2);
-    return false;
+    invalid = true;
   }
   if (latestUpdate.preyXPos != state->prey.x ||latestUpdate.preyYPos != state->prey.y) {
     cerr << "Prey position mismatch" << endl;
@@ -294,7 +295,7 @@ bool EvasionClient::isConsistent() {
     printErr("Our State:");
     vector<int> v2 = {state->prey.x, state->prey.y};
     printErr(v2);
-    return false;
+    invalid = true;
   }
   if (latestUpdate.walls.size() != state->walls.size()) {
     cerr << "Wall number mismatch" << endl;
@@ -304,14 +305,13 @@ bool EvasionClient::isConsistent() {
     printErr("Our State:");
     vector<int> v2 = {(int)state->walls.size()};
     printErr(v2);
-    return false;
+    invalid = true;
   }
   for (int i = 0; i < latestUpdate.walls.size(); i++) {
     WallInfo clientWall = latestUpdate.walls[i];
     Wall stateWall = state->walls[i];
     // horizontal, y, x1, x2
     if (clientWall.type == 0) {
-      bool invalid = false;
       if (stateWall.start.x != clientWall.info[1] || stateWall.start.y != clientWall.info[0]) {
         cerr << "Horizontal wall start mismatch" << endl;
         printErr("Server:");
@@ -332,10 +332,8 @@ bool EvasionClient::isConsistent() {
         printErr(v2);
         invalid = true;
       }
-      if (invalid) return false;
     // vertical, x, y1, y2
     } else if (clientWall.type == 1) {
-      bool invalid = false;
       if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[1]) {
         cerr << "Vertical wall start mismatch" << endl;
         printErr("Server:");
@@ -356,7 +354,6 @@ bool EvasionClient::isConsistent() {
         printErr(v2);
         invalid = true;
       }
-      if (invalid) return false;
     // diagonal/counterdiagonal, x1, x2, y1, y2, build-direction
     } else if (clientWall.type == 3 || clientWall.type == 4) {
       // check start/end points
@@ -368,7 +365,7 @@ bool EvasionClient::isConsistent() {
         printErr("Our State:");
         vector<int> v2 = {stateWall.start.x, stateWall.start.y};
         printErr(v2);
-        return false;
+        invalid = true;
       }
       if (stateWall.end.x != clientWall.info[1] || stateWall.end.y != clientWall.info[3]) {
         cerr << "(Counter)diagonal wall start/end mismatch" << endl;
@@ -378,7 +375,7 @@ bool EvasionClient::isConsistent() {
         printErr("Our State:");
         vector<int> v2 = {stateWall.end.x, stateWall.end.y};
         printErr(v2);
-        return false;
+        invalid = true;
       }
       // check diagonal vs. counterdiagonal
       int parity = (stateWall.end.x - stateWall.start.x) * (stateWall.end.y - stateWall.start.y);
@@ -402,14 +399,13 @@ bool EvasionClient::isConsistent() {
         printErr("Our State End:");
         vector<int> v6 = {stateWall.end.x, stateWall.end.y};
         printErr(v6);
-        return false;
+        invalid = true;
       }
       // check build direction
       // diagonal
       if (clientWall.type == 2) {
         int stateDiagonalIndex = stateWall.creationPoint.x - stateWall.creationPoint.y;
         int clientDiagonalIndex = clientWall.info[0] - clientWall.info[2];
-        bool invalid = false;
         if (clientWall.info[4] == 1) {
           // We should be on the creation point diagonal
           if (stateDiagonalIndex != clientDiagonalIndex) {
@@ -421,13 +417,12 @@ bool EvasionClient::isConsistent() {
         }
         if (invalid) {
           printErr("Build direction mismatch for diagonal");
-          return false;
+          invalid = true;
         }
       // counter diagonal
       } else if (clientWall.type == 3)  {
         int stateDiagonalIndex = stateWall.creationPoint.x + stateWall.creationPoint.y;
         int clientDiagonalIndex = clientWall.info[0] + clientWall.info[2];
-        bool invalid = false;
         if (clientWall.info[4] == 1) {
           // We should be on the creation point diagonal
           if (stateDiagonalIndex != clientDiagonalIndex) {
@@ -440,15 +435,14 @@ bool EvasionClient::isConsistent() {
           }
         } else {
           cerr << "Weird stuff happening, clientWall.info[4] not matching 0 or 1, actual value is " << clientWall.info[4] << endl;
-          return false;
+          invalid = true;
         }
         if (invalid) {
           printErr("Build direction mismatch for counter diagonal");
-          return false;
+          invalid = true;
         }
       }
     }
   }
-
-  return true;
+  return !invalid;
 }
