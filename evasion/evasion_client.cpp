@@ -306,48 +306,52 @@ bool EvasionClient::isConsistent() {
     Wall stateWall = state->walls[i];
     // horizontal, y, x1, x2
     if (clientWall.type == 0) {
+      bool invalid = false;
       if (stateWall.start.x != clientWall.info[1] || stateWall.start.y != clientWall.info[0]) {
-        cerr << "Horizontal wall start/end mismatch" << endl;
+        cerr << "Horizontal wall start mismatch" << endl;
         printErr("Server:");
         vector<int> v1 = {clientWall.info[1], clientWall.info[0]};
         printErr(v1);
         printErr("Our State:");
         vector<int> v2 = {stateWall.start.x, stateWall.start.y};
         printErr(v2);
-        return false;
+        invalid = true;
       }
       if (stateWall.end.x != clientWall.info[2] || stateWall.end.y != clientWall.info[0]) {
-        cerr << "Horizontal wall start/end mismatch" << endl;
+        cerr << "Horizontal wall end mismatch" << endl;
         printErr("Server:");
         vector<int> v1 = {clientWall.info[2], clientWall.info[0]};
         printErr(v1);
         printErr("Our State:");
         vector<int> v2 = {stateWall.end.x, stateWall.end.y};
         printErr(v2);
-        return false;
+        invalid = true;
       }
+      if (invalid) return false;
     // vertical, x, y1, y2
     } else if (clientWall.type == 1) {
+      bool invalid = false;
       if (stateWall.start.x != clientWall.info[0] || stateWall.start.y != clientWall.info[1]) {
-        cerr << "Vertical wall start/end mismatch" << endl;
+        cerr << "Vertical wall start mismatch" << endl;
         printErr("Server:");
         vector<int> v1 = {clientWall.info[0], clientWall.info[1]};
         printErr(v1);
         printErr("Our State:");
         vector<int> v2 = {stateWall.start.x, stateWall.start.y};
         printErr(v2);
-        return false;
+        invalid = true;
       }
       if (stateWall.end.x != clientWall.info[0] || stateWall.end.y != clientWall.info[2]) {
-        cerr << "Vertical wall start/end mismatch" << endl;
+        cerr << "Vertical wall end mismatch" << endl;
         printErr("Server:");
         vector<int> v1 = {clientWall.info[0], clientWall.info[2]};
         printErr(v1);
         printErr("Our State:");
         vector<int> v2 = {stateWall.end.x, stateWall.end.y};
         printErr(v2);
-        return false;
+        invalid = true;
       }
+      if (invalid) return false;
     // diagonal/counterdiagonal, x1, x2, y1, y2, build-direction
     } else if (clientWall.type == 3 || clientWall.type == 4) {
       // check start/end points
