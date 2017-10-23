@@ -97,6 +97,12 @@ void GameState::removeWalls(vector<int> indicesToDelete) {
 }
 
 void GameState::buildWall(int wallType, Position startPosition) {
+  if (walls.size() == maxWalls) {
+#ifdef DEBUG
+    cerr << "Tried to build a wall at max walls" << endl;
+#endif
+    return;
+  }
   Position start = startPosition, end = startPosition;
   if (wallType == 0) {
     // Don't do anything
@@ -167,7 +173,7 @@ void GameState::buildWall(int wallType, Position startPosition) {
     end.y--;
   } else if (wallType == 3) {
     // Diagonal wall
-    bool goVertical = true;
+    bool goVertical = false;
     while(!isOccupied(start)) {
       if (start == prey) {
 #ifdef DEBUG
@@ -194,7 +200,7 @@ void GameState::buildWall(int wallType, Position startPosition) {
     } else {
       start.y++;
     }
-    goVertical = false;
+    goVertical = true;
     while(!isOccupied(end)) {
       if (end == prey) {
 #ifdef DEBUG
