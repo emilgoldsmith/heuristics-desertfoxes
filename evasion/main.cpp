@@ -20,12 +20,18 @@ int main(int argc, char** argv) {
     if (client.isHunter) {
       hm = client.hunterMakeMove(solveHunterHeuristic);
       client.receiveUpdate();
+      if (client.latestUpdate.gameNum == 1 && client.latestUpdate.tickNum == 0) {
+        continue;
+      }
       pm = client.parsePreyMove();
       cout << "Parsed prey move: " << pm.x << ", " << pm.y << endl;
       client.state->makeMove(hm, pm);
     } else {
       pm = client.preyMakeMove(solvePreyHeuristic);
       client.receiveUpdate();
+      if (client.latestUpdate.gameNum == 1 && client.latestUpdate.tickNum == 0) {
+        continue;
+      }
       hm = client.parseHunterMove();
       cout << "Parsed hunter move: " << hm.wallType << " ";
       for (int i : hm.indicesToDelete) {
