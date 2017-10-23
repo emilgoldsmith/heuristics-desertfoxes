@@ -115,6 +115,10 @@ HunterMove solveHunterHeuristic(GameState *state) {
       }
     }
     if (shouldBuildHorizontal) {
+      if ((state->preyMoves && abs(dy) > 2) || (!state->preyMoves && abs(dy) > 1)) {
+        // We can wait until next move with building the wall
+        return {0};
+      }
       vector<int> indicesToDelete;
       for (int index = 0; index < state->walls.size(); index++) {
         Wall curWall = state->walls[index];
@@ -132,6 +136,10 @@ HunterMove solveHunterHeuristic(GameState *state) {
       }
       return {1, indicesToDelete};
     } else {
+      if ((state->preyMoves && abs(dx) > 2) || (!state->preyMoves && abs(dx) > 1)) {
+        // We can wait until next move with building the wall
+        return {0};
+      }
       vector<int> indicesToDelete;
       for (int index = 0; index < state->walls.size(); index++) {
         Wall curWall = state->walls[index];
