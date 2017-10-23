@@ -20,39 +20,14 @@ EvasionClient::EvasionClient(string serverIP, int serverPort) {
 #endif
   sock->sendString(TEAM + "\n");
 
-  // receive role
-  string role = sock->receive(1, '\n');
-#ifdef DEBUG
-  if (role != "hunter\n" && role != "prey\n") {
-    cerr << "Error: role information incorrect" << endl;
-  }
-#endif
-  isHunter = role == "hunter\n";
-
   // receive first update
-  receiveUpdate();
+  receiveUpdate(true);
   cooldown = latestUpdate.wallPlacementDelay;
   maxWalls = latestUpdate.maxWalls;
   state = new GameState(cooldown, maxWalls);
 }
 
-void EvasionClient::receiveUpdate() {
-  int buffer = BUFFER_SIZE;
-  if (state->gameOver) {
-    // Game is over so we have to receive the new roles
-    buffer = 1;
-  }
-  string updateString = sock->receive(buffer, '\n');
-  cout << "Received: " << updateString << endl;
-  // check if a new game is starting
-  if (updateString == "hunter\n" || updateString == "prey\n") {
-    isHunter = updateString == "hunter\n";
-    state = new GameState(state->cooldown, state->maxWalls);
-    // receive the first update of the new game
-    receiveUpdate();
-    return;
-  }
-
+void EvasionClient::parseUpdate(string updateString) {
   string entry;
   istringstream iss(updateString, istringstream::in);
 
@@ -70,7 +45,7 @@ void EvasionClient::receiveUpdate() {
   int wallPlacementDelay = stoi(entry);
   iss >> entry;
   int boardSizeX = stoi(entry);
-  iss >> entry;
+  iss >> entry; 
   int boardSizeY = stoi(entry);
   iss >> entry;
   int currentWallTimer = stoi(entry);
@@ -112,14 +87,47 @@ void EvasionClient::receiveUpdate() {
     walls[i] = { type, info };
   }
 
-  prevUpdate = latestUpdate; // This should also work fine for first moves as by the time
-  // parse(Prey/Hunter) move has been called 2 receiveUpdates have already been called, 1 in constructor
+  // This should also work fine for first moves as by the time parse(Prey/Hunter) move has been called 2 receiveUpdates have already been called, 1 in constructor
+  prevUpdate = latestUpdate; 
   // and one in the while loop
   latestUpdate = {
     playerTimeLeft, gameNum, tickNum, maxWalls, wallPlacementDelay,
     boardSizeX, boardSizeY, currentWallTimer, hunterXPos, hunterYPos,
     hunterXVel, hunterYVel, preyXPos, preyYPos, numWalls, walls
   };
+}
+
+void EvasionClient::receiveUpdate(bool firstGame) {
+  string updateString = sock->receive(BUFFER_SIZE, '\n');
+  cout << "Received: " << updateString << endl;
+
+  vector<string> updates;
+  int i = 0;
+  int j = 0;
+  while (j < updateString.length()) {
+    if (updateString[j] == '\n') {
+      updates.push_back(updateString.substr(i, (j - i)));
+      i = j + 1;
+    }
+    j++;
+  }
+
+  for (string s : updates) {
+    // hunter or prey
+    if (s[0] == 'h' || s[0] == 'p') {
+      isHunter = s[0] == 'h';
+      if (!firstGame) {
+        state = new GameState(state->cooldown, state->maxWalls);
+      }
+      // in case role and first update are not stringed together
+      if (updates.size() == 1) {
+        receiveUpdate(firstGame);
+      }
+    // normal update
+    } else {
+      parseUpdate(s);
+    }
+  }
 }
 
 string EvasionClient::toString(HunterMove move)  {

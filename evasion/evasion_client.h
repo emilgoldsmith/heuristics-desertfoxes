@@ -47,7 +47,8 @@ public:
 
   // methods
   EvasionClient(std::string serverIP, int serverPort);
-  void receiveUpdate();
+  void parseUpdate(std::string updateString);
+  void receiveUpdate(bool firstGame=false);
   std::string toString(HunterMove move);
   std::string toString(Position move);
   HunterMove hunterMakeMove(HunterMove (*hunterSolve)(GameState*));

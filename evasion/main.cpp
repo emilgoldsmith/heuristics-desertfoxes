@@ -7,7 +7,7 @@ using namespace std;
 
 int main() {
   string ip = "127.0.0.1";
-  int port = 9000;
+  int port = 9001; // 9001 for prey
   EvasionClient client(ip, port);
 
   HunterMove hm;
