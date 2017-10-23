@@ -3,6 +3,8 @@
 
 #include <string>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -17,6 +19,9 @@ int main(int argc, char** argv) {
   HunterMove hm;
   Position pm;
   while (true) {
+#ifdef DEBUG
+    this_thread::sleep_for(chrono::milliseconds(4));
+#endif
     if (client.isHunter) {
       hm = client.hunterMakeMove(solveHunterHeuristic);
       client.receiveUpdate();
