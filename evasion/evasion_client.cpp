@@ -400,18 +400,44 @@ bool EvasionClient::isConsistent() {
         return false;
       }
       // check build direction
-      // diagonal and build x first
-      if (clientWall.type == 2 && clientWall.info[4] == 0) {
+      // diagonal
+      if (clientWall.type == 2) {
+        int stateDiagonalIndex = stateWall.creationPoint.x - stateWall.creationPoint.y;
+        int clientDiagonalIndex = clientWall.info[0] - clientWall.info[1];
+        bool invalid = false;
+        if (clientWall.info[4] == 0) {
+          // We should be on the creation point diagonal
+          if (stateDiagonalIndex != clientDiagonalIndex) {
+            invalid = true;
+          }
+        // We should be on the padding diagonal
+        } else if (stateDiagonalIndex - 1 != clientDiagonalIndex) {
+          invalid = true;
+        }
+        if (invalid) {
+          printErr("Build direction mismatch for diagonal");
+          return false;
+        }
+      }
 
-      // diagonal and build y first
-      } else if (clientWall.type == 2 && clientWall.info[4] == 1)  {
-
-      // counter diagonal and build x first
-      } else if (clientWall.type == 3 && clientWall.info[4] == 0)  {
-
-      // counter diagonal and build y first
-      } else if (clientWall.type == 3 && clientWall.info[4] == 1)  {
-
+      // counter diagonal
+      } else if (clientWall.type == 3)  {
+        int stateDiagonalIndex = stateWall.creationPoint.x + stateWall.creationPoint.y;
+        int clientDiagonalIndex = clientWall.info[0] + clientWall.info[1];
+        bool invalid = false;
+        if (clientWall.info[4] == 0) {
+          // We should be on the creation point diagonal
+          if (stateDiagonalIndex != clientDiagonalIndex) {
+            invalid = true;
+          }
+        // We should be on the padding diagonal
+        } else if (stateDiagonalIndex - 1 != clientDiagonalIndex) {
+          invalid = true;
+        }
+        if (invalid) {
+          printErr("Build direction mismatch for counter diagonal");
+          return false;
+        }
       }
     }
   }
