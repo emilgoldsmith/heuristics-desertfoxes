@@ -146,22 +146,34 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
         Position step = {parity * dx[i], parity * dy[j]};
-        visited[step.x + offset][step.y + offset] = true;
         Position realPlace = start + step;
         auto it = deadlyPoints->begin();
         for (; it != deadlyPoints->end(); it++) {
           if (it->first == realPlace) break;
         }
         bool isDead = false;
+        bool futureSafeSpot = true;
         if (it != deadlyPoints->end()) { // The current point is deadly
           for (int deadlyTime : it->second) {
-            if (deadlyTime == 1 || deadlyTime == 2) {
+            if (deadlyTime == 1 || deadlyTime == 2) { // And it's deadly at this simulated moment
               isDead = true;
+              futureSafeSpot = false;
+              break;
+            }
+            if (deadlyTime >= 1) {
+              futureSafeSpot = false;
+              // We can break because we know it's sorted so the above if statement would never occur if it hasn't already
+              break;
             }
           }
         }
         if (!isDead && !state->isOccupied(realPlace)) {
+          visited[step.x + offset][step.y + offset] = true;
           q.push({step, {step, 1}});
+          if (futureSafeSpot) {
+            // We also consider just standing still here for the rest of the time as it's safe
+            q.push({step, {step, ticksToSearch}});
+          }
         }
       }
     }
@@ -186,24 +198,35 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           Position move = {cur.first.x + parity * dx[i], cur.first.y + parity * dy[j]};
-          // We allow standing still
-          if (!(i == 0 && j == 0 && parity == -1) && visited[move.x + offset][move.y + offset]) continue;
+          if (visited[move.x + offset][move.y + offset]) continue;
           Position realPlace = start + move;
           auto it = deadlyPoints->begin();
           for (; it != deadlyPoints->end(); it++) {
             if (it->first == realPlace) break;
           }
           bool isDead = false;
+          bool futureSafeSpot = true;
           if (it != deadlyPoints->end()) { // The current point is deadly
             for (int deadlyTime : it->second) {
               if (deadlyTime == cur.second.second + 2 || deadlyTime == cur.second.second + 3) { // And it's deadly at this simulated moment
                 isDead = true;
+                futureSafeSpot = false;
+                break;
+              }
+              if (deadlyTime >= cur.second.second + 2) {
+                futureSafeSpot = false;
+                // We can break because we know it's sorted so the above if statement would never occur if it hasn't already
+                break;
               }
             }
           }
           if (!isDead && !state->isOccupied(realPlace)) {
             visited[move.x + offset][move.y + offset] = true;
             q.push({move, {cur.second.first, cur.second.second + 2}});
+            if (futureSafeSpot) {
+              // We also consider just standing still here for the rest of the time as it's safe
+              q.push({move, {cur.second.first, ticksToSearch}});
+            }
           }
         }
       }
