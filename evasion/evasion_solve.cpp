@@ -186,7 +186,8 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           Position move = {cur.first.x + parity * dx[i], cur.first.y + parity * dy[j]};
-          if (visited[move.x + offset][move.y + offset]) continue;
+          // We allow standing still
+          if (!(i == 0 && j == 0 && parity == -1) && visited[move.x + offset][move.y + offset]) continue;
           Position realPlace = start + move;
           auto it = deadlyPoints->begin();
           for (; it != deadlyPoints->end(); it++) {
