@@ -128,7 +128,7 @@ vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *initialState, int
   return deadlyPoints;
 }
 
-pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vector<int>>> *deadlyPoints, int ticksToSearch, GameState *state) {
+pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Position, vector<int>>> *deadlyPoints, int ticksToSearch, GameState *state) {
   int arrLength = 2 * ticksToSearch + 10;
   int offset = ticksToSearch;
   bool **visited = new bool*[arrLength];
@@ -153,6 +153,7 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
         }
         bool isDead = false;
         bool futureSafeSpot = true;
+        int safeUntil = 0;
         if (it != deadlyPoints->end()) { // The current point is deadly
           for (int deadlyTime : it->second) {
             if (deadlyTime == 1 || deadlyTime == 2) { // And it's deadly at this simulated moment
@@ -162,6 +163,7 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
             }
             if (deadlyTime >= 1) {
               futureSafeSpot = false;
+              safeUntil = deadlyTime - 1;
               // We can break because we know it's sorted so the above if statement would never occur if it hasn't already
               break;
             }
@@ -174,25 +176,30 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
             // We also consider just standing still here for the rest of the time as it's safe
             q.push({step, {step, ticksToSearch}});
           }
+          else {
+            q.push({step, {step, safeUntil}});
+          }
         }
       }
     }
   }
-  pair<Position, int> bestMove = {{0, 0}, 100000};
-  // Position pair.second values represent possible escape and distance to center (/ highestDiff of rays)
+  pair<Position, pair<int, int>> bestMove = {{0, 0}, {100000, 0}};
+  // the second pair is {distanceToCenter, tickNum (only valid when you would otherwise have been dead)
 
   while (!q.empty()) {
     pair<Position, pair<Position, int>> cur = q.front();
     q.pop();
-    if (cur.second.second == ticksToSearch || q.empty()) { // include the if q.empty() so that if we're screwed the move that got us the furthest while still alive is considered
+    if (cur.second.second >= ticksToSearch) {
       // Time to evaluate the best move
       int distToCenter = getPathToCenter(state, start + cur.first).first;
-      if (distToCenter < bestMove.second) {
-        bestMove = {cur.second.first, distToCenter};
+      if (distToCenter < bestMove.second.first) {
+        bestMove = {cur.second.first, {distToCenter, ticksToSearch}};
       }
       // We don't wanna search any further than movesToSearch
       continue;
     }
+
+    bool hasValidMoves = false;
 
     for (int parity = -1; parity <= 1; parity += 2) {
       for (int i = 0; i < 4; i++) {
@@ -206,6 +213,7 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
           }
           bool isDead = false;
           bool futureSafeSpot = true;
+          int safeUntil = 0;
           if (it != deadlyPoints->end()) { // The current point is deadly
             for (int deadlyTime : it->second) {
               if (deadlyTime == cur.second.second + 2 || deadlyTime == cur.second.second + 3) { // And it's deadly at this simulated moment
@@ -215,21 +223,32 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
               }
               if (deadlyTime >= cur.second.second + 2) {
                 futureSafeSpot = false;
+                safeUntil = deadlyTime - 1;
                 // We can break because we know it's sorted so the above if statement would never occur if it hasn't already
                 break;
               }
             }
           }
           if (!isDead && !state->isOccupied(realPlace)) {
+            hasValidMoves = true;
             visited[move.x + offset][move.y + offset] = true;
             q.push({move, {cur.second.first, cur.second.second + 2}});
             if (futureSafeSpot) {
               // We also consider just standing still here for the rest of the time as it's safe
               q.push({move, {cur.second.first, ticksToSearch}});
             }
+            else {
+              q.push({move, {cur.second.first, safeUntil}});
+            }
           }
         }
       }
+    }
+    if (!hasValidMoves && cur.second.second > bestMove.second.second) {
+      // This move can't go any further but it is also the move that stayed along the longest
+      // up until now
+      int distToCenter = getPathToCenter(state, start + cur.first).first;
+      bestMove = {cur.second.first, {distToCenter, cur.second.second}};
     }
   }
   for (int i = 0; i < arrLength; i++) {
