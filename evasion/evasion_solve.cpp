@@ -93,7 +93,15 @@ vector<Position> getDeadlyNeighbours(Position a) {
   return deadlyNeighbours;
 }
 
-vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *state, int length) {
+vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *initialState, int length) {
+  // We first delete all walls between the hunter and the prey just to make sure we get deadlyPoints
+  // where the hunter suddenly removes a wall and then takes us
+  GameState stateCopy(*initialState);
+  GameState *state = &stateCopy;
+  for (int wallIndexBetween = findWallBetween(state, state->prey, state->hunter); wallIndexBetween != -1; wallIndexBetween = findWallBetween(state, state->prey, state->hunter)) {
+    vector<int> indicesToDelete { wallIndexBetween };
+    state->removeWalls(indicesToDelete);
+  }
   // We simulate length ticks for the hunter to see assuming no extra walls all the deadly positions
   pair<Position, Position> hunterPositionAndVelocity = {state->hunter, state->hunterDirection};
   vector<pair<Position, vector<int>>> deadlyPoints;
@@ -120,10 +128,13 @@ vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *state, int length
   return deadlyPoints;
 }
 
-pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vector<int>>> *deadlyPoints, int movesToSearch, GameState *state) {
-  bool visited[50][50];
-  for (int i = 0; i < 50; i++) {
-    for (int j = 0; j < 50; j++) {
+pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Position, vector<int>>> *deadlyPoints, int ticksToSearch, GameState *state) {
+  int arrLength = 2 * ticksToSearch + 10;
+  int offset = ticksToSearch;
+  bool **visited = new bool*[arrLength];
+  for (int i = 0; i < arrLength; i++) {
+    visited[i] = new bool[arrLength];
+    for (int j = 0; j < arrLength; j++) {
       visited[i][j] = false;
     }
   }
@@ -135,82 +146,130 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
         Position step = {parity * dx[i], parity * dy[j]};
-        visited[step.x + 20][step.y + 20] = true;
         Position realPlace = start + step;
         auto it = deadlyPoints->begin();
         for (; it != deadlyPoints->end(); it++) {
           if (it->first == realPlace) break;
         }
         bool isDead = false;
+        bool futureSafeSpot = true;
+        int safeUntil = 0;
         if (it != deadlyPoints->end()) { // The current point is deadly
           for (int deadlyTime : it->second) {
-            if (deadlyTime == 1 || deadlyTime == 2) {
+            if (deadlyTime == 1 || deadlyTime == 2) { // And it's deadly at this simulated moment
               isDead = true;
+              futureSafeSpot = false;
+              break;
+            }
+            if (deadlyTime >= 1) {
+              futureSafeSpot = false;
+              safeUntil = deadlyTime - 1;
+              // We can break because we know it's sorted so the above if statement would never occur if it hasn't already
+              break;
             }
           }
         }
         if (!isDead && !state->isOccupied(realPlace)) {
+          visited[step.x + offset][step.y + offset] = true;
           q.push({step, {step, 1}});
+          if (futureSafeSpot) {
+            // We also consider just standing still here for the rest of the time as it's safe
+            q.push({step, {step, ticksToSearch}});
+          }
+          else {
+            q.push({step, {step, safeUntil}});
+          }
         }
       }
     }
   }
-  pair<Position, int> bestMove = {{0, 0}, 100000};
-  // Position pair.second values represent possible escape and distance to center (/ highestDiff of rays)
+  pair<Position, pair<int, int>> bestMove = {{0, 0}, {100000, 0}};
+  // the second pair is {distanceToCenter, tickNum (only valid when you would otherwise have been dead)
 
   while (!q.empty()) {
     pair<Position, pair<Position, int>> cur = q.front();
     q.pop();
-    if (cur.second.second == 1 + 2 * movesToSearch || q.empty()) { // include the if q.empty() so that if we're screwed the move that got us the furthest while still alive is considered
+    if (cur.second.second >= ticksToSearch) {
       // Time to evaluate the best move
       int distToCenter = getPathToCenter(state, start + cur.first).first;
-      if (distToCenter < bestMove.second) {
-        bestMove = {cur.second.first, distToCenter};
+      if (distToCenter < bestMove.second.first) {
+        bestMove = {cur.second.first, {distToCenter, ticksToSearch}};
       }
       // We don't wanna search any further than movesToSearch
       continue;
     }
 
+    bool hasValidMoves = false;
+
     for (int parity = -1; parity <= 1; parity += 2) {
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           Position move = {cur.first.x + parity * dx[i], cur.first.y + parity * dy[j]};
-          if (visited[move.x + 20][move.y + 20]) continue;
-          visited[move.x + 20][move.y + 20] = true;
+          if (visited[move.x + offset][move.y + offset]) continue;
           Position realPlace = start + move;
           auto it = deadlyPoints->begin();
           for (; it != deadlyPoints->end(); it++) {
             if (it->first == realPlace) break;
           }
           bool isDead = false;
+          bool futureSafeSpot = true;
+          int safeUntil = 0;
           if (it != deadlyPoints->end()) { // The current point is deadly
             for (int deadlyTime : it->second) {
               if (deadlyTime == cur.second.second + 2 || deadlyTime == cur.second.second + 3) { // And it's deadly at this simulated moment
                 isDead = true;
+                futureSafeSpot = false;
+                break;
+              }
+              if (deadlyTime >= cur.second.second + 2) {
+                futureSafeSpot = false;
+                safeUntil = deadlyTime - 1;
+                // We can break because we know it's sorted so the above if statement would never occur if it hasn't already
+                break;
               }
             }
           }
           if (!isDead && !state->isOccupied(realPlace)) {
+            hasValidMoves = true;
+            visited[move.x + offset][move.y + offset] = true;
             q.push({move, {cur.second.first, cur.second.second + 2}});
+            if (futureSafeSpot) {
+              // We also consider just standing still here for the rest of the time as it's safe
+              q.push({move, {cur.second.first, ticksToSearch}});
+            }
+            else {
+              q.push({move, {cur.second.first, safeUntil}});
+            }
           }
         }
       }
     }
+    if (!hasValidMoves && cur.second.second > bestMove.second.second) {
+      // This move can't go any further but it is also the move that stayed along the longest
+      // up until now
+      int distToCenter = getPathToCenter(state, start + cur.first).first;
+      bestMove = {cur.second.first, {distToCenter, cur.second.second}};
+    }
   }
+  for (int i = 0; i < arrLength; i++) {
+    delete[] visited[i];
+  }
+  delete[] visited;
   return bestMove;
 }
 
 Position solvePreyHeuristic(GameState *state) {
   bool hasWallBetween = findWallBetween(state, state->prey, state->hunter) != -1;
   int hunterPreyDistance = computeDistance(state->prey, state->hunter);
-  int movesToSearch = 39;
-  if (!hasWallBetween && hunterPreyDistance <= 2 * movesToSearch * movesToSearch) { // The 2 is sqrt2 squared (the amount of distance coverable in 1 timestep)
+  int ticksToSearch = 45;
+  if (hunterPreyDistance <= 2 * ticksToSearch * ticksToSearch) { // The 2 is sqrt2 squared (the amount of distance coverable in 1 timestep)
     // First check if we're in danger of dying if we're in the same box as hunter and pretty close
-    vector<pair<Position, vector<int>>> deadlyPoints = getDeadlyPoints(state, movesToSearch);
-    return findSurvivalMove(state->prey, &deadlyPoints, movesToSearch >> 1, state).first;
+    vector<pair<Position, vector<int>>> deadlyPoints = getDeadlyPoints(state, ticksToSearch);
+    return findSurvivalMove(state->prey, &deadlyPoints, ticksToSearch, state).first;
   }
-  // Since we're not in danger of dying we compute our move to middle heuristic
-  return getPathToCenter(state, state->prey).second;
+  // Since we're not in danger of dying we just try to find the fastest way to the center
+  vector<pair<Position, vector<int>>> deadlyPointsDummy;
+  return findSurvivalMove(state->prey, &deadlyPointsDummy, 25, state).first;
 }
 
 vector<int> getPreyBoundingWalls(GameState *state) {

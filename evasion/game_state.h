@@ -40,11 +40,11 @@ class GameState {
      */
     std::pair<Position, Position> bounce(Position curPosition, Position direction);
     bool isOccupied(Position p, int& output = placeholder);
+    void removeWalls(std::vector<int> indicesToDelete);
 
   private:
     void movePrey(Position preyDirection);
     void moveHunter(HunterMove moveForHunter);
-    void removeWalls(std::vector<int> indicesToDelete);
     void buildWall(int wallType, Position startPosition);
     void checkCapture();
 };

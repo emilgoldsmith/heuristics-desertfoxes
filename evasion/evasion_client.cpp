@@ -45,7 +45,7 @@ void EvasionClient::parseUpdate(string updateString) {
   int wallPlacementDelay = stoi(entry);
   iss >> entry;
   int boardSizeX = stoi(entry);
-  iss >> entry; 
+  iss >> entry;
   int boardSizeY = stoi(entry);
   iss >> entry;
   int currentWallTimer = stoi(entry);
@@ -88,7 +88,7 @@ void EvasionClient::parseUpdate(string updateString) {
   }
 
   // This should also work fine for first moves as by the time parse(Prey/Hunter) move has been called 2 receiveUpdates have already been called, 1 in constructor
-  prevUpdate = latestUpdate; 
+  prevUpdate = latestUpdate;
   // and one in the while loop
   latestUpdate = {
     playerTimeLeft, gameNum, tickNum, maxWalls, wallPlacementDelay,
@@ -99,7 +99,9 @@ void EvasionClient::parseUpdate(string updateString) {
 
 void EvasionClient::receiveUpdate(bool firstGame) {
   string updateString = sock->receive(BUFFER_SIZE, '\n');
+#ifdef LOGGING
   cout << "Received: " << updateString << endl;
+#endif
 
   vector<string> updates;
   int i = 0;
@@ -149,7 +151,9 @@ string EvasionClient::toString(Position move) {
 HunterMove EvasionClient::hunterMakeMove(HunterMove (*hunterSolve)(GameState*)) {
   HunterMove move = hunterSolve(state);
   string moveString = toString(move);
+#ifdef LOGGING
   cout << "Sending: " << moveString << endl;
+#endif
   sock->sendString(moveString);
   return move;
 }
@@ -162,7 +166,9 @@ Position EvasionClient::preyMakeMove(Position (*preySolve)(GameState*)) {
   }
   Position move = preySolve(state);
   string moveString = toString(move);
+#ifdef LOGGING
   cout << "Sending: " << moveString << endl;
+#endif
   sock->sendString(moveString);
   return move;
 }
