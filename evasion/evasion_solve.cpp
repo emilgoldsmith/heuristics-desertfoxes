@@ -300,7 +300,7 @@ vector<int> getPreyBoundingWalls(GameState *state) {
       boundingWalls.push_back(wallIndex);
     }
   }
-  
+
   return boundingWalls;
 }
 
@@ -477,77 +477,142 @@ HunterMove solveHunterGuyu(GameState *state) {
   return { wallType, indicesToDelete };
 }
 
-HunterMove solveHunterHeuristic(GameState *state) {
-  if (state->cooldownTimer > 0) {
-    return {0};
+int getMinBoxDim(GameState *state) {
+  vector<int> boundingWalls = getPreyBoundingWalls(state);
+  Dimension preyBox = getPreyBoxDimension(state, boundingWalls);
+  return min(preyBox.maxX - preyBox.minX, preyBox.maxY - preyBox.minY);
+}
+
+Position cheapPrey(GameState *state) {
+  bool hasWallBetween = findWallBetween(state, state->prey, state->hunter) != -1;
+  int hunterPreyDistance = computeDistance(state->prey, state->hunter);
+  int ticksToSearch = 23;
+  if (hunterPreyDistance <= 2 * ticksToSearch * ticksToSearch) { // The 2 is sqrt2 squared (the amount of distance coverable in 1 timestep)
+    // First check if we're in danger of dying if we're in the same box as hunter and pretty close
+    vector<pair<Position, vector<int>>> deadlyPoints = getDeadlyPoints(state, ticksToSearch);
+    return findSurvivalMove(state->prey, &deadlyPoints, ticksToSearch, state).first;
   }
+  // Since we're not in danger of dying we just try to find the fastest way to the center
+  vector<pair<Position, vector<int>>> deadlyPointsDummy;
+  return findSurvivalMove(state->prey, &deadlyPointsDummy, 15, state).first;
+}
+
+pair<HunterMove, int> getMinDim(GameState *state, int depth) {
+  if (depth < 0) {
+    int wallBetweenIndex = findWallBetween(state, state->prey, state->hunter);
+    if (wallBetweenIndex != -1) {
+      return {{0}, getMinBoxDim(state)};
+    }
+    return {{0}, 500};
+  }
+  GameState stateCopy(*state);
+  Position pm = cheapPrey(&stateCopy);
+  if (stateCopy.cooldownTimer > 0 ) {
+    stateCopy.makeMove({0, {}}, pm);
+    return getMinDim(&stateCopy, depth - 1);
+  }
+  int wallBetweenIndex = findWallBetween(state, state->prey, state->hunter);
+  bool hunterOutside = wallBetweenIndex != -1;
+  if (hunterOutside) {
+    Wall separator = state->walls[wallBetweenIndex];
+    int dist;
+    int wallToBuild = 0;
+    if (separator.start.x == separator.end.x) {
+      // it is vertical
+      dist = abs(separator.start.y - state->hunter.y);
+      wallToBuild = 2;
+    } else {
+      // it is horizontal
+      dist = abs(separator.start.x - state->hunter.x);
+      wallToBuild = 1;
+    }
+    if (dist == 1) {
+      stateCopy.makeMove({wallToBuild, {wallBetweenIndex}}, pm);
+    } else {
+      stateCopy.makeMove({0, {}}, pm);
+    }
+    return getMinDim(&stateCopy, depth - 1);
+  }
+  int best = 500;
+  HunterMove bestMove = {0};
   int dx = state->prey.x - state->hunter.x;
   bool canBuildVertical = dx != 0 && (dx > 0) == (state->hunterDirection.x > 0);
   int dy = state->prey.y - state->hunter.y;
   bool canBuildHorizontal = dy != 0 && (dy > 0) == (state->hunterDirection.y > 0);
-  if (!canBuildVertical && !canBuildHorizontal) {
-    // If we aren't going towards the prey don't do anything.
-    return {0};
-  } else {
-    bool shouldBuildVertical = canBuildVertical;
-    bool shouldBuildHorizontal = canBuildHorizontal;
-    if (shouldBuildHorizontal && shouldBuildVertical) {
-      int verticalWidth = 0;
-      for (int steps = 1; !state->isOccupied({state->hunter.x, state->hunter.y + steps*state->hunterDirection.y}); steps++) verticalWidth++;
-      int horizontalWidth = 0;
-      for (int steps = 1; !state->isOccupied({state->hunter.x + steps*state->hunterDirection.x, state->hunter.y}); steps++) horizontalWidth++;
-      if (verticalWidth > horizontalWidth) {
-        // Vertical width is larger which means we should build a horizontal wall
-        shouldBuildVertical = false;
-      } else {
-        // The opposite
-        shouldBuildHorizontal = false;
+  if (state->walls.size() < state->maxWalls) {
+    if (!canBuildHorizontal) {
+      GameState myCopy(*state);
+      myCopy.makeMove({1, {}}, pm);
+      int candidate = min(best, getMinDim(&myCopy, depth - 1).second);
+      if (candidate < best) {
+        best = candidate;
+        bestMove = {1, {}};
       }
     }
-    if (shouldBuildHorizontal) {
-      if ((state->preyMoves && abs(dy) > 2) || (!state->preyMoves && abs(dy) > 1)) {
-        // We can wait until next move with building the wall
-        return {0};
+    if (!canBuildVertical) {
+      GameState myCopy(*state);
+      myCopy.makeMove({2, {}}, pm);
+      int candidate = min(best, getMinDim(&myCopy, depth - 1).second);
+      if (candidate < best) {
+        best = candidate;
+        bestMove = {2, {}};
       }
-      vector<int> indicesToDelete;
-      for (int index = 0; index < state->walls.size(); index++) {
-        Wall curWall = state->walls[index];
-        if (curWall.start.y == curWall.end.y) {
-          // It is a horizontal wall
-          int walldy = curWall.start.y - state->hunter.y;
-          bool movingAwayFromWall = (walldy > 0) != (state->hunterDirection.y > 0);
-          if (movingAwayFromWall) {
-            // The wall is now redundant
-            indicesToDelete.push_back(index);
-            // We can break as we should keep this property incrementally intact
-            break;
-          }
-        }
-      }
-      return {1, indicesToDelete};
-    } else {
-      if ((state->preyMoves && abs(dx) > 2) || (!state->preyMoves && abs(dx) > 1)) {
-        // We can wait until next move with building the wall
-        return {0};
-      }
-      vector<int> indicesToDelete;
-      for (int index = 0; index < state->walls.size(); index++) {
-        Wall curWall = state->walls[index];
-        if (curWall.start.x == curWall.end.x) {
-          // It is a vertical wall
-          int walldx = curWall.start.x - state->hunter.x;
-          bool movingAwayFromWall = (walldx > 0) != (state->hunterDirection.x > 0);
-          if (movingAwayFromWall) {
-            // The wall is now redundant
-            indicesToDelete.push_back(index);
-            // We can break as we should keep this property incrementally intact
-            break;
-          }
-        }
-      }
-      return {2, indicesToDelete};
     }
   }
+
+  if (canBuildHorizontal && ((state->preyMoves && abs(dy) > 2) || (!state->preyMoves && abs(dy) > 1))) {
+    vector<int> indicesToDelete;
+    for (int index = 0; index < state->walls.size(); index++) {
+      Wall curWall = state->walls[index];
+      if (curWall.start.y == curWall.end.y) {
+        // It is a horizontal wall
+        int walldy = curWall.start.y - state->hunter.y;
+        bool movingAwayFromWall = (walldy > 0) != (state->hunterDirection.y > 0);
+        if (movingAwayFromWall) {
+          // The wall is now redundant
+          indicesToDelete.push_back(index);
+        }
+      }
+    }
+    GameState myCopy(*state);
+    myCopy.makeMove({1, indicesToDelete}, pm);
+    int candidate = min(best, getMinDim(&myCopy, depth - 1).second);
+    if (candidate < best) {
+      best = candidate;
+      bestMove = {1, indicesToDelete};
+    }
+  } else if ((state->preyMoves && abs(dx) > 2) || (!state->preyMoves && abs(dx) > 1)) {
+    vector<int> indicesToDelete;
+    for (int index = 0; index < state->walls.size(); index++) {
+      Wall curWall = state->walls[index];
+      if (curWall.start.x == curWall.end.x) {
+        // It is a vertical wall
+        int walldx = curWall.start.x - state->hunter.x;
+        bool movingAwayFromWall = (walldx > 0) != (state->hunterDirection.x > 0);
+        if (movingAwayFromWall) {
+          // The wall is now redundant
+          indicesToDelete.push_back(index);
+          // We can break as we should keep this property incrementally intact
+          break;
+        }
+      }
+    }
+    GameState myCopy(*state);
+    myCopy.makeMove({2, indicesToDelete}, pm);
+    int candidate = min(best, getMinDim(&myCopy, depth - 1).second);
+    if (candidate < best) {
+      best = candidate;
+      bestMove = {2, indicesToDelete};
+    }
+  }
+  return {bestMove, best};
+}
+
+HunterMove solveHunterHeuristic(GameState *state) {
+  if (state->cooldownTimer > 0) {
+    return {0};
+  }
+  return getMinDim(state, 20).first;
 }
 
 int findWallBetween(GameState *state) {
