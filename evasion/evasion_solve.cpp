@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <utility>
+#include <queue>
 
 using namespace std;
 
@@ -36,40 +38,32 @@ Position linePointPoint(Position a, Position b, Position c) {
   return b+(lambda*(b-a));
 }
 
-Position solvePreyHeuristic(GameState *state) {
-  // First check if we're in danger of dying
-  Position closestPoint = linePointPoint(state->hunter, state->hunter + state->hunterDirection, state->prey);
-  Position distanceVector = closestPoint - state->prey;
-  int dist = distanceVector * distanceVector;
-  if (dist <= 10*10) {
-    // WE ARE GONNA DIE!!!! ARRRRGGGGHHHH
-    Position hunterDif = closestPoint - state->prey;
-    if (hunterDif.x == 0 && hunterDif.y == 0) {
-      return {-state->hunterDirection.y, -state->hunterDirection.x};
-    } else {
-      if (hunterDif.x > 0) {
-        hunterDif.x = 1;
-      } else {
-        hunterDif.x = -1;
-      }
-      if (hunterDif.y > 0) {
-        hunterDif.y = 1;
-      } else {
-        hunterDif.y = -1;
-      }
-      return {-hunterDif.x, -hunterDif.y};
+int computeDistance(Position a, Position b) {
+  Position vectorDistance = a - b;
+  return vectorDistance * vectorDistance;
+}
+
+int findWallBetween(GameState *state, Position p1, Position p2) {
+  vector<Position> pointsToConsider = bresenham(p1, p2);
+  for (Position point : pointsToConsider) {
+    int wallIndex = -1;
+    if (state->isOccupied(point, wallIndex) && wallIndex >= 0) {
+      return wallIndex;
     }
   }
-  // Since we're not in danger of dying we compute our move to middle heuristic
+  return -1;
+}
+
+pair<int, Position> getPathToCenter(GameState *state, Position p) {
   int highestDiff = 0;
   Position velocityToMove = {0, 0};
   int dx[4] = {1, 0, 1, -1}; // horizontal, vertical, diagonal, counterdiagonal
   int dy[4] = {0, 1, 1, 1};
   for (int dir = 0; dir < 4; dir++) {
     int rayLengthPositive = 0;
-    for (int steps = 1; !state->isOccupied({state->prey.x + steps*dx[dir], state->prey.y + steps*dy[dir]}); steps++) rayLengthPositive++;
+    for (int steps = 1; !state->isOccupied({p.x + steps*dx[dir], p.y + steps*dy[dir]}); steps++) rayLengthPositive++;
     int rayLengthNegative = 0;
-    for (int steps = 1; !state->isOccupied({state->prey.x - steps * dx[dir], state->prey.y - steps * dy[dir]}); steps++) rayLengthNegative++;
+    for (int steps = 1; !state->isOccupied({p.x - steps * dx[dir], p.y - steps * dy[dir]}); steps++) rayLengthNegative++;
     int diff = rayLengthNegative - rayLengthPositive;
     if (diff < 0) diff = -diff;
     if (diff > highestDiff) {
@@ -81,7 +75,142 @@ Position solvePreyHeuristic(GameState *state) {
       }
     }
   }
-  return velocityToMove;
+  return {highestDiff, velocityToMove};
+}
+
+vector<Position> getDeadlyNeighbours(Position a) {
+  // Yes this could be done without the checks and just hardcoded but no need to and this is clean
+  vector<Position> deadlyNeighbours;
+  for (int i = -4; i <= 4; i++) {
+    for (int j = -4; j <= 4; j++) {
+      Position dif = {i, j};
+      int dist = dif * dif;
+      if (dist <= 16) {
+        deadlyNeighbours.push_back(a + dif);
+      }
+    }
+  }
+  return deadlyNeighbours;
+}
+
+vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *state, int length) {
+  // We simulate length ticks for the hunter to see assuming no extra walls all the deadly positions
+  pair<Position, Position> hunterPositionAndVelocity = {state->hunter, state->hunterDirection};
+  vector<pair<Position, vector<int>>> deadlyPoints;
+  vector<Position> firstNeighbours = getDeadlyNeighbours(hunterPositionAndVelocity.first);
+  for (Position neighbour : firstNeighbours) {
+    deadlyPoints.push_back({neighbour, {0}});
+  }
+  for (int stepDistance = 1; stepDistance <= length; stepDistance++) {
+    hunterPositionAndVelocity = state->bounce(hunterPositionAndVelocity.first, hunterPositionAndVelocity.second);
+    vector<Position> deadlyNeighbours = getDeadlyNeighbours(hunterPositionAndVelocity.first);
+    for (Position deadly : deadlyNeighbours) {
+      auto it = deadlyPoints.begin();
+      for (; it != deadlyPoints.end(); it++) {
+        if (it->first == deadly) break;
+      }
+      if (it == deadlyPoints.end()) { // It is a new deadly point
+        deadlyPoints.push_back({deadly, {stepDistance}});
+      } else {
+        // Record that it was also deadly here
+        it->second.push_back(stepDistance);
+      }
+    }
+  }
+  return deadlyPoints;
+}
+
+pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vector<int>>> *deadlyPoints, int movesToSearch, GameState *state) {
+  bool visited[50][50];
+  for (int i = 0; i < 50; i++) {
+    for (int j = 0; j < 50; j++) {
+      visited[i][j] = false;
+    }
+  }
+  queue<pair<Position, pair<Position, int>>> q; // pair.second.first is the first move made, pair.second.second is the steps currently taken
+  // Initialize the queue with all the possible initial moves, that will then afterwards all be evaluated
+  int dx[4] = {1, 0, 1, -1}; // horizontal, vertical, diagonal, counterdiagonal
+  int dy[4] = {0, 1, 1, 1};
+  for (int parity = -1; parity <= 1; parity += 2) {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        Position step = {parity * dx[i], parity * dy[j]};
+        visited[step.x + 20][step.y + 20] = true;
+        Position realPlace = start + step;
+        auto it = deadlyPoints->begin();
+        for (; it != deadlyPoints->end(); it++) {
+          if (it->first == realPlace) break;
+        }
+        bool isDead = false;
+        if (it != deadlyPoints->end()) { // The current point is deadly
+          for (int deadlyTime : it->second) {
+            if (deadlyTime == 1 || deadlyTime == 2) {
+              isDead = true;
+            }
+          }
+        }
+        if (!isDead && !state->isOccupied(realPlace)) {
+          q.push({step, {step, 1}});
+        }
+      }
+    }
+  }
+  pair<Position, int> bestMove = {{0, 0}, 100000};
+  // Position pair.second values represent possible escape and distance to center (/ highestDiff of rays)
+
+  while (!q.empty()) {
+    pair<Position, pair<Position, int>> cur = q.front();
+    q.pop();
+    if (cur.second.second == 1 + 2 * movesToSearch || q.empty()) { // include the if q.empty() so that if we're screwed the move that got us the furthest while still alive is considered
+      // Time to evaluate the best move
+      int distToCenter = getPathToCenter(state, start + cur.first).first;
+      if (distToCenter < bestMove.second) {
+        bestMove = {cur.second.first, distToCenter};
+      }
+      // We don't wanna search any further than movesToSearch
+      continue;
+    }
+
+    for (int parity = -1; parity <= 1; parity += 2) {
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          Position move = {cur.first.x + parity * dx[i], cur.first.y + parity * dy[j]};
+          if (visited[move.x + 20][move.y + 20]) continue;
+          visited[move.x + 20][move.y + 20] = true;
+          Position realPlace = start + move;
+          auto it = deadlyPoints->begin();
+          for (; it != deadlyPoints->end(); it++) {
+            if (it->first == realPlace) break;
+          }
+          bool isDead = false;
+          if (it != deadlyPoints->end()) { // The current point is deadly
+            for (int deadlyTime : it->second) {
+              if (deadlyTime == cur.second.second + 2 || deadlyTime == cur.second.second + 3) { // And it's deadly at this simulated moment
+                isDead = true;
+              }
+            }
+          }
+          if (!isDead && !state->isOccupied(realPlace)) {
+            q.push({move, {cur.second.first, cur.second.second + 2}});
+          }
+        }
+      }
+    }
+  }
+  return bestMove;
+}
+
+Position solvePreyHeuristic(GameState *state) {
+  bool hasWallBetween = findWallBetween(state, state->prey, state->hunter) != -1;
+  int hunterPreyDistance = computeDistance(state->prey, state->hunter);
+  int movesToSearch = 31;
+  if (!hasWallBetween && hunterPreyDistance <= 2 * movesToSearch * movesToSearch) { // The 2 is sqrt2 squared (the amount of distance coverable in 1 timestep)
+    // First check if we're in danger of dying if we're in the same box as hunter and pretty close
+    vector<pair<Position, vector<int>>> deadlyPoints = getDeadlyPoints(state, movesToSearch);
+    return findSurvivalMove(state->prey, &deadlyPoints, movesToSearch >> 1, state).first;
+  }
+  // Since we're not in danger of dying we compute our move to middle heuristic
+  return getPathToCenter(state, state->prey).second;
 }
 
 HunterMove solveHunterHeuristic(GameState *state) {
