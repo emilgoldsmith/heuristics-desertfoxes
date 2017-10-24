@@ -337,7 +337,7 @@ HunterMove solveHunterGuyu(GameState *state) {
   bool hunterTowardsPreyY = hunterPreyDist.y * state->hunterDirection.y < 0;
 
   // should consider building vertical
-  if (hunterPreyDist.x <= 2) {
+  if (abs(hunterPreyDist.x) <= 2) {
     if (hunterTowardsPreyX) {
       wallCandidates.push_back(1);
     // hunter is moving away
@@ -364,13 +364,13 @@ HunterMove solveHunterGuyu(GameState *state) {
     }
   }
   // should consider building horizontal
-  if (hunterPreyDist.y <= 2) {
+  if (abs(hunterPreyDist.y) <= 2) {
     if (hunterTowardsPreyY) {
       wallCandidates.push_back(0);
     // hunter is moving away
     } else {
       // calculate the number of ticks before hunter gets back to the same y
-      int numTicks;
+      int numTicks = 0;
       GameState stateCopy(*state);
       do {
         HunterMove hm = { 0, {} };
@@ -410,8 +410,8 @@ HunterMove solveHunterGuyu(GameState *state) {
     }
   }
 
-  // delete walls
   vector<int> boundingWalls = getPreyBoundingWalls(state);
+  // delete trap walls
   for (int i = 0; i < state->walls.size(); i++) {
     Wall wall = state->walls[i];
     Position hunterWallDist = state->hunter - wall.start;
@@ -438,8 +438,40 @@ HunterMove solveHunterGuyu(GameState *state) {
         }
       }
     }
+  }
 
-    // TODO: also remove the wall if the wall is not a bounding wall
+  // delete non-bounding walls (after building the new wall)
+  GameState stateCopy(*state);
+  stateCopy.maxWalls += 1;
+  Position pm = { 0, 0 };
+  if (!stateCopy.preyMoves) {
+    pm = { 2, 2 };
+  }
+  stateCopy.makeMove({ wallType, {} }, pm);
+  vector<int> boundingWallsCopy = getPreyBoundingWalls(&stateCopy);
+  for (int i = 0; i < state->walls.size(); i++) {
+    // not already included in indiceToDelete
+    bool alreadyDeleted = false;
+    for (int deleted : indicesToDelete) {
+      if (deleted == i) {
+        alreadyDeleted = true;
+        break;
+      }
+    }
+    if (alreadyDeleted) {
+      continue;
+    }
+    // not a bounding wall
+    bool isBounding = false;
+    for (int bound : boundingWallsCopy) {
+      if (bound == i) {
+        isBounding = true;
+        break;
+      }
+    }
+    if (!isBounding) {
+      indicesToDelete.push_back(i);
+    }
   }
 
   return { wallType, indicesToDelete };
