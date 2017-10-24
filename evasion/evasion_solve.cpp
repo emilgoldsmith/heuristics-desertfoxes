@@ -93,7 +93,15 @@ vector<Position> getDeadlyNeighbours(Position a) {
   return deadlyNeighbours;
 }
 
-vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *state, int length) {
+vector<pair<Position, vector<int>>> getDeadlyPoints(GameState *initialState, int length) {
+  // We first delete all walls between the hunter and the prey just to make sure we get deadlyPoints
+  // where the hunter suddenly removes a wall and then takes us
+  GameState stateCopy(*initialState);
+  GameState *state = &stateCopy;
+  for (int wallIndexBetween = findWallBetween(state, state->prey, state->hunter); wallIndexBetween != -1; wallIndexBetween = findWallBetween(state, state->prey, state->hunter)) {
+    vector<int> indicesToDelete { wallIndexBetween };
+    state->removeWalls(indicesToDelete);
+  }
   // We simulate length ticks for the hunter to see assuming no extra walls all the deadly positions
   pair<Position, Position> hunterPositionAndVelocity = {state->hunter, state->hunterDirection};
   vector<pair<Position, vector<int>>> deadlyPoints;
