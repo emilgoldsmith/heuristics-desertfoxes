@@ -341,7 +341,7 @@ HunterMove solveHunterGuyu(GameState *state) {
 
   // should consider building vertical
   if (state->cooldownTimer == 0) {
-    if (hunterPreyDist.x == 2 || hunterPreyDist.x == -2) {
+    if (abs(hunterPreyDist.x) <= 2) {
       if (hunterTowardsPreyX) {
         wallCandidates.push_back(2);
       // hunter is moving away
@@ -368,7 +368,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       }
     }
     // should consider building horizontal
-    if (hunterPreyDist.y == 2 || hunterPreyDist.y == -2) {
+    if (abs(hunterPreyDist.y) <= 2) {
       if (hunterTowardsPreyY) {
         wallCandidates.push_back(1);
       // hunter is moving away
@@ -426,7 +426,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       if (hunterWallDist.x * state->hunterDirection.x < 0) {
         // if hunter is only 1 unit away from the wall
         // and moving towards the prey (trap wall)
-        if (hunterWallDist.x == 1 && hunterTowardsPreyX) {
+        if (hunterWallDist.x == 2 && hunterTowardsPreyX) {
           indicesToDelete.push_back(i);
           continue;
         }
@@ -437,7 +437,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       if (hunterWallDist.y * state->hunterDirection.y < 0) {
         // if hunter is only 1 unit away from the wall
         // and moving towards the prey (trap wall)
-        if (hunterWallDist.y == 1 && hunterTowardsPreyY) {
+        if (hunterWallDist.y == 2 && hunterTowardsPreyY) {
           indicesToDelete.push_back(i);
           continue;
         }
