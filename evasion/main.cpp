@@ -29,7 +29,9 @@ int main(int argc, char** argv) {
         continue;
       }
       pm = client.parsePreyMove();
+#ifdef LOGGING
       cout << "Parsed prey move: " << pm.x << ", " << pm.y << endl;
+#endif
       client.state->makeMove(hm, pm);
     } else {
       pm = client.preyMakeMove(solvePreyHeuristic);
@@ -38,11 +40,13 @@ int main(int argc, char** argv) {
         continue;
       }
       hm = client.parseHunterMove();
+#ifdef LOGGING
       cout << "Parsed hunter move: " << hm.wallType << " ";
       for (int i : hm.indicesToDelete) {
         cout << i << " ";
       }
       cout << endl;
+#endif
       client.state->makeMove(hm, pm);
     }
 #ifdef DEBUG
