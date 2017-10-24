@@ -339,7 +339,7 @@ HunterMove solveHunterGuyu(GameState *state) {
   // should consider building vertical
   if (abs(hunterPreyDist.x) <= 2 && hunterPreyDist.y != 0) {
     if (hunterTowardsPreyX) {
-      wallCandidates.push_back(1);
+      wallCandidates.push_back(2);
     // hunter is moving away
     } else {
       // calculate the number of ticks before hunter gets back to the same x
@@ -359,14 +359,14 @@ HunterMove solveHunterGuyu(GameState *state) {
       } while (stateCopy.hunter.x != state->hunter.x);
       // hunter is able to come back, destroy the old wall, and build a new wall immediately
       if (numTicks > state->cooldown) {
-        wallCandidates.push_back(1);
+        wallCandidates.push_back(2);
       }
     }
   }
   // should consider building horizontal
   if (abs(hunterPreyDist.y) <= 2 && hunterPreyDist.y != 0) {
     if (hunterTowardsPreyY) {
-      wallCandidates.push_back(0);
+      wallCandidates.push_back(1);
     // hunter is moving away
     } else {
       // calculate the number of ticks before hunter gets back to the same y
@@ -386,7 +386,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       } while (stateCopy.hunter.y != state->hunter.y);
       // hunter is able to come back, destroy the old wall, and build a new wall immediately
       if (numTicks > state->cooldown) {
-        wallCandidates.push_back(0);
+        wallCandidates.push_back(1);
       }
     }
   }
