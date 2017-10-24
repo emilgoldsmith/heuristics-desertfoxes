@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <utility>
 #include <queue>
+#include <iostream>
 
 using namespace std;
 
@@ -283,7 +284,7 @@ vector<int> getPreyBoundingWalls(GameState *state) {
     if (wall.start.x == wall.end.x) {
       int dx = wall.start.x > state->prey.x ? 1 : -1;
       for (int x = state->prey.x; x >= 0 && x < 300; x += dx) {
-        if (state->isOccupied({x, state->prey.y}), wallIndex) {
+        if (state->isOccupied({x, state->prey.y}, wallIndex)) {
           break;
         }
       }
@@ -297,7 +298,9 @@ vector<int> getPreyBoundingWalls(GameState *state) {
       }
     }
     if (wallIndex == i) {
-      boundingWalls.push_back(wallIndex);
+      if (find(boundingWalls.begin(), boundingWalls.end(), wallIndex) == boundingWalls.end()) {
+        boundingWalls.push_back(wallIndex);
+      }
     }
   }
   
@@ -337,56 +340,58 @@ HunterMove solveHunterGuyu(GameState *state) {
   bool hunterTowardsPreyY = hunterPreyDist.y * state->hunterDirection.y < 0;
 
   // should consider building vertical
-  if (abs(hunterPreyDist.x) <= 2 && hunterPreyDist.y != 0) {
-    if (hunterTowardsPreyX) {
-      wallCandidates.push_back(2);
-    // hunter is moving away
-    } else {
-      // calculate the number of ticks before hunter gets back to the same x
-      int numTicks = 0;
-      GameState stateCopy(*state);
-      do {
-        HunterMove hm = { 0, {} };
-        Position pm = { 0, 0 };
-        if (!stateCopy.preyMoves) {
-          pm = { 2, 2 };
-        }
-        stateCopy.makeMove(hm, pm);
-        numTicks++;
-        if (numTicks > state->cooldown) {
-          break;
-        }
-      } while (stateCopy.hunter.x != state->hunter.x);
-      // hunter is able to come back, destroy the old wall, and build a new wall immediately
-      if (numTicks > state->cooldown) {
+  if (state->cooldownTimer == 0) {
+    if (hunterPreyDist.x == 2 || hunterPreyDist.x == -2) {
+      if (hunterTowardsPreyX) {
         wallCandidates.push_back(2);
+      // hunter is moving away
+      } else {
+        // calculate the number of ticks before hunter gets back to the same x
+        int numTicks = 0;
+        GameState stateCopy(*state);
+        do {
+          HunterMove hm = { 0, {} };
+          Position pm = { 0, 0 };
+          if (!stateCopy.preyMoves) {
+            pm = { 2, 2 };
+          }
+          stateCopy.makeMove(hm, pm);
+          numTicks++;
+          if (numTicks > state->cooldown) {
+            break;
+          }
+        } while (stateCopy.hunter.x != state->hunter.x);
+        // hunter is able to come back, destroy the old wall, and build a new wall immediately
+        if (numTicks > state->cooldown) {
+          wallCandidates.push_back(2);
+        }
       }
     }
-  }
-  // should consider building horizontal
-  if (abs(hunterPreyDist.y) <= 2 && hunterPreyDist.y != 0) {
-    if (hunterTowardsPreyY) {
-      wallCandidates.push_back(1);
-    // hunter is moving away
-    } else {
-      // calculate the number of ticks before hunter gets back to the same y
-      int numTicks = 0;
-      GameState stateCopy(*state);
-      do {
-        HunterMove hm = { 0, {} };
-        Position pm = { 0, 0 };
-        if (!stateCopy.preyMoves) {
-          pm = { 2, 2 };
-        }
-        stateCopy.makeMove(hm, pm);
-        numTicks++;
-        if (numTicks > state->cooldown) {
-          break;
-        }
-      } while (stateCopy.hunter.y != state->hunter.y);
-      // hunter is able to come back, destroy the old wall, and build a new wall immediately
-      if (numTicks > state->cooldown) {
+    // should consider building horizontal
+    if (hunterPreyDist.y == 2 || hunterPreyDist.y == -2) {
+      if (hunterTowardsPreyY) {
         wallCandidates.push_back(1);
+      // hunter is moving away
+      } else {
+        // calculate the number of ticks before hunter gets back to the same y
+        int numTicks = 0;
+        GameState stateCopy(*state);
+        do {
+          HunterMove hm = { 0, {} };
+          Position pm = { 0, 0 };
+          if (!stateCopy.preyMoves) {
+            pm = { 2, 2 };
+          }
+          stateCopy.makeMove(hm, pm);
+          numTicks++;
+          if (numTicks > state->cooldown) {
+            break;
+          }
+        } while (stateCopy.hunter.y != state->hunter.y);
+        // hunter is able to come back, destroy the old wall, and build a new wall immediately
+        if (numTicks > state->cooldown) {
+          wallCandidates.push_back(1);
+        }
       }
     }
   }
@@ -421,7 +426,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       if (hunterWallDist.x * state->hunterDirection.x < 0) {
         // if hunter is only 1 unit away from the wall
         // and moving towards the prey (trap wall)
-        if (hunterWallDist.x <= 1 && hunterTowardsPreyX) {
+        if (hunterWallDist.x == 1 && hunterTowardsPreyX) {
           indicesToDelete.push_back(i);
           continue;
         }
@@ -432,7 +437,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       if (hunterWallDist.y * state->hunterDirection.y < 0) {
         // if hunter is only 1 unit away from the wall
         // and moving towards the prey (trap wall)
-        if (hunterWallDist.y <= 1 && hunterTowardsPreyY) {
+        if (hunterWallDist.y == 1 && hunterTowardsPreyY) {
           indicesToDelete.push_back(i);
           continue;
         }
