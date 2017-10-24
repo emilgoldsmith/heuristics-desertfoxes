@@ -54,6 +54,6 @@ struct Dimension {
   int minY;
   int maxX;
   int maxY;
-}
+};
 
 #endif
