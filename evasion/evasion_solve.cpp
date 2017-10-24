@@ -337,13 +337,13 @@ HunterMove solveHunterGuyu(GameState *state) {
   bool hunterTowardsPreyY = hunterPreyDist.y * state->hunterDirection.y < 0;
 
   // should consider building vertical
-  if (abs(hunterPreyDist.x) <= 2) {
+  if (abs(hunterPreyDist.x) <= 2 && hunterPreyDist.y != 0) {
     if (hunterTowardsPreyX) {
       wallCandidates.push_back(1);
     // hunter is moving away
     } else {
       // calculate the number of ticks before hunter gets back to the same x
-      int numTicks;
+      int numTicks = 0;
       GameState stateCopy(*state);
       do {
         HunterMove hm = { 0, {} };
@@ -364,7 +364,7 @@ HunterMove solveHunterGuyu(GameState *state) {
     }
   }
   // should consider building horizontal
-  if (abs(hunterPreyDist.y) <= 2) {
+  if (abs(hunterPreyDist.y) <= 2 && hunterPreyDist.y != 0) {
     if (hunterTowardsPreyY) {
       wallCandidates.push_back(0);
     // hunter is moving away
