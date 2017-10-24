@@ -49,4 +49,11 @@ struct Score {
   int score;
 };
 
+struct Dimension {
+  int minX;
+  int minY;
+  int maxX;
+  int maxY;
+}
+
 #endif

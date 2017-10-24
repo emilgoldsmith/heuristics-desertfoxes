@@ -17,7 +17,7 @@ class GameState {
     Position hunterDirection = {1, 1};
     std::vector<Wall> walls;
     const int cooldown;
-    const int maxWalls;
+    int maxWalls;
     int cooldownTimer = 0;
     constexpr const static Position boardSize = {300, 300};
     bool gameOver = false;
