@@ -203,7 +203,7 @@ pair<Position, int> findSurvivalMove(Position start, vector<pair<Position, vecto
 Position solvePreyHeuristic(GameState *state) {
   bool hasWallBetween = findWallBetween(state, state->prey, state->hunter) != -1;
   int hunterPreyDistance = computeDistance(state->prey, state->hunter);
-  int movesToSearch = 31;
+  int movesToSearch = 35;
   if (!hasWallBetween && hunterPreyDistance <= 2 * movesToSearch * movesToSearch) { // The 2 is sqrt2 squared (the amount of distance coverable in 1 timestep)
     // First check if we're in danger of dying if we're in the same box as hunter and pretty close
     vector<pair<Position, vector<int>>> deadlyPoints = getDeadlyPoints(state, movesToSearch);
