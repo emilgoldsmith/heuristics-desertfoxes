@@ -26,30 +26,24 @@ MoveCloserUpdate moveCloser(const Point &center, const Point &furthestPoint, con
   Point directionToMove = (furthestPoint - center).unitize();
   int dx[] = {directionToMove.x, directionToMove.x, 0};
   int dy[] = {directionToMove.y, 0, directionToMove.y};
+  Point curCenter = center;
+  Point curFurthestPoint = furthestPoint;
   for (int i = 0; i < 3; i++) {
-    Point newCenter = center + Point(dx[i], dy[i]);
-    Point newFurthestPoint = getFurthestPoint(newCenter, points);
-    if (newFurthestPoint == furthestPoint) {
-      // We moved closer and it's still the closest point so we update and keep going
-      return {newCenter, newFurthestPoint};
-    } else { // We check whether this enters a loop where they just alternate between being the furthestPoint
-      if (!onlyDoCheck) {
-        MoveCloserUpdate newCenterTest = moveCloser(newCenter, newFurthestPoint, points, true);
-        if (newCenterTest.furthestPoint == furthestPoint) {
-          // It is a loop so this is not worth anything
-          continue;
-        } else {
-          // It is a valid new furthest point to check
-          return {newCenter, newFurthestPoint};
-        }
+    while(1) {
+      Point newCenter = curCenter + Point(dx[i], dy[i]);
+      Point newFurthestPoint = getFurthestPoint(newCenter, points);
+      if (newFurthestPoint == curFurthestPoint) {
+        // We moved closer and it's still the closest point so we update and keep going
+        curCenter = newCenter;
+        curFurthestPoint = furthestPoint;
       } else {
-        // This is a depth 2 call to the function that just wants to know whether there is a loop
-        // And here we want to find a direction where we can actually go closer while it still being the furthest point
-        continue;
+        // We can't go any further in this direction
+        break;
       }
     }
+
   }
-  return {center, furthestPoint};
+  return {curCenter, curFurthestPoint};
 }
 
 Point computeCenter(vector<Point> points) {
@@ -63,11 +57,15 @@ Point computeCenter(vector<Point> points) {
   Point furthestPoint = getFurthestPoint(center, points);
   bool movedCloser;
   MoveCloserUpdate latestCenterInformation = {center, furthestPoint};
-  do {
+  while (1) {
     MoveCloserUpdate newUpdate = moveCloser(latestCenterInformation.center, latestCenterInformation.furthestPoint, points);
-    movedCloser = newUpdate.center != latestCenterInformation.center;
-    latestCenterInformation = newUpdate;
-  } while(movedCloser);
+    movedCloser = manDist(newUpdate.center, newUpdate.furthestPoint) < manDist(latestCenterInformation.center, latestCenterInformation.furthestPoint);
+    if (movedCloser) {
+      latestCenterInformation = newUpdate;
+    } else {
+      break;
+    }
+  }
   return latestCenterInformation.center;
 }
 
