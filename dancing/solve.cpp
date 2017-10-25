@@ -1,10 +1,13 @@
 #include "geometry.h"
+#include "solve.h"
 
 #include <vector>
+#include <limits>
+#include <algorithm>
 
 using namespace std;
 
-Point getFurthestPoint(Point center, vector<Point> points, bool getSecondFurthestPoint = false) {
+Point getFurthestPoint(const Point &center, const vector<Point> &points, bool getSecondFurthestPoint) {
   int maxDist = -1;
   Point furthestPoint = points[0];
   Point secondFurthestPoint = points[1];
@@ -82,6 +85,33 @@ Point computeCenter(vector<Point> points) {
   return bestCandidateCenter;
 }
 
+Point computeCenterBruteforce(const vector<Point> &points) {
+  // Get the rectangle that encloses our points
+  int minX = numeric_limits<int>::max();
+  int minY = numeric_limits<int>::max();
+  int maxX = numeric_limits<int>::min();
+  int maxY = numeric_limits<int>::min();
+  for (Point curPoint : points) {
+    minX = min(minX, curPoint.x);
+    minY = min(minY, curPoint.y);
+    maxX = max(maxX, curPoint.x);
+    maxY = max(maxY, curPoint.y);
+  }
+  // Now bruteforce all positions in this square
+  int minFurthestDistance = numeric_limits<int>::max();
+  Point bestCenter;
+  for (int x = minX; x <= maxX; x++) {
+    for (int y = minY; y <= maxY; y++) {
+      Point curFurthestPoint = getFurthestPoint({x, y}, points);
+      int minMaxDist = manDist({x, y}, curFurthestPoint);
+      if (minMaxDist < minFurthestDistance) {
+        bestCenter = {x, y};
+        minFurthestDistance = minMaxDist;
+      }
+    }
+  }
+  return bestCenter;
+}
 
 /**
 void pairingsToPositions() {
