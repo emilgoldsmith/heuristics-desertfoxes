@@ -69,7 +69,7 @@ inline Point operator *(const Point &a, const int lambda){
 }
 
 inline Point operator /(const Point &a, const int lambda){
-	return Point(lambda/a.x, lambda/a.y);
+	return Point(a.x / lambda, a.y / lambda);
 }
 
 // Manhattan distance
