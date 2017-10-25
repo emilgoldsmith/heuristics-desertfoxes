@@ -4,15 +4,20 @@
 
 using namespace std;
 
-Point getFurthestPoint(Point center, vector<Point> points) {
+Point getFurthestPoint(Point center, vector<Point> points, bool getSecondFurthestPoint = false) {
   int maxDist = -1;
-  Point furthestPoint;
+  Point furthestPoint = points[0];
+  Point secondFurthestPoint = points[1];
   for (Point singlePoint : points) {
     int dist = manDist(center, singlePoint);
-    if (dist > maxDist) {
+    if (dist >= maxDist) {
       maxDist = dist;
+      secondFurthestPoint = furthestPoint;
       furthestPoint = singlePoint;
     }
+  }
+  if (getSecondFurthestPoint) {
+    return secondFurthestPoint;
   }
   return furthestPoint;
 }
@@ -20,6 +25,10 @@ Point getFurthestPoint(Point center, vector<Point> points) {
 struct MoveCloserUpdate {
   Point center;
   Point furthestPoint;
+
+  int dist() {
+    return manDist(center, furthestPoint);
+  }
 };
 
 MoveCloserUpdate moveCloser(const Point &center, const Point &furthestPoint, const vector<Point> &points, bool onlyDoCheck = false) {
@@ -31,17 +40,17 @@ MoveCloserUpdate moveCloser(const Point &center, const Point &furthestPoint, con
   for (int i = 0; i < 3; i++) {
     while(1) {
       Point newCenter = curCenter + Point(dx[i], dy[i]);
-      Point newFurthestPoint = getFurthestPoint(newCenter, points);
-      if (newFurthestPoint == curFurthestPoint) {
-        // We moved closer and it's still the closest point so we update and keep going
-        curCenter = newCenter;
-        curFurthestPoint = furthestPoint;
-      } else {
+      Point newFurthestPoint = getFurthestPoint(curCenter, points);
+      bool shouldStop = newFurthestPoint != furthestPoint;
+      if (shouldStop) {
         // We can't go any further in this direction
         break;
+      } else {
+        // Else we update our new values
+        curCenter = newCenter;
+        curFurthestPoint = newFurthestPoint;
       }
     }
-
   }
   return {curCenter, curFurthestPoint};
 }
@@ -57,16 +66,20 @@ Point computeCenter(vector<Point> points) {
   Point furthestPoint = getFurthestPoint(center, points);
   bool movedCloser;
   MoveCloserUpdate latestCenterInformation = {center, furthestPoint};
+  int bestCandidateDist = latestCenterInformation.dist();
+  Point bestCandidateCenter = center;
   while (1) {
-    MoveCloserUpdate newUpdate = moveCloser(latestCenterInformation.center, latestCenterInformation.furthestPoint, points);
-    movedCloser = manDist(newUpdate.center, newUpdate.furthestPoint) < manDist(latestCenterInformation.center, latestCenterInformation.furthestPoint);
-    if (movedCloser) {
-      latestCenterInformation = newUpdate;
+    latestCenterInformation = moveCloser(latestCenterInformation.center, latestCenterInformation.furthestPoint, points);
+    if (latestCenterInformation.dist() < bestCandidateDist) {
+      bestCandidateDist = latestCenterInformation.dist();
+      bestCandidateCenter = latestCenterInformation.center;
+      // Make sure we search on the second furthest point next
+      latestCenterInformation.furthestPoint = getFurthestPoint(latestCenterInformation.center, points, true);
     } else {
       break;
     }
   }
-  return latestCenterInformation.center;
+  return bestCandidateCenter;
 }
 
 
