@@ -14,9 +14,9 @@ public:
   SocketClient(std::string socketAddress, int socketPort);
   ~SocketClient();
   int sendAll(char *buf, int len);
-  std::string receive(int bufferSize, char end = '\0');
+  std::string receive(int bufferSize, char end = ' ');
   int sendJSON(nlohmann::json j);
-  nlohmann::json receiveJSON(int bufferSize, char end = '\0');
+  nlohmann::json receiveJSON(int bufferSize, char end = ' ');
   int sendString(std::string s);
   void closeSocket();
 
