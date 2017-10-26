@@ -253,3 +253,35 @@ void Client::makeSpoilerMove(vector<Point> starsToPlace) {
   send(starString);
   gameOver = true;
 }
+
+void Client::makeChoreographerMove(ChoreographerMove move) {
+#ifdef DEBUG
+  if (move.finalPosition.size() != serverNumDancers) {
+    cerr << "Final position for choreographer invalid, there " << move.finalPosition.size() << " lines instead of " << serverNumDancers << endl;
+  }
+#endif
+  // We leave the rest of the validation to the server as we'll never see this data again anyway
+
+  // First send all the moves we're gonna make
+  for (vector<DancerMove> singleStep : move.dancerMoves) {
+    stringstream ss;
+    ss << singleStep.size() << ' ';
+    for (DancerMove singleMove : singleStep) {
+      ss << singleMove.from.x << ' ' << singleMove.from.y << ' ' << singleMove.to.x << ' ' << singleMove.to.y << ' ';
+    }
+    string stepString = ss.str();
+    stepString = stepString.substr(0, stepString.size() - 1); // Remove last space
+    send(stepString);
+  }
+  // Signify that we are done making moves
+  send("DONE");
+
+  // Tell the server the configuration of the final position
+  stringstream ss;
+  for (EndLine singleLine : move.finalPosition) {
+    ss << singleLine.start.x << ' ' << singleLine.start.y << ' ' << singleLine.end.x << ' ' << singleLine.end.y << ' ';
+  }
+  string finalPositionString = ss.str();
+  finalPositionString = finalPositionString.substr(0, finalPositionString.size() - 1); // Remove last space
+  send(finalPositionString);
+}
