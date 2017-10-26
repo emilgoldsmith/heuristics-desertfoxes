@@ -26,9 +26,6 @@ static bool checkNumDancers(int numDancersCurrentColor, int serverNumDancers, in
 class Client {
   SocketClient *socket;
   void parseInputFile(string inputFile) {
-#ifdef LOGGING
-    cout << inputFile << endl;
-#endif
     for (int lineStart = 0; lineStart < inputFile.size();) {
       string line = "";
       for (int lineIndex = lineStart; inputFile[lineIndex] != '\n' && lineIndex < inputFile.size(); lineIndex++) {
@@ -67,9 +64,12 @@ class Client {
   public:
     const string name = "DesertFoxes";
     vector<Dancer> dancers;
+    vector<Point> stars;
     int numColors = 0;
-    int boardSize;
-    int k;
+    int serverNumColors;
+    int serverBoardSize;
+    int serverNumDancers;
+    const int role; // 0 for choreographer, 1 for spoiler
     queue<string> messageQueue;
 
     void send(string s) {
@@ -77,13 +77,8 @@ class Client {
     }
 
     string receive() {
-      if (!messageQueue.empty()) {
-        string nextMessage = messageQueue.front();
-        messageQueue.pop();
-        return nextMessage;
-      } else {
-        string receivedMessage = socket->receive(1000, '&');
-        receivedMessage = receivedMessage.substr(0, receivedMessage.size() - 1); // trim last &
+      if (messageQueue.empty()) {
+        string receivedMessage = socket->receive(1000, '&'); // The return value includes the last &
 #ifdef LOGGING
         cout << "Received: " << receivedMessage << endl;
 #endif
@@ -94,27 +89,38 @@ class Client {
             startOfLastMessage = i + 1;
           }
         }
-        return receivedMessage.substr(startOfLastMessage, string::npos);
       }
+      string nextMessage = messageQueue.front();
+      messageQueue.pop();
+      return nextMessage;
     }
 
-    Client(string ip, int port) {
+    Client(string ip, int port, int playerType): role(playerType) {
       socket = new SocketClient(ip, port);
       // First send name to the server
       send(name);
       // Then we receive the input file
-      string inputFile = receive();
-      parseInputFile(inputFile);
+      parseInputFile(receive());
 #ifdef LOGGING
       cout << "Dancers parsed:" << endl;
       for (Dancer singleDancer : dancers) {
         cout << singleDancer.position.x << ' ' << singleDancer.position.y << ' ' << singleDancer.color << endl;
       }
 #endif
-      string metaData = receive();
+      parseMetaData(receive());
 #ifdef DEBUG
-      if (!isConsistent(metaData)) {
+      if (!isConsistent()) {
         cerr << "We have inconsistencies between file parsing on server and client" << endl;
+      }
+#endif
+      if (role == 0) {
+        // We are choreographer
+        parseStars(receive());
+      }
+#ifdef LOGGING
+      cout << "Stars parsed:" << endl;
+      for (Point singleStar : stars) {
+        cout << singleStar.x << ' ' << singleStar.y << endl;
       }
 #endif
     }
@@ -123,8 +129,7 @@ class Client {
       delete socket;
     }
 
-    bool isConsistent(string metaData) {
-      // We first parse the string
+    void parseMetaData(string metaData) {
       string values[3] = {"", "", ""};
       int valueIndex = 0;
       for (char c : metaData) {
@@ -134,11 +139,30 @@ class Client {
           values[valueIndex] += c;
         }
       }
-      int serverBoardSize = stoi(values[0]);
-      int serverNumColors = stoi(values[1]);
-      int serverNumDancers = stoi(values[2]);
+      serverBoardSize = stoi(values[0]);
+      serverNumColors = stoi(values[1]);
+      serverNumDancers = stoi(values[2]);
+    }
 
-      // Now we do the actual consistency check
+    void parseStars(string starString) {
+      string values[2] = {"", ""};
+      int valueIndex = 0;
+      for (char c : starString) {
+        if (c == ' ') {
+          valueIndex++;
+          if (valueIndex == 2) {
+            // We have parsed a full star
+            stars.push_back({stoi(values[0]), stoi(values[1])});
+            valueIndex = 0;
+            values[0] = values[1] = "";
+          }
+        } else {
+          values[valueIndex] += c;
+        }
+      }
+    }
+
+    bool isConsistent() {
       bool consistent = true;
       if (serverNumColors != numColors) {
         consistent = false;
