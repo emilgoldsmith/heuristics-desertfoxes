@@ -1,4 +1,6 @@
-#include "client.cpp"
+#include "client.h"
+#include "geometry.h"
+#include "solve.h"
 
 #include <iostream>
 #include <string>
@@ -12,5 +14,9 @@ int main(int argc, char **argv) {
   }
   string ip = argv[1];
   int port = atoi(argv[2]);
-  Client client(ip, port, atoi(argv[3]));
+  int role = atoi(argv[3]);
+  Client client(ip, port, role);
+  if (role == 1) {
+    client.makeSpoilerMove(dummyPlaceStars(&client));
+  }
 }

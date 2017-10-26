@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 static int unitizeSingle(int x) {
   if (x > 0) {
@@ -57,6 +58,15 @@ public:
 
         std::string toString() const {
           return "(" + std::to_string(x) + "," + std::to_string(y) + ")";
+        }
+
+        bool in(std::vector<Point> points) {
+          for (Point curPoint : points) {
+            if ((*this) == curPoint) {
+              return true;
+            }
+          }
+          return false;
         }
 };
 

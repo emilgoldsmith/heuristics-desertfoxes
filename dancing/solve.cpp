@@ -1,5 +1,6 @@
 #include "geometry.h"
 #include "solve.h"
+#include "client.h"
 
 #include <vector>
 #include <limits>
@@ -111,6 +112,37 @@ Point computeCenterBruteforce(const vector<Point> &points) {
     }
   }
   return bestCenter;
+}
+
+vector<Point> dummyPlaceStars(Client *client) {
+  int n = client->serverBoardSize;
+  int k = client->serverNumDancers;
+  int c = client->serverNumColors;
+  // Get dancers as a vector of points
+  vector<Point> dancers;
+  for (Dancer curDancer : client->dancers) {
+    dancers.push_back(curDancer.position);
+  }
+  int x = 0, y = 0;
+  vector<Point> starsToPlace;
+
+  while (k--) {
+    while (Point(x, y).in(dancers)) {
+      x++;
+      if (x >= n) {
+        x = 0;
+        y += c + 1;
+      }
+    }
+
+    starsToPlace.push_back({x, y});
+    x += c + 1;
+    if (x >= n) {
+      x = 0;
+      y += c + 1;
+    }
+  }
+  return starsToPlace;
 }
 
 /**
