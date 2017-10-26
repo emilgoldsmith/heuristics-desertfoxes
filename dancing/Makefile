@@ -3,9 +3,14 @@ CXXFLAGS = -std=c++11
 
 DEBUG ?= 1
 ifeq ($(DEBUG), 1)
-	CXXFLAGS += -DDEBUG -DLOGGING -g -O0
+	CXXFLAGS += -DDEBUG -g -O0
 else
 	CXXFLAGS += -O2
+endif
+
+LOGGING ?= 0
+ifeq ($(LOGGING), 1)
+	CXXFLAGS += -DLOGGING
 endif
 
 main: main.cpp client.cpp solve.cpp

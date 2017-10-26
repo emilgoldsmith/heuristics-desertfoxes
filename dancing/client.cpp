@@ -138,6 +138,10 @@ void Client::parseStars(string starString) {
       values[valueIndex] += c;
     }
   }
+  if (values[0] != "" && values[1] != "") {
+    // There was no trailing space so we need to remember to parse last star as well!
+    stars.push_back({stoi(values[0]), stoi(values[1])});
+  }
 }
 
 static bool checkNumDancers(int numDancersCurrentColor, int serverNumDancers, int currentColor) {
