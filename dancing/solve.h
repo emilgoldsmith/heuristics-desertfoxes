@@ -1,7 +1,7 @@
 #ifndef SOLVE_H
 #define SOLVE_H
 
-#include "geometry.h"
+#include "geometry.hpp"
 #include "client.h"
 
 #include <vector>

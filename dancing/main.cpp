@@ -1,5 +1,5 @@
 #include "client.h"
-#include "geometry.h"
+#include "geometry.hpp"
 #include "solve.h"
 
 #include <iostream>

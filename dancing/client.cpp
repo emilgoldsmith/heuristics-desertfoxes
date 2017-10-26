@@ -1,6 +1,7 @@
 #include "client.h"
 #include "../socket/socket_client.h"
-#include "geometry.h"
+#include "geometry.hpp"
+#include "structs.h"
 
 #include <vector>
 #include <string>
