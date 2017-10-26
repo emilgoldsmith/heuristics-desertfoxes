@@ -271,7 +271,7 @@ void Client::makeChoreographerMove(ChoreographerMove move) {
       ss << singleMove.from.x << ' ' << singleMove.from.y << ' ' << singleMove.to.x << ' ' << singleMove.to.y << ' ';
     }
     string stepString = ss.str();
-    stepString = stepString.substr(0, stepString.size() - 1); // Remove last space
+    // We purposefully don't strip the last space as it is actually needed for the server to parse it correctly
     send(stepString);
   }
   // Signify that we are done making moves
