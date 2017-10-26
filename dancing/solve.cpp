@@ -1,6 +1,7 @@
 #include "geometry.hpp"
 #include "solve.h"
 #include "client.h"
+#include "structs.h"
 
 #include <vector>
 #include <limits>
@@ -143,6 +144,23 @@ vector<Point> dummyPlaceStars(Client *client) {
     }
   }
   return starsToPlace;
+}
+
+
+ChoreographerMove dummyGetChoreographerMove(Client *client) {
+  // We are just going to make some garbage as it's too comprehensive actually finding a solution
+  ChoreographerMove move;
+  for (int i = 0; i < 3; i++) {
+    vector<DancerMove> singleStep;
+    for (Dancer singleDancer : client->dancers) {
+      singleStep.push_back({singleDancer.position, singleDancer.position + Point(1, 0)});
+    }
+    move.dancerMoves.push_back(singleStep);
+  }
+  for (int i = 0; i < client->serverNumDancers; i++) {
+    move.finalPosition.push_back({{i, i}, {i + client->serverNumColors, i}});
+  }
+  return move;
 }
 
 /**

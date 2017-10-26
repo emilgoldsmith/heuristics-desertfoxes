@@ -18,5 +18,7 @@ int main(int argc, char **argv) {
   Client client(ip, port, role);
   if (role == 1) {
     client.makeSpoilerMove(dummyPlaceStars(&client));
+  } else {
+    client.makeChoreographerMove(dummyGetChoreographerMove(&client));
   }
 }
