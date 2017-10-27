@@ -14,6 +14,8 @@ Client::Client(string ip, int port, int playerType): role(playerType) {
   socket = new SocketClient(ip, port);
   // First send name to the server
   send(name);
+  // Then we get the meta data
+  parseMetaData(receive());
   // Then we receive the input file
   parseInputFile(receive());
 #ifdef LOGGING
@@ -22,7 +24,6 @@ Client::Client(string ip, int port, int playerType): role(playerType) {
     cout << singleDancer.position.x << ' ' << singleDancer.position.y << ' ' << singleDancer.color << endl;
   }
 #endif
-  parseMetaData(receive());
 #ifdef DEBUG
   if (!isConsistent()) {
     cerr << "We have inconsistencies between file parsing on server and client" << endl;
