@@ -1,5 +1,6 @@
-#include "geometry.h"
+#include "geometry.hpp"
 #include "solve.h"
+#include "spiral_iterator.h"
 
 #include <vector>
 #include <iostream>
@@ -8,7 +9,7 @@
 
 using namespace std;
 
-void customAssert(Point a, Point b, string assertionName = "Unnamed assertion") {
+void assertPoint(Point a, Point b, string assertionName = "Unnamed assertion") {
   if (a != b) {
     cerr << assertionName << ':' << endl;
     cerr << "Expected point: " << b.toString() << endl;
@@ -32,14 +33,13 @@ void assertCenter(Point a, Point b, vector<Point> points, string assertionName =
   }
 }
 
-
 struct CenterTest {
   vector<Point> testCase;
   Point expectedCenter;
 };
 
 int main() {
-  customAssert(Point(8, 8) / 4, Point(2, 2), "Point integer divison");
+  assertPoint(Point(8, 8) / 4, Point(2, 2), "Point integer divison");
   vector<CenterTest> centerTests = {
     {{{0, 0}, {0, 4}, {4, 4}, {4, 0}}, {2, 2}},
     {{{0, 0}, {0, 8}, {2, 8}, {2, 0}}, {1, 4}},
@@ -58,6 +58,41 @@ int main() {
       testName += " " + singlePoint.toString();
     }
     assertCenter(computeCenterBruteforce(test.testCase), test.expectedCenter, test.testCase, testName);
+  }
+  vector<Point> spiralTests = {
+    {0, 0},
+    {-1, 1},
+    {0, 1},
+    {1, 1},
+    {1, 0},
+    {1, -1},
+    {0, -1},
+    {-1, -1},
+    {-1, 0},
+    {-2, 2},
+    {-1, 2},
+    {0, 2},
+    {1, 2},
+    {2, 2},
+    {2, 1},
+    {2, 0},
+    {2, -1},
+    {2, -2},
+    {1, -2},
+    {0, -2},
+    {-1, -2},
+    {-2, -2},
+    {-2, -1},
+    {-2, 0},
+    {-2, 1},
+    {-3, 3}
+  };
+  int testNum = 1;
+  SpiralIterator it(0, 0);
+  for (Point expectedValue : spiralTests) {
+    string testName = "Spiral test for point number " + to_string(testNum);
+    assertPoint(it.getNext(), expectedValue, testName);
+    testNum++;
   }
   cout << "Tests Finished" << endl;
 }
