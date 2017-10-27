@@ -6,6 +6,7 @@
 #endif
 
 SpiralIterator::SpiralIterator(int x, int y): curPoint({x, y}) {}
+SpiralIterator::SpiralIterator(Point start): curPoint(start) {}
 
 Point SpiralIterator::getNext() {
   Point toReturn = curPoint;

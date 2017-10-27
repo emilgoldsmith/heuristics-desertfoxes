@@ -2,6 +2,7 @@
 #include "solve.h"
 #include "client.h"
 #include "structs.h"
+#include "spiral_iterator.h"
 
 #include <vector>
 #include <limits>
@@ -115,6 +116,53 @@ Point computeCenterBruteforce(const vector<Point> &points) {
   return bestCenter;
 }
 
+vector<Position> pairingsToPositions(Client *client, vector<Pairing> pairings) {
+  int n = client->serverBoardSize;
+  vector<vector<bool>> board(n, vector<bool>(n, false));
+  for (Point star : client->stars) {
+    board[star.x][star.y] = true;
+  }
+  vector<Position> finalPositions;
+  for (Pairing curPairing : pairings) {
+    Point center = computeCenterBruteforce(curPairing.dancers);
+    SpiralIterator it(center);
+    int pointsOnNegative = curPairing.dancers.size() / 2;
+    int pointsOnPositive = pointsOnNegative + curPairing.dancers.size() % 2;
+    while (true) {
+      Point cur = it.getNext();
+      if (cur.x < 0 || cur.x >= n || cur.y < 0 || cur.y >= n) continue;
+      // First try horizontal
+      Position candidatePosition;
+      for (int i = cur.x - pointsOnNegative; i < cur.x + pointsOnPositive && i >= 0 && i < n; i++) {
+        if (board[i][cur.y]) break;
+        candidatePosition.placements.push_back({i, cur.y});
+      }
+      if (candidatePosition.placements.size() == curPairing.dancers.size()) {
+        // We found a proper placement!
+        for (Point dancerFinal : candidatePosition.placements) {
+          board[dancerFinal.x][dancerFinal.y] = true;
+        }
+        finalPositions.push_back(candidatePosition);
+        break;
+      }
+      candidatePosition.placements.clear();
+      for (int j = cur.y - pointsOnNegative; j < cur.y + pointsOnPositive && j >= 0 && j < n; j++) {
+        if (board[cur.x][j]) break;
+        candidatePosition.placements.push_back({cur.x, j});
+      }
+      if (candidatePosition.placements.size() == curPairing.dancers.size()) {
+        // We found a proper placement!
+        for (Point dancerFinal : candidatePosition.placements) {
+          board[dancerFinal.x][dancerFinal.y] = true;
+        }
+        finalPositions.push_back(candidatePosition);
+        break;
+      }
+    }
+  }
+  return finalPositions;
+}
+
 vector<Point> dummyPlaceStars(Client *client) {
   int n = client->serverBoardSize;
   int k = client->serverNumDancers;
@@ -163,11 +211,3 @@ ChoreographerMove dummyGetChoreographerMove(Client *client) {
   return move;
 }
 
-/**
-void pairingsToPositions() {
-  board;
-  for (pair : pairings) {
-
-  }
-}
-*/

@@ -25,4 +25,13 @@ struct ChoreographerMove {
   std::vector<EndLine> finalPosition;
 };
 
+struct Pairing {
+  // We should only need the point as it's assumed that all colors are distinct and all are represented in a pairing
+  std::vector<Point> dancers; // This should be length c
+};
+
+struct Position {
+  std::vector<Point> placements; // This should be length c
+};
+
 #endif

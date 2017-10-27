@@ -12,6 +12,7 @@ class SpiralIterator {
     int curSquareLength = 1;
     int curSideSquaresTraversed;
     SpiralIterator(int x, int y);
+    SpiralIterator(Point start);
     Point getNext();
 };
 
