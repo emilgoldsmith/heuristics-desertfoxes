@@ -157,32 +157,32 @@ int main() {
   // };
 
   GameState state(boardSize, numColors, dancers, stars);
-  if (state.isConsistent()) {
-    cout << "TEST PASSED: INITIALIZATION" << endl;
-  } else {
-    cerr << "TEST FAILED: INITIALIZATION" << endl;
-  }
+  // if (state.isConsistent()) {
+  //   cout << "TEST PASSED: INITIALIZATION" << endl;
+  // } else {
+  //   cerr << "TEST FAILED: INITIALIZATION" << endl;
+  // }
 
-  // visual check
-  state.display();
+  // // visual check
+  // state.display();
 
-  if (testSimulateOneMove(&state)) {
-    cout << "TEST PASSED: SIMULATE ONE MOVE" << endl;
-  } else {
-    cerr << "TEST FAILED: SIMULATE ONE MOVE" << endl;
-  }
+  // if (testSimulateOneMove(&state)) {
+  //   cout << "TEST PASSED: SIMULATE ONE MOVE" << endl;
+  // } else {
+  //   cerr << "TEST FAILED: SIMULATE ONE MOVE" << endl;
+  // }
 
-  if (testAtFinalPosition(&state)) {
-    cout << "TEST PASSED: AT FINAL POSITION" << endl;
-  } else {
-    cerr << "TEST FAILED: AT FINAL POSITION" << endl;
-  }
+  // if (testAtFinalPosition(&state)) {
+  //   cout << "TEST PASSED: AT FINAL POSITION" << endl;
+  // } else {
+  //   cerr << "TEST FAILED: AT FINAL POSITION" << endl;
+  // }
 
-  if (testGetViableNextPositions(&state)) {
-    cout << "TEST PASSED: GET VIABLE NEXT POSITIONS" << endl;
-  } else {
-    cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
-  }
+  // if (testGetViableNextPositions(&state)) {
+  //   cout << "TEST PASSED: GET VIABLE NEXT POSITIONS" << endl;
+  // } else {
+  //   cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
+  // }
 
   auto move = state.simulate(dancerSrcDest);
 }
