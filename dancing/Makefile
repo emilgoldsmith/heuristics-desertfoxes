@@ -13,6 +13,11 @@ ifeq ($(LOGGING), 1)
 	CXXFLAGS += -DLOGGING
 endif
 
+VERBOSE ?= 0
+ifeq ($(VERBOSE), 1)
+	CXXFLAGS += -DVERBOSE
+endif
+
 main: main.cpp client.cpp solve.cpp game_state.cpp spiral_iterator.cpp
 	$(CXX) -o main.out main.cpp ../socket/socket_client.cpp client.cpp solve.cpp spiral_iterator.cpp game_state.cpp $(CXXFLAGS)
 
