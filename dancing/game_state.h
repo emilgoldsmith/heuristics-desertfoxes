@@ -13,7 +13,7 @@ public:
   int numColors;
   std::vector<Dancer> dancers;
   std::vector<Point> stars;
-  int **board; // let row be x, col be y by convention, and -1 star, 0 empty, 1-c dancers (color is 1-indexed in game state but 0-indexed in client)
+  int **board; // let row be y, col be x by convention, and -1 star, 0 empty, 1-c dancers (color is 1-indexed in game state but 0-indexed in client)
 
   int numSimulations; // number of simulation tried
   std::vector<ChoreographerMove> currentBestSequence; // best sequence simulated so far

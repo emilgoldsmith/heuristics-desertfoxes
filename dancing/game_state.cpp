@@ -16,11 +16,11 @@ GameState::GameState(int boardSize, int numColors, vector<Dancer> dancers, vecto
   // populate dancers
   for (auto &dancer : dancers) {
     // color becomes 1-indexed in board
-    board[dancer.position.x][dancer.position.y] = dancer.color + 1;
+    board[dancer.position.y][dancer.position.x] = dancer.color + 1;
   }
   // populate stars
   for (auto &star : stars) {
-    board[star.x][star.y] = -1;
+    board[star.y][star.x] = -1;
   }
 
   numSimulations = 0;
