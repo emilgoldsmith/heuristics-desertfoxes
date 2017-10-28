@@ -216,6 +216,7 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
       }
     }
   }
+
   #ifdef LOGGING
     for (auto &dancer : dancers) {
       cout << dancer.position.toString() << " ";
@@ -226,12 +227,34 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
     }
     cout << endl;
   #endif
+
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
     move.dancerMoves.push_back({});
-    vector<Point> nextPositions;
-    // get next position for every dancer
+    vector<Point> nextPositions(dancers.size());
+
+    // sorted dancer index with priority given to dancer with the highest manhattan distance to final position
+    vector<int> sortedDancerIndices;
+    vector<bool> included(dancers.size());
     for (int i = 0; i < dancers.size(); i++) {
+      included[i] = false;
+    }
+    // selection sort
+    for (int i = 0; i < dancers.size(); i++) {
+      int maxManhattanDist = -1;
+      int maxIndex = -1;
+      for (int j = 0; j < dancers.size(); j++) {
+        if (!included[j] && manDist(dancers[j].position, finalPositions[j]) > maxManhattanDist) {
+          maxManhattanDist = manDist(dancers[j].position, finalPositions[j]);
+          maxIndex = j;
+        }
+      }
+      sortedDancerIndices.push_back(maxIndex);
+      included[maxIndex] = true;
+    }
+
+    // get next position for every dancer
+    for (int i : sortedDancerIndices) {
       Dancer dancer = dancers[i];
       Point finalPos = finalPositions[i];
       vector<Point> viableNextPositions = getViableNextPositions(dancer);
@@ -255,7 +278,7 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
           }
         }
         if (!alreadyOccupied) {
-          nextPositions.push_back(candidate);
+          nextPositions[i] = candidate;
           break;
         }
       }
