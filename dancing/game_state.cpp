@@ -37,14 +37,14 @@ bool GameState::isConsistent() {
   bool isConsistent = true;
   // check dancers
   for (auto &dancer : dancers) {
-    if (board[dancer.position.x][dancer.position.y] != dancer.color + 1) {
+    if (board[dancer.position.y][dancer.position.x] != dancer.color + 1) {
       isConsistent = false;
       cerr << "Dancer list inconsistent with board" << endl;
     }
   }
   // check stars
   for (auto &star : stars) {
-    if (board[star.x][star.y] != -1) {
+    if (board[star.y][star.x] != -1) {
       isConsistent = false;
       cerr << "Star list inconsistent with board" << endl;
     }
