@@ -102,7 +102,7 @@ bool testGetViableNextPositions(GameState *state) {
   vector<Point> referenceViables[2] = {
     { Point(0, 2), Point(1, 1), Point(1, 2), Point(1, 3), Point(2, 2) },
     { Point(3, 4), Point(4, 4) }
-  };  
+  };
 
   for (int i = 0; i < 2; i++) {
     vector<Point> viable = state->getViableNextPositions(dancers[i]);
@@ -120,25 +120,22 @@ bool testGetViableNextPositions(GameState *state) {
 }
 
 int main() {
-  int boardSize = 5;
-  int numColors = 3;
+  int boardSize = 40;
+  int numColors = 4;
   int numStars = 2;
   vector<Dancer> dancers = {
-    { Point(1, 2), 0 },
-    { Point(3, 4), 1 },
-    { Point(4, 4), 2 }
+    {{7, 14}, 0}, {{11, 18}, 0}, {{13, 12}, 1}, {{12, 10}, 1}, {{8, 4}, 2}, {{21, 15}, 2}, {{1, 20}, 3}, {{3, 21}, 3}
   };
   vector<Point> stars = {
-    Point(2, 0), Point(4, 3), Point(0, 4)
+    {0, 0}, {5, 0}
   };
   vector<Point> finalPositions = {
-    Point(0, 1), Point(0, 2), Point(0, 3)
+    {1, 10}, {7, 15}, {2, 10}, {8, 15}, {3, 10}, {9, 15}, {4, 10}, {10, 15}
   };
-  vector<DancerMove> dancerSrcDest = {
-    { dancers[1].position, finalPositions[1] },
-    { dancers[2].position, finalPositions[2] },
-    { dancers[0].position, finalPositions[0] }
-  };
+  vector<DancerMove> dancerSrcDest;
+  for (int i = 0; i < dancers.size(); i++) {
+    dancerSrcDest.push_back({dancers[i].position, finalPositions[i]});
+  }
 
   GameState state(boardSize, numColors, dancers, stars);
   if (state.isConsistent()) {
