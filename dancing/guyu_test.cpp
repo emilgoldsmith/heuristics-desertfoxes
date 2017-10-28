@@ -131,6 +131,9 @@ int main() {
   vector<Point> stars = {
     Point(2, 0), Point(4, 3), Point(0, 4)
   };
+  vector<Point> finalPositions = {
+    Point(0, 1), Point(0, 2), Point(0, 3)
+  };
 
   GameState state(boardSize, numColors, dancers, stars);
   if (state.isConsistent()) {
@@ -159,4 +162,6 @@ int main() {
   } else {
     cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
   }
+
+  state.simulate(finalPositions);
 }

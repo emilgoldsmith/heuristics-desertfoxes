@@ -193,11 +193,46 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
   return viableNextPositions;
 }
 
-vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPosition) {
+vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPositions) {
   // back up dancers
   vector<Dancer> dancersBackup = cloneDancers();
 
   // simulate stuff
+  while (!atFinalPositions(finalPositions)) {
+    vector<Point> nextPositions;
+    // get next position for every dancer
+    for (int i = 0; i < dancers.size(); i++) {
+      Dancer dancer = dancers[i];
+      Point finalPos = finalPositions[i];
+      vector<Point> viableNextPositions = getViableNextPositions(dancer);
+      // sort viable positions based on manhattan distance (shortest first)
+      for (int i = 1; i < viableNextPositions.size(); i++) {
+        for (int j = i - 1; j >= 0; j--) {
+          if (manDist(viableNextPositions[i], finalPos) < manDist(viableNextPositions[j], finalPos)) {
+            Point swap = viableNextPositions[i];
+            viableNextPositions[i] = viableNextPositions[j];
+            viableNextPositions[j] = swap;
+          }
+        }
+      }
+      // for each next position
+      for (auto &candidate : viableNextPositions) {
+        bool alreadyOccupied = false;
+        for (auto &nextPos : nextPositions) {
+          if (nextPos == candidate) {
+            alreadyOccupied = true;
+            break;
+          }
+        }
+        if (!alreadyOccupied) {
+          nextPositions.push_back(candidate);
+          break;
+        }
+      }
+    }
+    simulateOneMove(nextPositions);
+    display();
+  }
 
   // restore dancers and board
   dancers = dancersBackup;
