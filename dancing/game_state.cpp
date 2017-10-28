@@ -251,7 +251,9 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
     if (!simulateOneMove(nextPositions)) {
       cerr << "Simulation failed" << endl;
     }
-    display();
+    #ifdef LOGGING
+      display();
+    #endif
   }
 
   // restore dancers and board
