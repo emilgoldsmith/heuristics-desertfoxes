@@ -163,5 +163,5 @@ int main() {
     cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
   }
 
-  state.simulate(finalPositions);
+  auto move = state.simulate(finalPositions);
 }

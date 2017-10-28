@@ -193,12 +193,14 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
   return viableNextPositions;
 }
 
-vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPositions) {
+ChoreographerMove GameState::simulate(vector<Point> &finalPositions) {
   // back up dancers
   vector<Dancer> dancersBackup = cloneDancers();
+  ChoreographerMove move;
 
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
+    move.dancerMoves.push_back({});
     vector<Point> nextPositions;
     // get next position for every dancer
     for (int i = 0; i < dancers.size(); i++) {
@@ -230,7 +232,14 @@ vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPositions) {
         }
       }
     }
-    simulateOneMove(nextPositions);
+    for (int i = 0; i < dancers.size(); i++) {
+      move.dancerMoves[move.dancerMoves.size() - 1].push_back({
+        dancers[i].position, nextPositions[i]
+      });
+    }
+    if (!simulateOneMove(nextPositions)) {
+      cerr << "Simulation failed" << endl;
+    }
     display();
   }
 
@@ -238,4 +247,6 @@ vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPositions) {
   dancers = dancersBackup;
   resetBoard();
   fillBoard(dancers, stars);
+
+  return move;
 }
