@@ -65,7 +65,7 @@ bool GameState::isConsistent() {
       isConsistent = false;
       #ifdef DEBUG
         cerr << "Dancer list inconsistent with board" << endl;
-      #endif    
+      #endif
     }
   }
   // check stars
@@ -74,7 +74,7 @@ bool GameState::isConsistent() {
       isConsistent = false;
       #ifdef DEBUG
         cerr << "Star list inconsistent with board" << endl;
-      #endif    
+      #endif
     }
   }
   // check empty location
@@ -91,7 +91,7 @@ bool GameState::isConsistent() {
     isConsistent = false;
     #ifdef DEBUG
       cerr << "Too many/too few empty spots on board" << endl;
-    #endif    
+    #endif
   }
 
   return isConsistent;
@@ -189,7 +189,7 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
       }
     }
   }
-  
+
   return viableNextPositions;
 }
 
@@ -277,6 +277,6 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
     currentBestSequence = move;
   }
   numSimulations++;
-  
+
   return move;
 }
