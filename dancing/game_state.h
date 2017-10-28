@@ -30,7 +30,7 @@ public:
   bool simulateOneMove(std::vector<Point> &nextPositions);
   bool atFinalPositions(std::vector<Point> &finalPositions);
   std::vector<Point> getViableNextPositions(Dancer &dancer);
-  ChoreographerMove simulate(std::vector<Point> &finalPositions); // returns a sequence of moves
+  ChoreographerMove simulate(std::vector<DancerMove> &dancerSrcDest); // returns a sequence of moves
 };
 
 #endif

@@ -102,7 +102,7 @@ bool testGetViableNextPositions(GameState *state) {
   vector<Point> referenceViables[2] = {
     { Point(0, 2), Point(1, 1), Point(1, 2), Point(1, 3), Point(2, 2) },
     { Point(3, 4), Point(4, 4) }
-  };
+  };  
 
   for (int i = 0; i < 2; i++) {
     vector<Point> viable = state->getViableNextPositions(dancers[i]);
@@ -134,6 +134,11 @@ int main() {
   vector<Point> finalPositions = {
     Point(0, 1), Point(0, 2), Point(0, 3)
   };
+  vector<DancerMove> dancerSrcDest = {
+    { dancers[1].position, finalPositions[1] },
+    { dancers[2].position, finalPositions[2] },
+    { dancers[0].position, finalPositions[0] }
+  };
 
   GameState state(boardSize, numColors, dancers, stars);
   if (state.isConsistent()) {
@@ -163,5 +168,5 @@ int main() {
     cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
   }
 
-  auto move = state.simulate(finalPositions);
+  auto move = state.simulate(dancerSrcDest);
 }

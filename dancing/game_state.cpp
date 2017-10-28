@@ -193,10 +193,21 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
   return viableNextPositions;
 }
 
-ChoreographerMove GameState::simulate(vector<Point> &finalPositions) {
+ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
   // back up dancers
   vector<Dancer> dancersBackup = cloneDancers();
   ChoreographerMove move;
+
+  // map destinations to final positions
+  vector<Point> finalPositions(dancers.size());
+  for (auto &fromTo : dancerSrcDest) {
+    for (int i = 0; i < dancers.size(); i++) {
+      if (dancers[i].position == fromTo.from) {
+        finalPositions[i] = fromTo.to;
+        break;
+      }
+    }
+  }
 
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
