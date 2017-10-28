@@ -136,6 +136,25 @@ int main() {
   for (int i = 0; i < dancers.size(); i++) {
     dancerSrcDest.push_back({dancers[i].position, finalPositions[i]});
   }
+  // int boardSize = 5;
+  // int numColors = 3;
+  // int numStars = 2;
+  // vector<Dancer> dancers = {
+  //   { Point(1, 2), 0 },
+  //   { Point(3, 4), 1 },
+  //   { Point(4, 4), 2 }
+  // };
+  // vector<Point> stars = {
+  //   Point(2, 0), Point(4, 3), Point(0, 4)
+  // };
+  // vector<Point> finalPositions = {
+  //   Point(0, 1), Point(0, 2), Point(0, 3)
+  // };
+  // vector<DancerMove> dancerSrcDest = {
+  //   { dancers[1].position, finalPositions[1] },
+  //   { dancers[2].position, finalPositions[2] },
+  //   { dancers[0].position, finalPositions[0] }
+  // };
 
   GameState state(boardSize, numColors, dancers, stars);
   if (state.isConsistent()) {
