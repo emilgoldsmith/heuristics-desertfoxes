@@ -34,7 +34,7 @@ void GameState::resetBoard() {
   }
 }
 
-void GameState::fillBoard(vector<Dancer> dancerList, vector<Point> starList) {
+void GameState::fillBoard(vector<Dancer> &dancerList, vector<Point> &starList) {
   // populate dancers
   for (auto &dancer : dancerList) {
     // color becomes 1-indexed in board
@@ -106,7 +106,7 @@ void GameState::display() {
   }
 }
 
-bool GameState::simulateOneMove(vector<Point> nextPositions) {
+bool GameState::simulateOneMove(vector<Point> &nextPositions) {
   bool success = true;
   vector<Dancer> dancersBackup = cloneDancers();
 
@@ -153,7 +153,7 @@ bool GameState::simulateOneMove(vector<Point> nextPositions) {
   return success;
 }
 
-vector<ChoreographerMove> GameState::simulate(vector<Point> finalPosition) {
+vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPosition) {
   // back up dancers
   vector<Dancer> dancersBackup = cloneDancers();
 
