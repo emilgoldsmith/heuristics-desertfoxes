@@ -1,6 +1,7 @@
 #include "client.h"
 #include "geometry.hpp"
 #include "solve.h"
+#include "game_state.h"
 
 #include <iostream>
 #include <string>
@@ -16,9 +17,15 @@ int main(int argc, char **argv) {
   int port = atoi(argv[2]);
   int role = atoi(argv[3]);
   Client client(ip, port, role);
+  GameState state(client.serverBoardSize, client.serverNumColors, client.dancers, client.stars);
   if (role == 1) {
     client.makeSpoilerMove(dummyPlaceStars(&client));
   } else {
-    client.makeChoreographerMove(dummyGetChoreographerMove(&client));
+    vector<Pairing> pairings = getPairing(&client);
+    SolutionSpec solutionSpec = pairingsToPositions(&client, pairings);
+    state.simulate(solutionSpec.dancerMapping);
+    ChoreographerMove solution = state.currentBestSequence;
+    solution.finalPosition = solutionSpec.finalConfiguration;
+    client.makeChoreographerMove(solution);
   }
 }

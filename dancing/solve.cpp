@@ -116,13 +116,26 @@ Point computeCenterBruteforce(const vector<Point> &points) {
   return bestCenter;
 }
 
-vector<Position> pairingsToPositions(Client *client, vector<Pairing> pairings) {
+vector<Pairing> getPairing(Client *client) {
+  vector<Pairing> pairings;
+  for (int i = 0; i < client->serverNumDancers; i++) {
+    vector<Point> curPairing;
+    for (int j = 0; j < client->serverNumColors; j++) {
+      curPairing.push_back(client->dancers[i + j * client->serverNumDancers].position);
+    }
+    pairings.push_back({curPairing});
+  }
+  return pairings;
+}
+
+SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
   int n = client->serverBoardSize;
   vector<vector<bool>> board(n, vector<bool>(n, false));
   for (Point star : client->stars) {
     board[star.x][star.y] = true;
   }
-  vector<Position> finalPositions;
+  vector<DancerMove> dancerMapping;
+  vector<EndLine> finalConfiguration;
   for (Pairing curPairing : pairings) {
     Point center = computeCenterBruteforce(curPairing.dancers);
     SpiralIterator it(center);
@@ -142,7 +155,15 @@ vector<Position> pairingsToPositions(Client *client, vector<Pairing> pairings) {
         for (Point dancerFinal : candidatePosition.placements) {
           board[dancerFinal.x][dancerFinal.y] = true;
         }
-        finalPositions.push_back(candidatePosition);
+        finalConfiguration.push_back({center - Point(pointsOnNegative, 0), center + Point(pointsOnPositive - 1, 0)});
+#ifdef DEBUG
+        if (curPairing.dancers.size() != candidatePosition.placements.size()) {
+          cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
+        }
+#endif
+        for (int i = 0; i < curPairing.dancers.size(); i++) {
+          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[i]});
+        }
         break;
       }
       candidatePosition.placements.clear();
@@ -155,12 +176,20 @@ vector<Position> pairingsToPositions(Client *client, vector<Pairing> pairings) {
         for (Point dancerFinal : candidatePosition.placements) {
           board[dancerFinal.x][dancerFinal.y] = true;
         }
-        finalPositions.push_back(candidatePosition);
+        finalConfiguration.push_back({center - Point(0, pointsOnNegative), center + Point(0, pointsOnPositive - 1)});
+#ifdef DEBUG
+        if (curPairing.dancers.size() != candidatePosition.placements.size()) {
+          cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
+        }
+#endif
+        for (int i = 0; i < curPairing.dancers.size(); i++) {
+          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[i]});
+        }
         break;
       }
     }
   }
-  return finalPositions;
+  return {dancerMapping, finalConfiguration};
 }
 
 vector<Point> dummyPlaceStars(Client *client) {

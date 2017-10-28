@@ -34,4 +34,9 @@ struct Position {
   std::vector<Point> placements; // This should be length c
 };
 
+struct SolutionSpec {
+  std::vector<DancerMove> dancerMapping;
+  std::vector<EndLine> finalConfiguration;
+};
+
 #endif
