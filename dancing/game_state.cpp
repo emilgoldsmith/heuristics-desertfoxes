@@ -100,10 +100,15 @@ bool GameState::isConsistent() {
 void GameState::display() {
   for (int i = 0; i < boardSize; i++) {
     for (int j = 0; j < boardSize; j++) {
-      cout << board[i][j] << "\t";
+      if (board[i][j] == -1) {
+        cout << "*" << " ";
+      } else {
+        cout << board[i][j] << " ";
+      }
     }
     cout << endl;
   }
+  cout << endl;
 }
 
 bool GameState::withinBounds(Point position) {
@@ -120,34 +125,37 @@ bool GameState::simulateOneMove(vector<Point> &nextPositions) {
   bool success = true;
   vector<Dancer> dancersBackup = cloneDancers();
 
-  // move dancers
   for (int i = 0; i < dancers.size(); i++) {
     Dancer dancer = dancers[i];
     Point nextPosition = nextPositions[i];
     // check for errors
     if (manDist(dancer.position, nextPosition) > 1) {
       #ifdef DEBUG
-        cerr << "Dancer attempted to move more than 1 manhattan distance away" << endl;
+      cerr << "Dancer attempted to move more than 1 manhattan distance away" << endl;
       #endif // DEBUG
       success = false;
     }
     if (!withinBounds(nextPosition)) {
       #ifdef DEBUG
-        cerr << "Dancer attempted to move outside the board" << endl;
+      cerr << "Dancer attempted to move outside the board" << endl;
       #endif // DEBUG
       success = false;
       continue; // otherwise segfault
     }
     if (board[nextPosition.y][nextPosition.x] == -1) {
       #ifdef DEBUG
-        cerr << "Dancer attempted to move to a star" << endl;
+      cerr << "Dancer attempted to move to a star" << endl;
       #endif // DEBUG
       success = false;
     }
-    // update board
+    // clear dancer's original position and set dancer new position
     board[dancer.position.y][dancer.position.x] = 0;
     dancers[i].position = nextPosition;
-    board[nextPosition.y][nextPosition.x] = dancer.color + 1;
+  }
+
+  // update board with new dancer positions
+  for (int i = 0; i < dancers.size(); i++) {
+    board[dancers[i].position.y][dancers[i].position.x] = dancers[i].color + 1;
   }
 
   // final consistency check (e.g. if multiple dancers moved to same position)
@@ -229,11 +237,11 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
       vector<Point> viableNextPositions = getViableNextPositions(dancer);
       // sort viable positions based on manhattan distance (shortest first)
       for (int i = 1; i < viableNextPositions.size(); i++) {
-        for (int j = i - 1; j >= 0; j--) {
-          if (manDist(viableNextPositions[i], finalPos) < manDist(viableNextPositions[j], finalPos)) {
-            Point swap = viableNextPositions[i];
-            viableNextPositions[i] = viableNextPositions[j];
-            viableNextPositions[j] = swap;
+        for (int j = i; j > 0; j--) {
+          if (manDist(viableNextPositions[j], finalPos) < manDist(viableNextPositions[j - 1], finalPos)) {
+            Point swap = viableNextPositions[j];
+            viableNextPositions[j] = viableNextPositions[j - 1];
+            viableNextPositions[j - 1] = swap;
           }
         }
       }
