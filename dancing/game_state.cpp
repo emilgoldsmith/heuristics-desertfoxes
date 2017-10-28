@@ -208,7 +208,16 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
       }
     }
   }
-
+  #ifdef LOGGING
+    for (auto &dancer : dancers) {
+      cout << dancer.position.toString() << " ";
+    }
+    cout << endl;
+    for (auto &fp : finalPositions) {
+      cout << fp.toString() << " ";
+    }
+    cout << endl;
+  #endif
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
     move.dancerMoves.push_back({});
@@ -251,7 +260,7 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
     if (!simulateOneMove(nextPositions)) {
       cerr << "Simulation failed" << endl;
     }
-    #ifdef LOGGING
+    #ifdef VERBOSE
       display();
     #endif
   }
