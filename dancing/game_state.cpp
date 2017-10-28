@@ -47,7 +47,7 @@ void GameState::fillBoard(vector<Dancer> &dancerList, vector<Point> &starList) {
 }
 
 vector<Dancer> GameState::cloneDancers() {
-  vector<Dancer> dancersClone(dancers.size());
+  vector<Dancer> dancersClone;
   for (auto &dancer : dancers) {
     dancersClone.push_back({
       Point(dancer.position.x, dancer.position.y),
@@ -106,6 +106,16 @@ void GameState::display() {
   }
 }
 
+bool GameState::withinBounds(Point position) {
+  if (position.x < 0 || position.x >= boardSize) {
+    return false;
+  }
+  if (position.y < 0 || position.y >= boardSize) {
+    return false;
+  }
+  return true;
+}
+
 bool GameState::simulateOneMove(vector<Point> &nextPositions) {
   bool success = true;
   vector<Dancer> dancersBackup = cloneDancers();
@@ -121,7 +131,7 @@ bool GameState::simulateOneMove(vector<Point> &nextPositions) {
       #endif // DEBUG
       success = false;
     }
-    if (nextPosition.x < 0 || nextPosition.x >= boardSize || nextPosition.y < 0 || nextPosition.y >= boardSize) {
+    if (!withinBounds(nextPosition)) {
       #ifdef DEBUG
         cerr << "Dancer attempted to move outside the board" << endl;
       #endif // DEBUG
@@ -141,7 +151,9 @@ bool GameState::simulateOneMove(vector<Point> &nextPositions) {
   }
 
   // final consistency check (e.g. if multiple dancers moved to same position)
-  success = isConsistent();
+  if (!isConsistent()) {
+    success = false;
+  }
 
   // restore game state if simulation fails
   if (!success) {
@@ -151,6 +163,34 @@ bool GameState::simulateOneMove(vector<Point> &nextPositions) {
   }
 
   return success;
+}
+
+bool GameState::atFinalPositions(std::vector<Point> &finalPositions) {
+  for (int i = 0; i < dancers.size(); i++) {
+    if (dancers[i].position != finalPositions[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
+  vector<Point> viableNextPositions;
+  for (int dx = -1; dx <= 1; dx++) {
+    for (int dy = -1; dy <= 1; dy++) {
+      if (dx != 0 && dy != 0) {
+        continue;
+      }
+      Point nextPosition = dancer.position + Point(dx, dy);
+      // next position CAN be occupied by another dancer
+      if (withinBounds(nextPosition) && board[nextPosition.y][nextPosition.x] != -1) {
+        viableNextPositions.push_back(nextPosition);
+      }
+    }
+  }
+  
+  return viableNextPositions;
 }
 
 vector<ChoreographerMove> GameState::simulate(vector<Point> &finalPosition) {

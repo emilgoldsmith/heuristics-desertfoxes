@@ -86,6 +86,39 @@ bool testSimulateOneMove(GameState *state) {
   return success;
 }
 
+bool testAtFinalPosition(GameState *state) {
+  vector<Point> finalPositive = {
+    Point(1, 2), Point(3, 4), Point(4, 4)
+  };
+  vector<Point> finalNegative = {
+    Point(2, 2), Point(3, 4), Point(4, 4)
+  };
+
+  return state->atFinalPositions(finalPositive) && !state->atFinalPositions(finalNegative);
+}
+
+bool testGetViableNextPositions(GameState *state) {
+  Dancer dancers[2] = { state->dancers[0], state->dancers[2] };
+  vector<Point> referenceViables[2] = {
+    { Point(0, 2), Point(1, 1), Point(1, 2), Point(1, 3), Point(2, 2) },
+    { Point(3, 4), Point(4, 4) }
+  };
+
+  for (int i = 0; i < 2; i++) {
+    vector<Point> viable = state->getViableNextPositions(dancers[i]);
+    if (viable.size() != referenceViables[i].size()) {
+      return false;
+    }
+    for (int j = 0; j < viable.size(); j++) {
+      if (viable[j] != referenceViables[i][j]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 int main() {
   int boardSize = 5;
   int numColors = 3;
@@ -113,5 +146,17 @@ int main() {
     cout << "TEST PASSED: SIMULATE ONE MOVE" << endl;
   } else {
     cerr << "TEST FAILED: SIMULATE ONE MOVE" << endl;
+  }
+
+  if (testAtFinalPosition(&state)) {
+    cout << "TEST PASSED: AT FINAL POSITION" << endl;
+  } else {
+    cerr << "TEST FAILED: AT FINAL POSITION" << endl;
+  }
+
+  if (testGetViableNextPositions(&state)) {
+    cout << "TEST PASSED: GET VIABLE NEXT POSITIONS" << endl;
+  } else {
+    cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
   }
 }

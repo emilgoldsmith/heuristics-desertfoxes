@@ -26,7 +26,10 @@ public:
   std::vector<Dancer> cloneDancers();
   bool isConsistent(); // check if dancers, stars, and board are consistent
   void display();
+  bool withinBounds(Point position);
   bool simulateOneMove(std::vector<Point> &nextPositions);
+  bool atFinalPositions(std::vector<Point> &finalPositions);
+  std::vector<Point> getViableNextPositions(Dancer &dancer);
   std::vector<ChoreographerMove> simulate(std::vector<Point> &finalPositions); // returns a sequence of moves
 };
 
