@@ -19,3 +19,7 @@ main: main.cpp client.cpp solve.cpp spiral_iterator.cpp
 run_emil_test: emil_test.cpp solve.cpp spiral_iterator.cpp
 	$(CXX) -o emil_test.out emil_test.cpp solve.cpp spiral_iterator.cpp $(CXXFLAGS)
 	./emil_test.out
+
+run_guyu_test: guyu_test.cpp game_state.cpp
+	$(CXX) -o guyu_test.out guyu_test.cpp game_state.cpp $(CXXFLAGS)
+	./guyu_test.out
