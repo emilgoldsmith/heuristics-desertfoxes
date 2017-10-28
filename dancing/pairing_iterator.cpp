@@ -43,8 +43,8 @@ vector<Pairing> PairingIterator::getNext() {
     for (vector<Point> sortedOtherDancers : sortedDancers[i].sortedOtherDancers) {
       if (sortedOtherDancers.size() == 0) continue; // This is our own color
       for (Point candidateDancer : sortedOtherDancers) {
-        if (!dancerPicked[curDancer.x][curDancer.y]) {
-          dancerPicked[curDancer.x][curDancer.y] = true;
+        if (!dancerPicked[candidateDancer.x][candidateDancer.y]) {
+          dancerPicked[candidateDancer.x][candidateDancer.y] = true;
           curPairing.dancers.push_back(candidateDancer);
           break;
         }
