@@ -21,6 +21,7 @@ public:
   GameState(int boardSize, int numColors, std::vector<Dancer> dancers, std::vector<Point> stars);
   ~GameState(); // free the board array
   bool isConsistent(); // check if dancers, stars, and board are consistent
+  void display();
   std::vector<ChoreographerMove> simulate(std::vector<Point> finalPositions); // returns a sequence of moves
 };
 

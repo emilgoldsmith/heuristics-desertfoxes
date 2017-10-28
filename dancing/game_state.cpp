@@ -66,3 +66,12 @@ bool GameState::isConsistent() {
 
   return isConsistent;
 }
+
+void GameState::display() {
+  for (int i = 0; i < boardSize; i++) {
+    for (int j = 0; j < boardSize; j++) {
+      cout << board[i][j] << "\t";
+    }
+    cout << endl;
+  }
+}

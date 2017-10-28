@@ -22,9 +22,9 @@ int main() {
   int numColors = 3;
   int numStars = 2;
   vector<Dancer> dancers = {
-    { Point(1, 2), 1 },
-    { Point(3, 4), 2 },
-    { Point(4, 4), 3 }
+    { Point(1, 2), 0 },
+    { Point(3, 4), 1 },
+    { Point(4, 4), 2 }
   };
   vector<Point> stars = {
     Point(2, 0), Point(0, 4)
@@ -36,4 +36,5 @@ int main() {
   } else {
     cout << "Initialization success" << endl;
   }
+  state.display();
 }
