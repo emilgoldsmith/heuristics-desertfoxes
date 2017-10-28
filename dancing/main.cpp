@@ -2,6 +2,7 @@
 #include "geometry.hpp"
 #include "solve.h"
 #include "game_state.h"
+#include "pairing_iterator.h"
 
 #include <iostream>
 #include <string>
@@ -21,8 +22,8 @@ int main(int argc, char **argv) {
   if (role == 1) {
     client.makeSpoilerMove(dummyPlaceStars(&client));
   } else {
-    vector<Pairing> pairings = getPairing(&client);
-    SolutionSpec solutionSpec = pairingsToPositions(&client, pairings);
+    PairingIterator it(&client);
+    SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
     state.simulate(solutionSpec.dancerMapping);
     ChoreographerMove solution = state.currentBestSequence;
     solution.finalPosition = solutionSpec.finalConfiguration;

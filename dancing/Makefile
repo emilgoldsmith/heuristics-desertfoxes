@@ -18,8 +18,8 @@ ifeq ($(VERBOSE), 1)
 	CXXFLAGS += -DVERBOSE
 endif
 
-main: main.cpp client.cpp solve.cpp game_state.cpp spiral_iterator.cpp
-	$(CXX) -o main.out main.cpp ../socket/socket_client.cpp client.cpp solve.cpp spiral_iterator.cpp game_state.cpp $(CXXFLAGS)
+main: main.cpp client.cpp solve.cpp game_state.cpp spiral_iterator.cpp pairing_iterator.cpp
+	$(CXX) -o main.out main.cpp ../socket/socket_client.cpp client.cpp solve.cpp spiral_iterator.cpp game_state.cpp pairing_iterator.cpp $(CXXFLAGS)
 
 run_emil_test: emil_test.cpp solve.cpp spiral_iterator.cpp
 	$(CXX) -o emil_test.out emil_test.cpp solve.cpp spiral_iterator.cpp $(CXXFLAGS)
