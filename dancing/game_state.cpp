@@ -248,5 +248,13 @@ ChoreographerMove GameState::simulate(vector<Point> &finalPositions) {
   resetBoard();
   fillBoard(dancers, stars);
 
+  // book keeping
+  if (numSimulations == 0) {
+    currentBestSequence = move;
+  } else if (currentBestSequence.dancerMoves.size() > move.dancerMoves.size()) {
+    currentBestSequence = move;
+  }
+  numSimulations++;
+  
   return move;
 }

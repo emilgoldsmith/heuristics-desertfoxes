@@ -16,7 +16,7 @@ public:
   int **board; // let row be y, col be x by convention, and -1 star, 0 empty, 1-c dancers (color is 1-indexed in game state but 0-indexed in client)
 
   int numSimulations; // number of simulation tried
-  std::vector<ChoreographerMove> currentBestSequence; // best sequence simulated so far
+  ChoreographerMove currentBestSequence; // best sequence simulated so far
 
   GameState(int boardSize, int numColors, std::vector<Dancer> dancers, std::vector<Point> stars);
   ~GameState(); // free the board array
