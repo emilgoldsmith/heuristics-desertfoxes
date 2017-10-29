@@ -1,4 +1,5 @@
 #include "game_state.h"
+#include "../random/random.h"
 #include <queue>
 
 using namespace std;
@@ -210,7 +211,7 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
 
 Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Point> &initViableNexts) {
   int initDistance = manDist(dancer.position, finalPosition);
-  int bfsLimit = min(5, initDistance); // prevent over-search
+  int bfsLimit = 5;
   queue<PointParent> q;
   PointParent pp;
   bool **visited;
@@ -234,7 +235,11 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
     pp = q.front();
     q.pop();
     // found a viable play, but don't stop
-    if (pp.depth == bfsLimit && manDist(pp.point, finalPosition) < initDistance) {
+    if (pp.depth == bfsLimit) {
+      if (manDist(pp.point, finalPosition) < initDistance) {
+        candidates.push_back(pp);
+      }
+    } else if (pp.point == finalPosition) {
       candidates.push_back(pp);
     }
     // only stop when limit is reached
@@ -302,9 +307,20 @@ ChoreographerMove GameState::simulate(SolutionSpec &input) {
 
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
-    // get the number of dancers that are still misplaced
     move.dancerMoves.push_back({});
     vector<Point> nextPositions(dancers.size());
+    int numOutOfPlaceDancers = 0;
+    bool stuck = false;
+
+    for (int i = 0; i < dancers.size(); i++) {
+      if (dancers[i].position != finalPositions[i]) {
+        numOutOfPlaceDancers++;
+      }
+    }
+    for (Point &next : nextPositions) {
+      next.x = -1;
+      next.y = -1;
+    }
 
     // sorted dancer index with priority given to dancer with the highest manhattan distance to final position
     vector<int> sortedDancerIndices;
@@ -312,18 +328,31 @@ ChoreographerMove GameState::simulate(SolutionSpec &input) {
     for (int i = 0; i < dancers.size(); i++) {
       included[i] = false;
     }
-    // selection sort
-    for (int i = 0; i < dancers.size(); i++) {
-      int maxManhattanDist = -1;
-      int maxIndex = -1;
-      for (int j = 0; j < dancers.size(); j++) {
-        if (!included[j] && manDist(dancers[j].position, finalPositions[j]) > maxManhattanDist) {
-          maxManhattanDist = manDist(dancers[j].position, finalPositions[j]);
-          maxIndex = j;
+    if (!randomize) {
+      for (int i = 0; i < dancers.size(); i++) {
+        int maxManhattanDist = -1;
+        int maxIndex = -1;
+        for (int j = 0; j < dancers.size(); j++) {
+          if (!included[j] && manDist(dancers[j].position, finalPositions[j]) > maxManhattanDist) {
+            maxManhattanDist = manDist(dancers[j].position, finalPositions[j]);
+            maxIndex = j;
+          }
+        }
+        sortedDancerIndices.push_back(maxIndex);
+        included[maxIndex] = true;
+      }
+    } else {
+      Random r;
+      for (int i = 0; i < dancers.size(); i++) {
+        while (true) {
+          int randomIndex = r.randInt(0, dancers.size() - 1);
+          if (!included[randomIndex]) {
+            included[randomIndex] = true;
+            sortedDancerIndices.push_back(randomIndex);
+            break;
+          }
         }
       }
-      sortedDancerIndices.push_back(maxIndex);
-      included[maxIndex] = true;
     }
 
     // get next position for every dancer
@@ -355,9 +384,22 @@ ChoreographerMove GameState::simulate(SolutionSpec &input) {
           filteredViableNexts.push_back(candidate);
         }
       }
+
+      if (filteredViableNexts.empty()) {
+        stuck = true;
+        break;
+      }
+
       // get and set best next position
       nextPositions[i] = searchBestNext(dancer, finalPos, filteredViableNexts);
     }
+
+    if (stuck) {
+      randomize = true;
+      move.dancerMoves.pop_back();
+      continue;
+    }
+    randomize = false;
 
     for (int i = 0; i < dancers.size(); i++) {
       move.dancerMoves[move.dancerMoves.size() - 1].push_back({
