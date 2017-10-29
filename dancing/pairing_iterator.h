@@ -3,6 +3,7 @@
 
 #include "client.h"
 #include "structs.h"
+#include "../random/random.h"
 
 #include <vector>
 
@@ -13,9 +14,12 @@ struct SortedDistDancer {
 class PairingIterator {
   std::vector<SortedDistDancer> sortedDancers;
   const Client *client;
+  std::vector<int> dancerOrdering;
+  Random* r;
 
   public:
     PairingIterator(Client *inputClient);
+    ~PairingIterator();
     std::vector<Pairing> getNext();
 };
 

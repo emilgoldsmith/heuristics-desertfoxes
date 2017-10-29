@@ -1,12 +1,15 @@
 #include "client.h"
 #include "pairing_iterator.h"
 #include "structs.h"
+#include "../random/random.h"
 
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
 PairingIterator::PairingIterator(Client *inputClient): client(inputClient) {
+  r = new Random();
   vector<vector<Point>> dancersByColor(client->serverNumColors);
   vector<Point> dancerPoints;
   dancerPoints.reserve(client->serverNumColors * client->serverNumDancers);
@@ -27,6 +30,15 @@ PairingIterator::PairingIterator(Client *inputClient): client(inputClient) {
     }
     sortedDancers.push_back({dancersByColorCopy});
   }
+  // Setup the initial ordering
+  dancerOrdering.reserve(client->dancers.size());
+  for (int i = 0; i < client->dancers.size(); i++) {
+    dancerOrdering.push_back(i);
+  }
+}
+
+PairingIterator::~PairingIterator() {
+  delete r;
 }
 
 vector<Pairing> PairingIterator::getNext() {
@@ -34,7 +46,7 @@ vector<Pairing> PairingIterator::getNext() {
   vector<vector<bool>> dancerPicked(n, vector<bool>(n, false));
   vector<Pairing> pairings;
   pairings.reserve(client->serverNumDancers);
-  for (int i = 0; i < sortedDancers.size(); i++) {
+  for (int i : dancerOrdering) {
     Point curDancer = client->dancers[i].position;
     if (dancerPicked[curDancer.x][curDancer.y]) continue;
     dancerPicked[curDancer.x][curDancer.y] = true;
@@ -52,5 +64,7 @@ vector<Pairing> PairingIterator::getNext() {
     }
     pairings.push_back(curPairing);
   }
+  // Shuffle the dancerOrdering for next time
+  shuffle(dancerOrdering.begin(), dancerOrdering.end(), r->generator);
   return pairings;
 }

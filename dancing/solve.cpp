@@ -155,7 +155,7 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
         for (Point dancerFinal : candidatePosition.placements) {
           board[dancerFinal.x][dancerFinal.y] = true;
         }
-        finalConfiguration.push_back({center - Point(pointsOnNegative, 0), center + Point(pointsOnPositive - 1, 0)});
+        finalConfiguration.push_back({cur - Point(pointsOnNegative, 0), cur + Point(pointsOnPositive - 1, 0)});
 #ifdef DEBUG
         if (curPairing.dancers.size() != candidatePosition.placements.size()) {
           cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
@@ -176,7 +176,7 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
         for (Point dancerFinal : candidatePosition.placements) {
           board[dancerFinal.x][dancerFinal.y] = true;
         }
-        finalConfiguration.push_back({center - Point(0, pointsOnNegative), center + Point(0, pointsOnPositive - 1)});
+        finalConfiguration.push_back({cur - Point(0, pointsOnNegative), cur + Point(0, pointsOnPositive - 1)});
 #ifdef DEBUG
         if (curPairing.dancers.size() != candidatePosition.placements.size()) {
           cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
