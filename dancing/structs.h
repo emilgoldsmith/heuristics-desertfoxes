@@ -39,4 +39,11 @@ struct SolutionSpec {
   std::vector<EndLine> finalConfiguration;
 };
 
+// used for BFS
+struct PointParent {
+  Point point;
+  PointParent *parent;
+  int depth;
+};
+
 #endif

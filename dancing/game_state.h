@@ -29,7 +29,9 @@ public:
   bool withinBounds(Point position);
   bool simulateOneMove(std::vector<Point> &nextPositions);
   bool atFinalPositions(std::vector<Point> &finalPositions);
+  std::vector<Point> getViableNextPositions(Point dancerPosition);
   std::vector<Point> getViableNextPositions(Dancer &dancer);
+  Point searchBestNext(Dancer &dancer, Point &finalPosition, std::vector<Point> &initViableNexts);
   ChoreographerMove simulate(std::vector<DancerMove> &dancerSrcDest); // returns a sequence of moves
 };
 

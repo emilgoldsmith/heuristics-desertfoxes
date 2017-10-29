@@ -1,4 +1,5 @@
 #include "game_state.h"
+#include <queue>
 
 using namespace std;
 
@@ -100,7 +101,9 @@ bool GameState::isConsistent() {
 void GameState::display() {
   for (int i = 0; i < boardSize; i++) {
     for (int j = 0; j < boardSize; j++) {
-      if (board[i][j] == -1) {
+      if (board[i][j] == 0) {
+        cout << "." << " ";
+      } else if (board[i][j] == -1) {
         cout << "*" << " ";
       } else {
         cout << board[i][j] << " ";
@@ -183,14 +186,14 @@ bool GameState::atFinalPositions(std::vector<Point> &finalPositions) {
   return true;
 }
 
-vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
+vector<Point> GameState::getViableNextPositions(Point dancerPosition) {
   vector<Point> viableNextPositions;
   for (int dx = -1; dx <= 1; dx++) {
     for (int dy = -1; dy <= 1; dy++) {
       if (dx != 0 && dy != 0) {
         continue;
       }
-      Point nextPosition = dancer.position + Point(dx, dy);
+      Point nextPosition = dancerPosition + Point(dx, dy);
       // next position CAN be occupied by another dancer
       if (withinBounds(nextPosition) && board[nextPosition.y][nextPosition.x] != -1) {
         viableNextPositions.push_back(nextPosition);
@@ -199,6 +202,74 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
   }
 
   return viableNextPositions;
+}
+
+vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
+  return getViableNextPositions(dancer.position);
+}
+
+Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Point> &initViableNexts) {
+  int bfsLimit = 5;
+  int initDistance = manDist(dancer.position, finalPosition);
+  queue<PointParent> q;
+  PointParent pp;
+  Point bestNext;
+  bool **visited;
+
+  // initialize visited flags - this can be significantly reduced to the range of BFS
+  visited = new bool*[boardSize];
+  for (int i = 0; i < boardSize; i++) {
+    visited[i] = new bool[boardSize];
+    for (int j = 0; j < boardSize; j++) {
+      visited[i][j] = false;
+    }
+  }
+
+  for (Point &next : initViableNexts) {
+    q.push({ next, nullptr, 1 });
+    visited[next.y][next.x] = true;
+  }
+
+  bool success = false;
+  while (!q.empty()) {
+    pp = q.front();
+    q.pop();
+    // stop after successfully approaching the final position
+    if (manDist(pp.point, finalPosition) < initDistance) {
+      success = true;
+      break;
+    }
+    // this is for when the dancer moves away/stand still to make place for another dancer
+    if (pp.depth > bfsLimit) {
+      break;
+    }
+    // push unvisited neighbors into the queue
+    vector<Point> ppNext = getViableNextPositions(pp.point);
+    for (Point &next : ppNext) {
+      if (!visited[next.y][next.x]) {
+        q.push({ next, &pp, pp.depth + 1 });
+        visited[next.y][next.x] = true;
+      }
+    }
+  }
+
+  // get nextBest from pp
+  do {
+    bestNext = pp.point;
+  } while (pp.parent);
+
+  // another optimization would be having visited as a member variable
+  // so it would only be allocated and freed once
+  for (int i = 0; i < boardSize; i++) {
+    delete [] visited[i];
+  }
+  delete [] visited;
+
+  if (success) {
+    return bestNext;
+  }
+
+  return initViableNexts[0];
 }
 
 ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
@@ -258,6 +329,7 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
       Dancer dancer = dancers[i];
       Point finalPos = finalPositions[i];
       vector<Point> viableNextPositions = getViableNextPositions(dancer);
+      vector<Point> filteredViableNexts;
       // sort viable positions based on manhattan distance (shortest first)
       for (int i = 1; i < viableNextPositions.size(); i++) {
         for (int j = i; j > 0; j--) {
@@ -268,7 +340,7 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
           }
         }
       }
-      // for each next position
+      // filter viableNextPositions by checking if they are already occupied
       for (auto &candidate : viableNextPositions) {
         bool alreadyOccupied = false;
         for (auto &nextPos : nextPositions) {
@@ -278,16 +350,33 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
           }
         }
         if (!alreadyOccupied) {
-          nextPositions[i] = candidate;
-          break;
+          filteredViableNexts.push_back(candidate);
         }
       }
+      // get and set best next position
+      nextPositions[i] = searchBestNext(dancer, finalPos, filteredViableNexts);
     }
+
     for (int i = 0; i < dancers.size(); i++) {
       move.dancerMoves[move.dancerMoves.size() - 1].push_back({
         dancers[i].position, nextPositions[i]
       });
     }
+    #ifdef DEBUG // useful for checking when simulation gets stuck
+      vector<int> movedDancers;
+      for (int i = 0; i < dancers.size(); i++) {
+        auto dm = move.dancerMoves[move.dancerMoves.size() - 1][i];
+        if (dm.from != dm.to) {
+          movedDancers.push_back(i);
+        }
+      }
+      vector<int> dancersShouldMove;
+      for (int i = 0; i < dancers.size(); i++) {
+        if (dancers[i].position != finalPositions[i]) {
+          dancersShouldMove.push_back(i);
+        }
+      }
+    #endif
     if (!simulateOneMove(nextPositions)) {
       cerr << "Simulation failed" << endl;
     }
