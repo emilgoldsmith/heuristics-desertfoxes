@@ -33,6 +33,7 @@ class Client {
     bool gameOver = false;
 
     Client(std::string ip, int port, int playerType);
+    Client(std::vector<Dancer> xdancers, std::vector<Point> xstars, int xnumColors, int xboardSize, int xnumDancers); // This is only meant to be used in testing
     ~Client();
     void makeSpoilerMove(std::vector<Point> starsToPlace);
     void makeChoreographerMove(ChoreographerMove move);

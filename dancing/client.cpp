@@ -7,9 +7,15 @@
 #include <string>
 #include <queue>
 #include <sstream>
+#include <iostream>
 
 using namespace std;
 
+Client::Client(std::vector<Dancer> xdancers, std::vector<Point> xstars, int xnumColors, int xboardSize, int xnumDancers): dancers(xdancers), stars(xstars), numColors(xnumColors), serverNumColors(xnumColors), serverBoardSize(xboardSize), serverNumDancers(xnumDancers), role(0) {
+#ifndef TEST
+  cerr << "ERROR: Used test client constructor in non test environment" << endl;
+#endif
+}
 Client::Client(string ip, int port, int playerType): role(playerType) {
   socket = new SocketClient(ip, port);
   // First send name to the server
@@ -271,7 +277,12 @@ void Client::makeChoreographerMove(ChoreographerMove move) {
     for (DancerMove singleMove : singleStep) {
       ss << singleMove.from.x << ' ' << singleMove.from.y << ' ' << singleMove.to.x << ' ' << singleMove.to.y << ' ';
     }
+
     string stepString = ss.str();
+#ifdef LOGGING
+    cout << "MOVES WE ARE SENDING:" << endl;
+    cout << stepString << endl << endl;
+#endif
     // We purposefully don't strip the last space as it is actually needed for the server to parse it correctly
     send(stepString);
   }
@@ -285,5 +296,9 @@ void Client::makeChoreographerMove(ChoreographerMove move) {
   }
   string finalPositionString = ss.str();
   finalPositionString = finalPositionString.substr(0, finalPositionString.size() - 1); // Remove last space
+#ifdef LOGGING
+  cout << "FINAL POSITIONS WE ARE SENDING:" << endl;
+  cout << finalPositionString << endl;
+#endif
   send(finalPositionString);
 }
