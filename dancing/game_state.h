@@ -15,6 +15,7 @@ public:
   std::vector<Point> stars;
   int **board; // let row be y, col be x by convention, and -1 star, 0 empty, 1-c dancers (color is 1-indexed in game state but 0-indexed in client)
 
+  bool randomize = false;
   int numSimulations; // number of simulation tried
   ChoreographerMove currentBestSequence; // best sequence simulated so far
 
