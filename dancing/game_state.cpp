@@ -273,14 +273,14 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
   return initViableNexts[0];
 }
 
-ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
+ChoreographerMove GameState::simulate(SolutionSpec &input) {
   // back up dancers
   vector<Dancer> dancersBackup = cloneDancers();
-  ChoreographerMove move;
+  ChoreographerMove move = {{}, input.finalConfiguration};
 
   // map destinations to final positions
   vector<Point> finalPositions(dancers.size());
-  for (auto &fromTo : dancerSrcDest) {
+  for (auto &fromTo : input.dancerMapping) {
     for (int i = 0; i < dancers.size(); i++) {
       if (dancers[i].position == fromTo.from) {
         finalPositions[i] = fromTo.to;

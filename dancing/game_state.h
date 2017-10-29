@@ -32,7 +32,7 @@ public:
   std::vector<Point> getViableNextPositions(Point dancerPosition);
   std::vector<Point> getViableNextPositions(Dancer &dancer);
   Point searchBestNext(Dancer &dancer, Point &finalPosition, std::vector<Point> &initViableNexts);
-  ChoreographerMove simulate(std::vector<DancerMove> &dancerSrcDest); // returns a sequence of moves
+  ChoreographerMove simulate(SolutionSpec &input); // returns a sequence of moves
 };
 
 #endif

@@ -10,6 +10,7 @@ class Random {
     Random();
 
     int randInt(int a, int b); // the values are inclusive
+    double randDouble(double a, double b); // b is not included
 };
 
 #endif

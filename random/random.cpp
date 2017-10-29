@@ -14,3 +14,8 @@ int Random::randInt(int a, int b) {
   uniform_int_distribution<int> distribution(a, b);
   return distribution(generator);
 }
+
+double Random::randDouble(double a, double b) {
+  uniform_real_distribution<double> distribution(a, b);
+  return distribution(generator);
+}
