@@ -3,6 +3,7 @@
 #include "spiral_iterator.h"
 #include "structs.h"
 #include "client.h"
+#include "pairing_iterator.h"
 
 #include <vector>
 #include <iostream>
@@ -63,6 +64,14 @@ struct CenterTest {
 struct PairingsTest {
   vector<Pairing> pairings;
   vector<EndLine> expectedEndLines;
+};
+
+struct PairingGeneratorTest {
+  int numColors;
+  int numDancers;
+  int boardSize;
+  vector<Dancer> dancers;
+  vector<vector<Pairing>> steps_expected_pairings; // This is for calling the generator successively
 };
 
 int main() {
@@ -186,6 +195,92 @@ int main() {
       expectedOutput.push_back(e.end);
     }
     assertPointVector(actualOutput, expectedOutput, "pairingsToPositions test number " + to_string(testNum));
+    testNum++;
+  }
+
+  vector<PairingGeneratorTest> generatorTests = {
+    {
+      4,
+      2,
+      40,
+      {
+        {{0, 0}, 0}, {{0, 4}, 1}, {{4, 4}, 2}, {{4, 0}, 3}, {{10, 0}, 0}, {{10, 4}, 1}, {{14, 4}, 2}, {{14, 0}, 3}
+      },
+      {
+        {
+          {{
+             {0, 0}, {0, 4}, {4, 4}, {4, 0}
+          }},
+          {{
+             {10, 0}, {10, 4}, {14, 4}, {14, 0}
+          }}
+        }
+      }
+    },
+    {
+      4,
+      2,
+      40,
+      {
+        {{0, 0}, 0}, {{0, 4}, 1}, {{4, 4}, 2}, {{4, 0}, 3}, {{3, 0}, 0}, {{3, 4}, 1}, {{7, 4}, 2}, {{7, 0}, 3}
+      },
+      {}
+    },
+    {
+      4,
+      2,
+      40,
+      {
+        {{0, 0}, 0}, {{0, 4}, 1}, {{4, 4}, 2}, {{4, 0}, 3}, {{3, 0}, 2}, {{3, 4}, 3}, {{7, 4}, 0}, {{7, 0}, 1}
+      },
+      {}
+    }
+  };
+  generatorTests[1].steps_expected_pairings.resize(10);
+  generatorTests[2].steps_expected_pairings.resize(10);
+  testNum = 1;
+  for (PairingGeneratorTest curTest : generatorTests) {
+    // We first sort the dancers by color as that's what the algorithm expects
+    sort(curTest.dancers.begin(), curTest.dancers.end(),
+        [](const Dancer &a, const Dancer &b) -> bool { return a.color < b.color; }
+    );
+    client.numColors = client.serverNumColors = curTest.numColors;
+    client.serverNumDancers = curTest.numDancers;
+    client.serverBoardSize = curTest.boardSize;
+    client.dancers = curTest.dancers;
+    PairingIterator it(&client);
+    int stepNum = 1;
+    for (vector<Pairing> expectedPairing : curTest.steps_expected_pairings) {
+      vector<Pairing> sol = it.getNext();
+      vector<Point> actualOutput;
+      for (Pairing curPairing : sol) {
+        for (Point curPoint : curPairing.dancers) {
+          actualOutput.push_back(curPoint);
+        }
+      }
+      if (expectedPairing.size() > 0) {
+        vector<Point> expectedOutput;
+        for (Pairing curPairing : expectedPairing) {
+          for (Point curPoint : curPairing.dancers) {
+            expectedOutput.push_back(curPoint);
+          }
+        }
+        string testName = "PairingGenerator test number " + to_string(testNum) + " step " + to_string(stepNum);
+        assertPointVector(actualOutput, expectedOutput, testName);
+      } else {
+        cout << "Pairings for test number " + to_string(testNum) + " step " + to_string(stepNum) << endl;
+        int pairingIndex = 0;
+        for (Point curPoint : actualOutput) {
+          cout << curPoint.toString() << ' ';
+          pairingIndex++;
+          if (pairingIndex == curTest.numColors) {
+            pairingIndex = 0;
+            cout << endl;
+          }
+        }
+      }
+      stepNum++;
+    }
     testNum++;
   }
   cout << "Tests Finished" << endl;

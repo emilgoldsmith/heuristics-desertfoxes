@@ -5,8 +5,8 @@
 #include <random>
 
 class Random {
-  std::default_random_engine generator;
   public:
+    std::default_random_engine generator;
     Random();
 
     int randInt(int a, int b); // the values are inclusive
