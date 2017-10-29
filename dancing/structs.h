@@ -42,7 +42,7 @@ struct SolutionSpec {
 // used for BFS
 struct PointParent {
   Point point;
-  PointParent *parent;
+  Point source;
   int depth;
 };
 

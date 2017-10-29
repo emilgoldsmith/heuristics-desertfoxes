@@ -209,11 +209,10 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
 }
 
 Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Point> &initViableNexts) {
-  int bfsLimit = 5;
   int initDistance = manDist(dancer.position, finalPosition);
+  int bfsLimit = min(5, initDistance); // prevent over-search
   queue<PointParent> q;
   PointParent pp;
-  Point bestNext;
   bool **visited;
 
   // initialize visited flags - this can be significantly reduced to the range of BFS
@@ -226,20 +225,19 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
   }
 
   for (Point &next : initViableNexts) {
-    q.push({ next, nullptr, 1 });
+    q.push({ next, next, 1 });
     visited[next.y][next.x] = true;
   }
 
-  bool success = false;
+  vector<PointParent> candidates;
   while (!q.empty()) {
     pp = q.front();
     q.pop();
-    // stop after successfully approaching the final position
-    if (manDist(pp.point, finalPosition) < initDistance) {
-      success = true;
-      break;
+    // found a viable play, but don't stop
+    if (pp.depth == bfsLimit && manDist(pp.point, finalPosition) < initDistance) {
+      candidates.push_back(pp);
     }
-    // this is for when the dancer moves away/stand still to make place for another dancer
+    // only stop when limit is reached
     if (pp.depth > bfsLimit) {
       break;
     }
@@ -247,16 +245,11 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
     vector<Point> ppNext = getViableNextPositions(pp.point);
     for (Point &next : ppNext) {
       if (!visited[next.y][next.x]) {
-        q.push({ next, &pp, pp.depth + 1 });
+        q.push({ next, pp.source, pp.depth + 1 });
         visited[next.y][next.x] = true;
       }
     }
   }
-
-  // get nextBest from pp
-  do {
-    bestNext = pp.point;
-  } while (pp.parent);
 
   // another optimization would be having visited as a member variable
   // so it would only be allocated and freed once
@@ -265,8 +258,16 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
   }
   delete [] visited;
 
-  if (success) {
-    return bestNext;
+  if (candidates.size() > 0) {
+    PointParent bestPP;
+    int minManDist = 99999;
+    for (PointParent candidate : candidates) {
+      if (manDist(candidate.point, finalPosition) < minManDist) {
+        minManDist = manDist(candidate.point, finalPosition);
+        bestPP = candidate;
+      }
+    }
+    return bestPP.source;
   }
 
   return initViableNexts[0];
@@ -301,6 +302,7 @@ ChoreographerMove GameState::simulate(vector<DancerMove> &dancerSrcDest) {
 
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
+    // get the number of dancers that are still misplaced
     move.dancerMoves.push_back({});
     vector<Point> nextPositions(dancers.size());
 
