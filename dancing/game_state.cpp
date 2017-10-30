@@ -1,13 +1,14 @@
 #include "game_state.h"
 #include "../random/random.h"
+#include "../timer/timer.h"
 
 #include <algorithm>
 #include <queue>
 
 using namespace std;
 
-GameState::GameState(int boardSize, int numColors, vector<Dancer> dancers, vector<Point> stars)
-:boardSize(boardSize), numColors(numColors), dancers(dancers), stars(stars) {
+GameState::GameState(int boardSize, int numColors, vector<Dancer> dancers, vector<Point> stars, Timer *xt)
+:boardSize(boardSize), numColors(numColors), dancers(dancers), stars(stars), t(xt) {
   // init board
   board = new int*[boardSize];
   for (int i = 0; i < boardSize; i++) {
@@ -310,6 +311,12 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   bool better = true;
   while (!atFinalPositions(finalPositions)) {
     move.dancerMoves.push_back({});
+    // Check that we didn't get stuck on first move when we don't have an optimization ready
+    if (numSimulations == 0 && t->getTime() > 0.5) {
+      cout << "Cancelling first simulation as it took too long" << endl; // I'm keeping this one even in "production" mode as it's so important as it could screw everything
+      // up if the time limit is put at too low a value
+      break;
+    }
 #ifndef DEBUG
     if (numSimulations > 0 && move.dancerMoves.size() == currentBestSequence.dancerMoves.size()) { // Even if we reach there this move it won't be better
       better = false;
@@ -418,6 +425,12 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   dancers = dancersBackup;
   resetBoard();
   fillBoard(dancers, stars);
+
+  if (numSimulations == 0 && t->getTime() > 0.5) {
+    // It was cancelled not actually done but we had to wait for the reset board statements
+    cout << "And actually doing the cancel now" << endl;
+    return;
+  }
 
   // book keeping
 #ifndef DEBUG
