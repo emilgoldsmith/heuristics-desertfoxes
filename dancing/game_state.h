@@ -6,6 +6,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#ifdef DEBUG
+#include <map>
+#endif
 
 class GameState {
 public:
@@ -18,6 +21,10 @@ public:
   bool randomize = false;
   int numSimulations; // number of simulation tried
   ChoreographerMove currentBestSequence; // best sequence simulated so far
+#ifdef DEBUG
+  std::map<std::string, int> bestMovePerStrategy;
+  void printStrategyStats();
+#endif
 
   GameState(int boardSize, int numColors, std::vector<Dancer> dancers, std::vector<Point> stars);
   ~GameState(); // free the board array
@@ -33,7 +40,7 @@ public:
   std::vector<Point> getViableNextPositions(Point dancerPosition);
   std::vector<Point> getViableNextPositions(Dancer &dancer);
   Point searchBestNext(Dancer &dancer, Point &finalPosition, std::vector<Point> &initViableNexts);
-  ChoreographerMove simulate(SolutionSpec &input); // returns a sequence of moves
+  ChoreographerMove simulate(SolutionSpec &input, std::string strategy = "Unknown"); // returns a sequence of moves
 };
 
 #endif

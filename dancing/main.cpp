@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     PairingIterator it(&client);
     for (int i = 0; i < 10; i++) {
       SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
-      state.simulate(solutionSpec);
+      state.simulate(solutionSpec, "pairingsToPositions");
     }
 
 
@@ -75,5 +75,8 @@ int main(int argc, char **argv) {
     // Then we send the best solution we could find
     ChoreographerMove solution = state.currentBestSequence;
     client.makeChoreographerMove(solution);
+#ifdef DEBUG
+    state.printStrategyStats();
+#endif
   }
 }

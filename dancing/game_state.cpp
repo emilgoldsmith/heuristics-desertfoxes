@@ -278,7 +278,7 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
   return initViableNexts[0];
 }
 
-ChoreographerMove GameState::simulate(SolutionSpec &input) {
+ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
   // back up dancers
   vector<Dancer> dancersBackup = cloneDancers();
   ChoreographerMove move = {{}, input.finalConfiguration};
@@ -441,6 +441,21 @@ ChoreographerMove GameState::simulate(SolutionSpec &input) {
     currentBestSequence = move;
   }
   numSimulations++;
-
+#ifdef DEBUG
+  if (bestMovePerStrategy.count(strategy) == 0) {
+    bestMovePerStrategy[strategy] = move.dancerMoves.size();
+  } else if (bestMovePerStrategy[strategy] > move.dancerMoves.size()) {
+    bestMovePerStrategy[strategy] = move.dancerMoves.size();
+  }
+#endif
   return move;
 }
+
+#ifdef DEBUG
+void GameState::printStrategyStats() {
+  cout << "Best scores achieved from each strategy" << endl;
+  for (auto mapPair : bestMovePerStrategy) {
+    cout << "Strategy " << mapPair.first << " achieved best score of: " << mapPair.second << endl;
+  }
+}
+#endif
