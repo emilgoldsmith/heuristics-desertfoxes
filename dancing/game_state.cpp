@@ -61,6 +61,7 @@ bool GameState::isConsistent() {
       isConsistent = false;
       #ifdef DEBUG
         cerr << "Dancer list inconsistent with board" << endl;
+        cerr << board[dancer.position.y][dancer.position.x] << ' ' << dancer.color + 1 << endl;
       #endif
     }
   }
