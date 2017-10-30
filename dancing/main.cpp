@@ -4,6 +4,7 @@
 #include "game_state.h"
 #include "pairing_iterator.h"
 #include "../random/random.h"
+#include "../timer/timer.h"
 
 #include <iostream>
 #include <string>
@@ -39,17 +40,12 @@ int main(int argc, char **argv) {
   int port = atoi(argv[2]);
   int role = atoi(argv[3]);
   Client client(ip, port, role);
+  Timer t(60 + 58);
+  t.start();
   GameState state(client.serverBoardSize, client.serverNumColors, client.dancers, client.stars);
   if (role == 1) {
     client.makeSpoilerMove(dummyPlaceStars(&client));
   } else {
-
-    // First we do a few runs with pairings that are close to each other
-    PairingIterator it(&client);
-    for (int i = 0; i < 10; i++) {
-      SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
-      state.simulate(solutionSpec, "pairingsToPositions");
-    }
 
     /*
     // Then we compute a center for all dancers and place them in there
@@ -79,7 +75,17 @@ int main(int argc, char **argv) {
       T *= alpha;
     }
     */
-
+    PairingIterator it(&client);
+    // Keep going until we're out of time
+#ifdef DEBUG
+    for (int i = 0; i < 20; i++) {
+#else
+    while (t.timeLeft() > 0) {
+#endif
+      cout << t.timeLeft() << endl;
+      SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
+      state.simulate(solutionSpec, "pairingsToPositions");
+    }
 
     // Then we send the best solution we could find
     ChoreographerMove solution = state.currentBestSequence;
