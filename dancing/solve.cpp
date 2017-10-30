@@ -161,8 +161,21 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
           cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
         }
 #endif
+        // We greedily pair each square with the dancer closest to it
+        vector<bool> taken(curPairing.dancers.size(), false);
         for (int i = 0; i < curPairing.dancers.size(); i++) {
-          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[i]});
+          int closestIndex;
+          int closestDistance = 1000 * 1000;
+          for (int j = 0; j < curPairing.dancers.size(); j++) {
+            if (taken[j]) continue;
+            int dist = manDist(curPairing.dancers[j], candidatePosition.placements[i]);
+            if (dist < closestDistance) {
+              closestDistance = dist;
+              closestIndex = j;
+            }
+          }
+          taken[closestIndex] = true;
+          dancerMapping.push_back({curPairing.dancers[closestIndex], candidatePosition.placements[i]});
         }
         break;
       }
