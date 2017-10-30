@@ -53,17 +53,6 @@ void GameState::fillBoard(vector<Dancer> &dancerList, vector<Point> &starList) {
   }
 }
 
-vector<Dancer> GameState::cloneDancers() {
-  vector<Dancer> dancersClone;
-  for (auto &dancer : dancers) {
-    dancersClone.push_back({
-      Point(dancer.position.x, dancer.position.y),
-      dancer.color
-    });
-  }
-  return dancersClone;
-}
-
 bool GameState::isConsistent() {
   bool isConsistent = true;
   // check dancers
@@ -132,12 +121,15 @@ bool GameState::withinBounds(Point position) {
 
 bool GameState::simulateOneMove(vector<Point> &nextPositions) {
   bool success = true;
-  vector<Dancer> dancersBackup = cloneDancers();
+#ifdef DEBUG
+  vector<Dancer> dancersBackup(dancers);
+#endif
 
   for (int i = 0; i < dancers.size(); i++) {
     Dancer dancer = dancers[i];
     Point nextPosition = nextPositions[i];
     // check for errors
+#ifdef DEBUG
     if (manDist(dancer.position, nextPosition) > 1) {
       #ifdef DEBUG
       cerr << "Dancer attempted to move more than 1 manhattan distance away" << endl;
@@ -157,6 +149,7 @@ bool GameState::simulateOneMove(vector<Point> &nextPositions) {
       #endif // DEBUG
       success = false;
     }
+#endif
     // clear dancer's original position and set dancer new position
     board[dancer.position.y][dancer.position.x] = 0;
     dancers[i].position = nextPosition;
@@ -167,17 +160,21 @@ bool GameState::simulateOneMove(vector<Point> &nextPositions) {
     board[dancers[i].position.y][dancers[i].position.x] = dancers[i].color + 1;
   }
 
+#ifdef DEBUG
   // final consistency check (e.g. if multiple dancers moved to same position)
   if (!isConsistent()) {
     success = false;
   }
+#endif
 
   // restore game state if simulation fails
+#ifdef DEBUG
   if (!success) {
     dancers = dancersBackup;
     resetBoard();
     fillBoard(dancers, stars);
   }
+#endif
 
   return success;
 }
@@ -188,7 +185,6 @@ bool GameState::atFinalPositions(std::vector<Point> &finalPositions) {
       return false;
     }
   }
-
   return true;
 }
 
@@ -285,7 +281,7 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
 
 ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
   // back up dancers
-  vector<Dancer> dancersBackup = cloneDancers();
+  vector<Dancer> dancersBackup(dancers);
   ChoreographerMove move = {{}, input.finalConfiguration};
 
   // map destinations to final positions
@@ -313,7 +309,7 @@ ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
   // simulate stuff
   while (!atFinalPositions(finalPositions)) {
     move.dancerMoves.push_back({});
-    vector<Point> nextPositions(dancers.size());
+    vector<Point> nextPositions(dancers.size(), {-1, -1});
     int numOutOfPlaceDancers = 0;
     bool stuck = false;
 
@@ -321,10 +317,6 @@ ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
       if (dancers[i].position != finalPositions[i]) {
         numOutOfPlaceDancers++;
       }
-    }
-    for (Point &next : nextPositions) {
-      next.x = -1;
-      next.y = -1;
     }
 
     // sorted dancer index with priority given to dancer with the highest manhattan distance to final position
