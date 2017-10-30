@@ -307,8 +307,20 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   #endif
 
   // simulate stuff
+  bool better = true;
   while (!atFinalPositions(finalPositions)) {
     move.dancerMoves.push_back({});
+#ifndef DEBUG
+    if (numSimulations > 0 && move.dancerMoves.size() == currentBestSequence.dancerMoves.size()) { // Even if we reach there this move it won't be better
+      better = false;
+      break;
+    }
+#else
+    if (bestMovePerStrategy.count(strategy) > 0 && move.dancerMoves.size() == bestMovePerStrategy[strategy]) {
+      better = false;
+      break;
+    }
+#endif
     vector<Point> nextPositions(dancers.size(), {-1, -1});
     int numOutOfPlaceDancers = 0;
     bool stuck = false;
@@ -408,19 +420,22 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   fillBoard(dancers, stars);
 
   // book keeping
+#ifndef DEBUG
+  if (better) {
+    currentBestSequence = move;
+  }
+#else
+  // We don't know if maybe it's a only an improvement on a worse strategy so we do the check
   if (numSimulations == 0) {
     currentBestSequence = move;
   } else if (currentBestSequence.dancerMoves.size() > move.dancerMoves.size()) {
     currentBestSequence = move;
   }
-  numSimulations++;
-#ifdef DEBUG
-  if (bestMovePerStrategy.count(strategy) == 0) {
-    bestMovePerStrategy[strategy] = move.dancerMoves.size();
-  } else if (bestMovePerStrategy[strategy] > move.dancerMoves.size()) {
+  if (better) {
     bestMovePerStrategy[strategy] = move.dancerMoves.size();
   }
 #endif
+  numSimulations++;
 }
 
 #ifdef DEBUG
