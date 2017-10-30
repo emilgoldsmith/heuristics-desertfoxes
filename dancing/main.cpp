@@ -50,7 +50,12 @@ int main(int argc, char **argv) {
       state.simulate(solutionSpec, "pairingsToPositions");
     }
 
+    // Then we compute a center for all dancers and place them in there
+    vector<Point> placeholder;
+    SolutionSpec solutionSpec = solveManyPoints(&client, client.dancers, placeholder);
+    state.simulate(solutionSpec, "compute center for all dancers");
 
+    /*
     // Then we try simulated annealing
     Random r;
     vector<Pairing> oldPairing = it.getNext();
@@ -70,6 +75,7 @@ int main(int argc, char **argv) {
       }
       T *= alpha;
     }
+    */
 
 
     // Then we send the best solution we could find

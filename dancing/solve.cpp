@@ -192,6 +192,103 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
   return {dancerMapping, finalConfiguration};
 }
 
+static Point extractClosestDancer(const Point &source, vector<Point> &dancers) {
+  int indexOfClosest = 0;
+  int closestDistance = manDist(source, dancers[0]);
+  for (int i = 1; i < dancers.size(); i++) {
+    int dist = manDist(source, dancers[i]);
+    if (dist < closestDistance) {
+      indexOfClosest = i;
+      closestDistance = dist;
+    }
+  }
+  Point ret = dancers[indexOfClosest];
+  dancers.erase(dancers.begin() + indexOfClosest);
+  return ret;
+}
+
+SolutionSpec solveManyPoints(Client *client, const vector<Dancer> &dancers, const vector<Point> &takenPositions) {
+  // We first figure out which squares we can actually use
+  int n = client->serverBoardSize;
+  vector<vector<bool>> board(n, vector<bool>(n, false));
+  for (Point star : client->stars) {
+    board[star.x][star.y] = true;
+  }
+  for (Point takenPoint : takenPositions) {
+    board[takenPoint.x][takenPoint.y] = true;
+  }
+  // Then we prep a few data structures
+  vector<vector<Point>> dancersByColor(client->numColors);
+  vector<Point> dancerPoints;
+  dancerPoints.reserve(dancers.size());
+  for (Dancer curDancer : dancers) {
+    dancerPoints.push_back(curDancer.position);
+    dancersByColor[curDancer.color].push_back(curDancer.position);
+  }
+  // Then we compute the center of all the points and let's go!
+  Point center = computeCenterBruteforce(dancerPoints);
+  vector<EndLine> finalConfiguration;
+  vector<DancerMove> dancerMapping;
+  int m = dancers.size();
+  SpiralIterator it(center);
+  int pointsOnNegative = client->numColors / 2;
+  int pointsOnPositive = pointsOnNegative + client->numColors % 2;
+  while (dancerMapping.size() < m) {
+    Point cur = it.getNext();
+    if (cur.x < 0 || cur.x >= n || cur.y < 0 || cur.y >= n) continue;
+    // First try horizontal
+    Position candidatePosition;
+    for (int i = cur.x - pointsOnNegative; i < cur.x + pointsOnPositive && i >= 0 && i < n; i++) {
+      if (board[i][cur.y]) break;
+      candidatePosition.placements.push_back({i, cur.y});
+    }
+    if (candidatePosition.placements.size() == client->numColors) {
+      // We found a proper placement!
+      for (Point dancerFinal : candidatePosition.placements) {
+        board[dancerFinal.x][dancerFinal.y] = true;
+      }
+      finalConfiguration.push_back({cur - Point(pointsOnNegative, 0), cur + Point(pointsOnPositive - 1, 0)});
+#ifdef DEBUG
+      if (client->numColors != candidatePosition.placements.size()) {
+        cerr << "ERROR: numColors and CandidatePosition are not the same size in solveManyPoints" << endl;
+      }
+#endif
+      for (int i = 0; i < client->numColors; i++) {
+        // Here we could probably do a small improvement so we don't statically consider colors but actually
+        // check if another color placement on the strip would be better
+        Point closestDancer = extractClosestDancer(candidatePosition.placements[i], dancersByColor[i]);
+        dancerMapping.push_back({closestDancer, candidatePosition.placements[i]});
+      }
+      continue;
+    }
+    candidatePosition.placements.clear();
+    for (int j = cur.y - pointsOnNegative; j < cur.y + pointsOnPositive && j >= 0 && j < n; j++) {
+      if (board[cur.x][j]) break;
+      candidatePosition.placements.push_back({cur.x, j});
+    }
+    if (candidatePosition.placements.size() == client->numColors) {
+      // We found a proper placement!
+      for (Point dancerFinal : candidatePosition.placements) {
+        board[dancerFinal.x][dancerFinal.y] = true;
+      }
+      finalConfiguration.push_back({cur - Point(0, pointsOnNegative), cur + Point(0, pointsOnPositive - 1)});
+#ifdef DEBUG
+      if (client->numColors != candidatePosition.placements.size()) {
+        cerr << "ERROR: numColors and CandidatePosition are not the same size in solveManyPoints" << endl;
+      }
+#endif
+      for (int i = 0; i < client->numColors; i++) {
+        // Here we could probably do a small improvement so we don't statically consider colors but actually
+        // check if another color placement on the strip would be better
+        Point closestDancer = extractClosestDancer(candidatePosition.placements[i], dancersByColor[i]);
+        dancerMapping.push_back({closestDancer, candidatePosition.placements[i]});
+      }
+      continue;
+    }
+  }
+  return {dancerMapping, finalConfiguration};
+}
+
 vector<Point> dummyPlaceStars(Client *client) {
   int n = client->serverBoardSize;
   int k = client->serverNumDancers;

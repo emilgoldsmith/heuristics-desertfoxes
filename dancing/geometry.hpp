@@ -83,7 +83,7 @@ inline Point operator /(const Point &a, const int lambda){
 }
 
 // Manhattan distance
-inline int manDist(Point a, Point b) {
+inline int manDist(const Point &a, const Point &b) {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
