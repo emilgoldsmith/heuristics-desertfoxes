@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
   t.start();
   GameState state(client.serverBoardSize, client.serverNumColors, client.dancers, client.stars, &t);
   if (role == 1) {
-    client.makeSpoilerMove(dummyPlaceStars(&client));
+    client.makeSpoilerMove(choreoPlaceStars(&client));
   } else {
 
     /*
