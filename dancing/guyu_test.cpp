@@ -184,5 +184,6 @@ int main() {
   //   cerr << "TEST FAILED: GET VIABLE NEXT POSITIONS" << endl;
   // }
 
-  auto move = state.simulate(dancerSrcDest);
+  SolutionSpec sol = { dancerSrcDest, {} };
+  auto move = state.simulate(sol);
 }

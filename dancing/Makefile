@@ -26,5 +26,5 @@ run_emil_test: emil_test.cpp solve.cpp spiral_iterator.cpp client.cpp pairing_it
 	./emil_test.out
 
 run_guyu_test: guyu_test.cpp game_state.cpp
-	$(CXX) -o guyu_test.out guyu_test.cpp game_state.cpp $(CXXFLAGS)
+	$(CXX) -o guyu_test.out guyu_test.cpp game_state.cpp ../random/random.cpp $(CXXFLAGS)
 	./guyu_test.out
