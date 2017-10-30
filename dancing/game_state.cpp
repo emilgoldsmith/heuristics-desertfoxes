@@ -211,72 +211,45 @@ vector<Point> GameState::getViableNextPositions(Dancer &dancer) {
 }
 
 Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Point> &initViableNexts) {
-  int initDistance = manDist(dancer.position, finalPosition);
-  int bfsLimit = 5;
+  const int bfsLimit = 5;
   queue<PointParent> q;
-  PointParent pp;
-  bool **visited;
 
-  // initialize visited flags - this can be significantly reduced to the range of BFS
-  visited = new bool*[boardSize];
-  for (int i = 0; i < boardSize; i++) {
-    visited[i] = new bool[boardSize];
-    for (int j = 0; j < boardSize; j++) {
-      visited[i][j] = false;
-    }
-  }
+  // initialize visited flags
+  vector<vector<bool>> visited(bfsLimit * 2 + 1, vector<bool>(bfsLimit * 2 + 1, false));
 
   for (Point &next : initViableNexts) {
-    q.push({ next, next, 1 });
-    visited[next.y][next.x] = true;
+    Point dir = next - dancer.position;
+    q.push({ dir, dir, 1 });
+    visited[dir.y + bfsLimit][dir.x + bfsLimit] = true;
   }
 
-  vector<PointParent> candidates;
+  Point bestMove = {0, 0};
+  int bestMoveDistance = manDist(dancer.position, finalPosition);
   while (!q.empty()) {
-    pp = q.front();
+    PointParent pp = q.front();
     q.pop();
     // found a viable play, but don't stop
     if (pp.depth == bfsLimit) {
-      if (manDist(pp.point, finalPosition) < initDistance) {
-        candidates.push_back(pp);
+      int dist = manDist(pp.point + dancer.position, finalPosition);
+      if (dist < bestMoveDistance) {
+        bestMove = pp.source;
+        bestMoveDistance = dist;
       }
-    } else if (pp.point == finalPosition) {
-      candidates.push_back(pp);
-    }
-    // only stop when limit is reached
-    if (pp.depth > bfsLimit) {
-      break;
+      // We continue as we don't want to add any new items to the queue with depth higher than this
+      continue;
     }
     // push unvisited neighbors into the queue
-    vector<Point> ppNext = getViableNextPositions(pp.point);
+    vector<Point> ppNext = getViableNextPositions(pp.point + dancer.position);
     for (Point &next : ppNext) {
-      if (!visited[next.y][next.x]) {
-        q.push({ next, pp.source, pp.depth + 1 });
-        visited[next.y][next.x] = true;
+      Point dir = next - dancer.position;
+      if (!visited[dir.y + bfsLimit][dir.x + bfsLimit]) {
+        q.push({ dir, pp.source, pp.depth + 1 });
+        visited[dir.y + bfsLimit][dir.x + bfsLimit] = true;
       }
     }
   }
 
-  // another optimization would be having visited as a member variable
-  // so it would only be allocated and freed once
-  for (int i = 0; i < boardSize; i++) {
-    delete [] visited[i];
-  }
-  delete [] visited;
-
-  if (candidates.size() > 0) {
-    PointParent bestPP;
-    int minManDist = 99999;
-    for (PointParent candidate : candidates) {
-      if (manDist(candidate.point, finalPosition) < minManDist) {
-        minManDist = manDist(candidate.point, finalPosition);
-        bestPP = candidate;
-      }
-    }
-    return bestPP.source;
-  }
-
-  return initViableNexts[0];
+  return bestMove + dancer.position;
 }
 
 void GameState::simulate(SolutionSpec &input, string strategy) {
