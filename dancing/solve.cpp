@@ -161,21 +161,33 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
           cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
         }
 #endif
-        // We greedily pair each square with the dancer closest to it
-        vector<bool> taken(curPairing.dancers.size(), false);
+        // We sort the dancers in the pairing by the one who has the longest min distance to a square to prioritize overall min distance
+        sort(curPairing.dancers.begin(), curPairing.dancers.end(),
+            [&candidatePosition](const Point &a, const Point &b) -> bool {
+              int closestDistanceA = 1000 * 1000;
+              int closestDistanceB = 1000 * 1000;
+              for (int i = 0; i < candidatePosition.placements.size(); i++) {
+                closestDistanceA = min(closestDistanceA, manDist(a, candidatePosition.placements[i]));
+                closestDistanceB = min(closestDistanceB, manDist(b, candidatePosition.placements[i]));
+              }
+              return closestDistanceA > closestDistanceB;
+            }
+        );
+
+        vector<bool> taken(candidatePosition.placements.size(), false);
         for (int i = 0; i < curPairing.dancers.size(); i++) {
           int closestIndex;
           int closestDistance = 1000 * 1000;
-          for (int j = 0; j < curPairing.dancers.size(); j++) {
+          for (int j = 0; j < candidatePosition.placements.size(); j++) {
             if (taken[j]) continue;
-            int dist = manDist(curPairing.dancers[j], candidatePosition.placements[i]);
+            int dist = manDist(curPairing.dancers[i], candidatePosition.placements[j]);
             if (dist < closestDistance) {
               closestDistance = dist;
               closestIndex = j;
             }
           }
           taken[closestIndex] = true;
-          dancerMapping.push_back({curPairing.dancers[closestIndex], candidatePosition.placements[i]});
+          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[closestIndex]});
         }
         break;
       }
