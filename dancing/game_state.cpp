@@ -1,5 +1,7 @@
 #include "game_state.h"
 #include "../random/random.h"
+
+#include <algorithm>
 #include <queue>
 
 using namespace std;
@@ -19,6 +21,9 @@ GameState::GameState(int boardSize, int numColors, vector<Dancer> dancers, vecto
   fillBoard(dancers, stars);
 
   numSimulations = 0;
+
+  sortedDancerIndices.reserve(dancers.size());
+  for (int i = 0; i < dancers.size(); i++) sortedDancerIndices.push_back(i);
 }
 
 GameState::~GameState() {
@@ -323,36 +328,15 @@ ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
     }
 
     // sorted dancer index with priority given to dancer with the highest manhattan distance to final position
-    vector<int> sortedDancerIndices;
-    vector<bool> included(dancers.size());
-    for (int i = 0; i < dancers.size(); i++) {
-      included[i] = false;
-    }
     if (!randomize) {
-      for (int i = 0; i < dancers.size(); i++) {
-        int maxManhattanDist = -1;
-        int maxIndex = -1;
-        for (int j = 0; j < dancers.size(); j++) {
-          if (!included[j] && manDist(dancers[j].position, finalPositions[j]) > maxManhattanDist) {
-            maxManhattanDist = manDist(dancers[j].position, finalPositions[j]);
-            maxIndex = j;
+      sort(sortedDancerIndices.begin(), sortedDancerIndices.end(),
+          [&](const int &a, const int &b) -> bool {
+            return manDist(dancers[a].position, finalPositions[a]) > manDist(dancers[b].position, finalPositions[b]);
           }
-        }
-        sortedDancerIndices.push_back(maxIndex);
-        included[maxIndex] = true;
-      }
+      );
     } else {
       Random r;
-      for (int i = 0; i < dancers.size(); i++) {
-        while (true) {
-          int randomIndex = r.randInt(0, dancers.size() - 1);
-          if (!included[randomIndex]) {
-            included[randomIndex] = true;
-            sortedDancerIndices.push_back(randomIndex);
-            break;
-          }
-        }
-      }
+      shuffle(sortedDancerIndices.begin(), sortedDancerIndices.end(), r.generator);
     }
 
     // get next position for every dancer
@@ -363,19 +347,16 @@ ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
       vector<Point> filteredViableNexts;
       // sort viable positions based on manhattan distance (shortest first)
       for (int i = 1; i < viableNextPositions.size(); i++) {
-        for (int j = i; j > 0; j--) {
-          if (manDist(viableNextPositions[j], finalPos) < manDist(viableNextPositions[j - 1], finalPos)) {
-            Point swap = viableNextPositions[j];
-            viableNextPositions[j] = viableNextPositions[j - 1];
-            viableNextPositions[j - 1] = swap;
-          }
+        for (int j = i; j - 1 >= 0 && manDist(viableNextPositions[j], finalPos) < manDist(viableNextPositions[j - 1], finalPos); j--) {
+          swap(viableNextPositions[j - 1], viableNextPositions[j]);
         }
       }
       // filter viableNextPositions by checking if they are already occupied
       for (auto &candidate : viableNextPositions) {
         bool alreadyOccupied = false;
-        for (auto &nextPos : nextPositions) {
-          if (nextPos == candidate) {
+        for (int j : sortedDancerIndices) {
+          if (j == i) break; // All the rest of the dancers haven't been moved yet
+          if (nextPositions[j] == candidate) {
             alreadyOccupied = true;
             break;
           }
