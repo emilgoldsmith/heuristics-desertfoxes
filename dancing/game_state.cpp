@@ -284,6 +284,10 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   // back up dancers
   vector<Dancer> dancersBackup(dancers);
   ChoreographerMove move = {{}, input.finalConfiguration};
+  double start;
+  if (numSimulations == 0) { // Used for checking if stuck on first move
+    start = t->getTime();
+  }
 
   // map destinations to final positions
   vector<Point> finalPositions(dancers.size());
@@ -311,8 +315,8 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   bool better = true;
   while (!atFinalPositions(finalPositions)) {
     move.dancerMoves.push_back({});
-    // Check that we didn't get stuck on first move when we don't have an optimization ready
-    if (numSimulations == 0 && t->getTime() > 0.5) {
+    // Check that we didn't get stuck on first move when we don't have a lower bound already
+    if (numSimulations == 0 && t->getTime() - start > 0.5) {
       cout << "Cancelling first simulation as it took too long" << endl; // I'm keeping this one even in "production" mode as it's so important as it could screw everything
       // up if the time limit is put at too low a value
       break;
@@ -426,7 +430,7 @@ void GameState::simulate(SolutionSpec &input, string strategy) {
   resetBoard();
   fillBoard(dancers, stars);
 
-  if (numSimulations == 0 && t->getTime() > 0.5) {
+  if (numSimulations == 0 && t->getTime() - start > 0.5) {
     // It was cancelled not actually done but we had to wait for the reset board statements
     cout << "And actually doing the cancel now" << endl;
     return;

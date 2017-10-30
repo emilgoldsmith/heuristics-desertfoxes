@@ -82,7 +82,6 @@ int main(int argc, char **argv) {
 #else
     while (t.timeLeft() > 0) {
 #endif
-      cout << t.timeLeft() << endl;
       SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
       state.simulate(solutionSpec, "pairingsToPositions");
     }
