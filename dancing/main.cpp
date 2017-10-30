@@ -92,5 +92,6 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
     state.printStrategyStats();
 #endif
+    cout << "We simulated " << state.numSimulations << " simulations. Wow! How awesome aren't we??" << endl;
   }
 }
