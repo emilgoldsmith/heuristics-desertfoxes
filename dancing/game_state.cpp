@@ -279,7 +279,7 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
   return initViableNexts[0];
 }
 
-ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
+void GameState::simulate(SolutionSpec &input, string strategy) {
   // back up dancers
   vector<Dancer> dancersBackup(dancers);
   ChoreographerMove move = {{}, input.finalConfiguration};
@@ -421,7 +421,6 @@ ChoreographerMove GameState::simulate(SolutionSpec &input, string strategy) {
     bestMovePerStrategy[strategy] = move.dancerMoves.size();
   }
 #endif
-  return move;
 }
 
 #ifdef DEBUG

@@ -26,7 +26,8 @@ vector<Pairing> getSANeighbour(vector<Pairing> source) {
 
 double getSACost(vector<Pairing> pairings, Client *client, GameState *state) {
   SolutionSpec solutionSpec = pairingsToPositions(client, pairings);
-  return state->simulate(solutionSpec).dancerMoves.size();
+  return 5.0;
+  //return state->simulate(solutionSpec).dancerMoves.size();
 }
 
 int main(int argc, char **argv) {
