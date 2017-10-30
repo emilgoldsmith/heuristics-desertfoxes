@@ -13,6 +13,7 @@
 
 using namespace std;
 
+/*
 vector<Pairing> getSANeighbour(vector<Pairing> source) {
   Random r;
   int firstIndex = r.randInt(0, source.size() - 1);
@@ -25,11 +26,17 @@ vector<Pairing> getSANeighbour(vector<Pairing> source) {
   return source;
 }
 
-double getSACost(vector<Pairing> pairings, Client *client, GameState *state) {
-  SolutionSpec solutionSpec = pairingsToPositions(client, pairings);
-  return 5.0;
-  //return state->simulate(solutionSpec).dancerMoves.size();
+double getSACost(vector<Pairing> pairings) {
+  int maxDist = -1;
+  for (Pairing curPairing : pairings) {
+    Point center = computeCenterBruteforce(curPairing.dancers);
+    for (Point curPoint : curPairing.dancers) {
+      maxDist = max(maxDist, manDist(center, curPoint));
+    }
+  }
+  return maxDist;
 }
+*/
 
 int main(int argc, char **argv) {
   if (argc != 4) {
@@ -55,26 +62,43 @@ int main(int argc, char **argv) {
     */
 
     /*
-    // Then we try simulated annealing
+    // First do a round of Simulated Annealing
     Random r;
     vector<Pairing> oldPairing = it.getNext();
-    double oldCost = getSACost(oldPairing, &client, &state);
-    double T = 1.0;
+    double oldCost = getSACost(oldPairing);
+    vector<Pairing> bestPairing = oldPairing;
+    double bestCost = oldCost;
+    double T = 1000.0;
     double T_min = 0.00001;
-    double alpha = 0.5;
+    double alpha = 0.945;
     while (T > T_min) {
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 100; i++) {
         vector<Pairing> newPairing = getSANeighbour(oldPairing);
-        double newCost = getSACost(newPairing, &client, &state);
+        double newCost = getSACost(newPairing);
         double acceptanceProbability = exp((oldCost - newCost)/T);
         if (acceptanceProbability > r.randDouble(0, 1)) {
           oldPairing = newPairing;
           oldCost = newCost;
+          if (oldCost < bestCost) {
+            bestCost = oldCost;
+            bestPairing = oldPairing;
+          }
         }
       }
       T *= alpha;
     }
+    // Test the result of SA
+    SolutionSpec solutionSpec = pairingsToPositions(&client, bestPairing);
+    for (int i = 0; i < 10; i++) {
+      // Simulate it several times as simulate has some random stuff going on
+      state.simulate(solutionSpec, "Simulated Annealing");
+    }
+#ifdef DEBUG
+    cout << "Simulated Annealing finished after " << t.getTime() << " seconds" << endl;
+#endif
+
     */
+    // Then we just run pairingsToPositions
     PairingIterator it(&client);
     // Keep going until we're out of time
 #ifdef DEBUG
