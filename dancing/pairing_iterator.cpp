@@ -68,5 +68,14 @@ vector<Pairing> PairingIterator::getNext() {
   }
   // Shuffle the dancerOrdering for next time
   shuffle(dancerOrdering.begin(), dancerOrdering.end(), r->generator);
+#ifdef DEBUG
+  int total = 0;
+  for (Pairing curPairing : pairings) {
+    total += curPairing.dancers.size();
+  }
+  if (total != client->serverNumDancers * client->serverNumColors) {
+    cerr << "ERROR: Pairing output wasn't the right size!" << endl;
+  }
+#endif
   return pairings;
 }
