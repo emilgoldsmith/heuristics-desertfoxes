@@ -378,6 +378,9 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
   vector<Point> stars; // stars is initially empty
   int minIterations = 10;
   int maxIterations = 10000;
+#ifdef DEBUG
+  maxIterations = 10;
+#endif
   int iteration = maxIterations;
   while (stars.size() < numDancers) {
     // construct a game state with the modified stars
@@ -418,7 +421,6 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
         }
       }
     }
-    cout << stars.size() << endl;
   }
   // need back up plan in case time runs out
 
