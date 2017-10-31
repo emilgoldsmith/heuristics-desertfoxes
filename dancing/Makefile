@@ -28,3 +28,6 @@ run_emil_test: emil_test.cpp solve.cpp spiral_iterator.cpp client.cpp pairing_it
 run_guyu_test: guyu_test.cpp game_state.cpp
 	$(CXX) -o guyu_test.out guyu_test.cpp game_state.cpp ../random/random.cpp $(CXXFLAGS)
 	./guyu_test.out
+
+generate:
+	python3 generate_test_case.py 50 50 8 > random_test_case.txt
