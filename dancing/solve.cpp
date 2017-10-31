@@ -5,6 +5,7 @@
 #include "spiral_iterator.h"
 #include "pairing_iterator.h"
 #include "game_state.h"
+#include "../random/random.h"
 
 #include <vector>
 #include <limits>
@@ -316,17 +317,10 @@ SolutionSpec solveManyPoints(Client *client, const vector<Dancer> &dancers, cons
   return {dancerMapping, finalConfiguration};
 }
 
-vector<Point> adjPlaceStars(Client *client, Timer &t) {
-  int boardSize = client->serverBoardSize;
-  int numDancers = client->serverNumDancers;
-  int numColors = client->serverNumColors;
-  int numStars = numDancers; // because the rule says so
-
-  vector<Point> stars; // stars is initially empty
-  GameState state(boardSize, numColors, client->dancers, stars, &t);
+vector<PointScore> getAdjCandidates(GameState &state) {
   vector<PointScore> candidates;
-  for (int x = 0; x < boardSize; x++) {
-    for (int y = 0; y < boardSize; y++) {
+  for (int x = 0; x < state.boardSize; x++) {
+    for (int y = 0; y < state.boardSize; y++) {
       if (state.board[y][x] == 0) {
         Point p(x, y);
         int minManDist = 99999;
@@ -349,6 +343,19 @@ vector<Point> adjPlaceStars(Client *client, Timer &t) {
       return ps1.score < ps2.score;
     }
   );
+
+  return candidates;
+}
+
+vector<Point> adjPlaceStars(Client *client, Timer &t) {
+  int boardSize = client->serverBoardSize;
+  int numDancers = client->serverNumDancers;
+  int numColors = client->serverNumColors;
+  int numStars = numDancers; // because the rule says so
+
+  vector<Point> stars; // stars is initially empty
+  GameState state(boardSize, numColors, client->dancers, stars, &t);
+  vector<PointScore> candidates = getAdjCandidates(state);
 
   int i = 0;
   while (stars.size() < numStars && i < candidates.size()) {
@@ -389,7 +396,10 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
     // get a new pairing iterator, so the pairings start anew
     PairingIterator it(client);
     double deadline = t.getTime() + t.timeLeft() / 2;
-    if (t.timeLeft() < 10) {
+    if (t.timeLeft() < 5) {
+      break;
+    }
+    if (t.timeLeft() < 15) {
       iteration = minIterations;
     }
     for (int i = 0; i < iteration; i++) {
@@ -421,8 +431,31 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
         }
       }
     }
+    cout << stars.size() << endl;
   }
-  // need back up plan in case time runs out
+
+  if (stars.size() == numStars) {
+    return stars;
+  }
+
+  // time ran out, place stars as close to the dancers as possible
+  GameState state(boardSize, numColors, client->dancers, stars, &t);
+  vector<PointScore> candidates = getAdjCandidates(state);
+  for (PointScore &candidateStar : candidates) {
+    bool tooClose = false;
+    for (Point &star : stars) {
+      if (manDist(candidateStar.point, star) < numColors + 1) {
+        tooClose = true;
+        break;
+      }
+    }
+    if (!tooClose) {
+      stars.push_back(candidateStar.point);
+      if (stars.size() == numStars) {
+        break;
+      }
+    }
+  }
 
   return stars;
 }
