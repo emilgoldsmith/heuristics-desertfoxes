@@ -204,18 +204,27 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
     SpiralIterator it(center);
     int pointsOnNegative = curPairing.dancers.size() / 2;
     int pointsOnPositive = pointsOnNegative + curPairing.dancers.size() % 2;
+    Random r;
+    if (curPairing.dancers.size() % 2 == 0) {
+      // Randomly decide which side gets the extra point
+      if (r.randInt(0, 1) == 0) {
+        pointsOnNegative--;
+        pointsOnPositive++;
+      }
+      // Else we do nothing, negative gets it by default
+    }
     while (true) {
       Point cur = it.getNext();
       if (cur.x < 0 || cur.x >= n || cur.y < 0 || cur.y >= n) continue;
-      // Check horizontal first
-      if (findValidPosition(curPairing, cur, pointsOnNegative, pointsOnPositive, n, dancerMapping, finalConfiguration, board, 1)) break;
-      // Then check vertical
-      if (findValidPosition(curPairing, cur, pointsOnNegative, pointsOnPositive, n, dancerMapping, finalConfiguration, board, 0)) break;
+      int horizontalFirst = r.randInt(0, 1); // Randomize horizontal or vertical first
+      if (findValidPosition(curPairing, cur, pointsOnNegative, pointsOnPositive, n, dancerMapping, finalConfiguration, board, horizontalFirst)) break;
+      if (findValidPosition(curPairing, cur, pointsOnNegative, pointsOnPositive, n, dancerMapping, finalConfiguration, board, horizontalFirst ^ 1)) break;
     }
   }
   return {dancerMapping, finalConfiguration};
 }
 
+#ifdef DEBUG
 static Point extractClosestDancer(const Point &source, vector<Point> &dancers) {
   int indexOfClosest = 0;
   int closestDistance = manDist(source, dancers[0]);
@@ -312,6 +321,8 @@ SolutionSpec solveManyPoints(Client *client, const vector<Dancer> &dancers, cons
   }
   return {dancerMapping, finalConfiguration};
 }
+
+#endif
 
 vector<Point> adjPlaceStars(Client *client, Timer &t) {
   int boardSize = client->serverBoardSize;
