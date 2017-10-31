@@ -57,7 +57,7 @@ int SocketClient::sendAll(char *buf, int len) {
 // receive a string
 string SocketClient::receive(int bufferSize, char end) {
   char *data = new char [bufferSize];
-  string dataString;
+  string dataString = "";
 
   // end of message is not specified
   if (end == ' ') {
@@ -65,15 +65,13 @@ string SocketClient::receive(int bufferSize, char end) {
     dataString = string(data, bytesReceived);
   // end of message is specified
   } else {
-    int totalReceived = 0;
     while (true) {
-      int bytesReceived = recv(sockFD, data + totalReceived, bufferSize, 0);
-      totalReceived += bytesReceived;
-      if (data[totalReceived - 1] == end) {
+      int bytesReceived = recv(sockFD, data, bufferSize, 0);
+      dataString += string(data, bytesReceived);
+      if (dataString[dataString.size() - 1] == end) {
         break;
       }
     }
-    dataString = string(data, totalReceived);
   }
 
   delete[] data;
@@ -95,7 +93,7 @@ int SocketClient::sendJSON(json j) {
 // receive JSON
 json SocketClient::receiveJSON(int bufferSize, char end) {
   string jsonString = SocketClient::receive(bufferSize, end);
-  return json::parse(jsonString); 
+  return json::parse(jsonString);
 }
 
 void SocketClient::closeSocket() {
