@@ -10,6 +10,7 @@ def generate(board_size, num_dancers, num_colors):
       while board[y][x] != 0:
         x = random.randint(0, board_size - 1)
         y = random.randint(0, board_size - 1)
+      board[y][x] = 1;
       print('{} {}'.format(x, y))
 
 if __name__ == '__main__':
