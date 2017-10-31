@@ -317,6 +317,61 @@ SolutionSpec solveManyPoints(Client *client, const vector<Dancer> &dancers, cons
   return {dancerMapping, finalConfiguration};
 }
 
+vector<Point> adjPlaceStars(Client *client) {
+  int boardSize = client->serverBoardSize;
+  int numDancers = client->serverNumDancers;
+  int numColors = client->serverNumColors;
+  int numStars = numDancers; // because the rule says so
+  Timer t(60 + 55);
+  t.start();
+
+  vector<Point> stars; // stars is initially empty
+  GameState state(boardSize, numColors, client->dancers, stars, &t);
+  vector<PointScore> candidates;
+  for (int x = 0; x < boardSize; x++) {
+    for (int y = 0; y < boardSize; y++) {
+      if (state.board[y][x] == 0) {
+        Point p(x, y);
+        int minManDist = 99999;
+        for (Dancer &dancer : state.dancers) {
+          int currentManDist = manDist(dancer.position, p);
+          if (currentManDist < minManDist) {
+            minManDist = currentManDist;
+          }
+        }
+        candidates.push_back({ p, minManDist });
+      }
+    }
+  }
+
+  // sort candidates, shortest manDist first
+  sort(
+    candidates.begin(),
+    candidates.end(),
+    [&](const PointScore &ps1, const PointScore &ps2) {
+      return ps1.score < ps2.score;
+    }
+  );
+
+  int i = 0;
+  while (stars.size() < numStars && i < candidates.size()) {
+    Point candidateStar = candidates[i].point;
+    bool tooClose = false;
+    for (Point &star : stars) {
+      if (manDist(candidateStar, star) < numColors + 1) {
+        tooClose = true;
+        break;
+      }
+    }
+    if (!tooClose) {
+      stars.push_back(candidateStar);
+    }
+    i++;
+  }
+
+  return stars;
+}
+
 vector<Point> choreoPlaceStars(Client *client) {
   int boardSize = client->serverBoardSize;
   int numDancers = client->serverNumDancers;

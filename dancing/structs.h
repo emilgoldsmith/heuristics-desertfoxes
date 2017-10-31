@@ -46,4 +46,10 @@ struct PointParent {
   int depth;
 };
 
+// for spoiler
+struct PointScore {
+  Point point;
+  int score;
+};
+
 #endif

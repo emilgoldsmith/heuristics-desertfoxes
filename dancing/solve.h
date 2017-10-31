@@ -13,7 +13,7 @@ Point getFurthestPoint(const Point &center, const std::vector<Point> &points, bo
 std::vector<Pairing> getPairing(Client *client);
 SolutionSpec pairingsToPositions(Client *client, std::vector<Pairing> pairings);
 SolutionSpec solveManyPoints(Client *client, const std::vector<Dancer> &dancers, const std::vector<Point> &takenPositions);
-std::vector<Point> statPlaceStars(Client *client);
+std::vector<Point> adjPlaceStars(Client *client);
 std::vector<Point> choreoPlaceStars(Client *client);
 std::vector<Point> dummyPlaceStars(Client *client);
 ChoreographerMove dummyGetChoreographerMove(Client *client);
