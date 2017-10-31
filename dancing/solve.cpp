@@ -131,6 +131,67 @@ vector<Pairing> getPairing(Client *client) {
   return pairings;
 }
 
+bool findValidPosition(Pairing &curPairing, Point &cur, int &pointsOnNegative, int &pointsOnPositive, int &n, vector<DancerMove> &dancerMapping, vector<EndLine> &finalConfiguration, vector<vector<bool>> &board, int isHorizontal) {
+  Position candidatePosition;
+  if (isHorizontal == 1) {
+    for (int i = cur.x - pointsOnNegative; i < cur.x + pointsOnPositive && i >= 0 && i < n; i++) {
+      if (board[i][cur.y]) break;
+      candidatePosition.placements.push_back({i, cur.y});
+    }
+  } else {
+    for (int i = cur.y - pointsOnNegative; i < cur.y + pointsOnPositive && i >= 0 && i < n; i++) {
+      if (board[cur.x][i]) break;
+      candidatePosition.placements.push_back({cur.x, i});
+    }
+  }
+  if (candidatePosition.placements.size() == curPairing.dancers.size()) {
+    // We found a proper placement!
+    for (Point dancerFinal : candidatePosition.placements) {
+      board[dancerFinal.x][dancerFinal.y] = true;
+    }
+    if (isHorizontal == 1) {
+      finalConfiguration.push_back({cur - Point(pointsOnNegative, 0), cur + Point(pointsOnPositive - 1, 0)});
+    } else {
+      finalConfiguration.push_back({cur - Point(0, pointsOnNegative), cur + Point(0, pointsOnPositive - 1)});
+    }
+#ifdef DEBUG
+    if (curPairing.dancers.size() != candidatePosition.placements.size()) {
+      cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
+    }
+#endif
+    // We sort the dancers in the pairing by the one who has the longest min distance to a square to prioritize overall min distance
+    sort(curPairing.dancers.begin(), curPairing.dancers.end(),
+        [&candidatePosition](const Point &a, const Point &b) -> bool {
+          int closestDistanceA = 1000 * 1000;
+          int closestDistanceB = 1000 * 1000;
+          for (int i = 0; i < candidatePosition.placements.size(); i++) {
+            closestDistanceA = min(closestDistanceA, manDist(a, candidatePosition.placements[i]));
+            closestDistanceB = min(closestDistanceB, manDist(b, candidatePosition.placements[i]));
+          }
+          return closestDistanceA > closestDistanceB;
+        }
+    );
+
+    vector<bool> taken(candidatePosition.placements.size(), false);
+    for (int i = 0; i < curPairing.dancers.size(); i++) {
+      int closestIndex;
+      int closestDistance = 1000 * 1000;
+      for (int j = 0; j < candidatePosition.placements.size(); j++) {
+        if (taken[j]) continue;
+        int dist = manDist(curPairing.dancers[i], candidatePosition.placements[j]);
+        if (dist < closestDistance) {
+          closestDistance = dist;
+          closestIndex = j;
+        }
+      }
+      taken[closestIndex] = true;
+      dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[closestIndex]});
+    }
+    return true;
+  }
+  return false;
+}
+
 SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
   int n = client->serverBoardSize;
   vector<vector<bool>> board(n, vector<bool>(n, false));
@@ -144,77 +205,21 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
     SpiralIterator it(center);
     int pointsOnNegative = curPairing.dancers.size() / 2;
     int pointsOnPositive = pointsOnNegative + curPairing.dancers.size() % 2;
+    Random r;
+    if (curPairing.dancers.size() % 2 == 0) {
+      // Randomly decide which side gets the extra point
+      if (r.randInt(0, 1) == 0) {
+        pointsOnNegative--;
+        pointsOnPositive++;
+      }
+      // Else we do nothing, negative gets it by default
+    }
     while (true) {
       Point cur = it.getNext();
       if (cur.x < 0 || cur.x >= n || cur.y < 0 || cur.y >= n) continue;
-      // First try horizontal
-      Position candidatePosition;
-      for (int i = cur.x - pointsOnNegative; i < cur.x + pointsOnPositive && i >= 0 && i < n; i++) {
-        if (board[i][cur.y]) break;
-        candidatePosition.placements.push_back({i, cur.y});
-      }
-      if (candidatePosition.placements.size() == curPairing.dancers.size()) {
-        // We found a proper placement!
-        for (Point dancerFinal : candidatePosition.placements) {
-          board[dancerFinal.x][dancerFinal.y] = true;
-        }
-        finalConfiguration.push_back({cur - Point(pointsOnNegative, 0), cur + Point(pointsOnPositive - 1, 0)});
-#ifdef DEBUG
-        if (curPairing.dancers.size() != candidatePosition.placements.size()) {
-          cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
-        }
-#endif
-        // We sort the dancers in the pairing by the one who has the longest min distance to a square to prioritize overall min distance
-        sort(curPairing.dancers.begin(), curPairing.dancers.end(),
-            [&candidatePosition](const Point &a, const Point &b) -> bool {
-              int closestDistanceA = 1000 * 1000;
-              int closestDistanceB = 1000 * 1000;
-              for (int i = 0; i < candidatePosition.placements.size(); i++) {
-                closestDistanceA = min(closestDistanceA, manDist(a, candidatePosition.placements[i]));
-                closestDistanceB = min(closestDistanceB, manDist(b, candidatePosition.placements[i]));
-              }
-              return closestDistanceA > closestDistanceB;
-            }
-        );
-
-        vector<bool> taken(candidatePosition.placements.size(), false);
-        for (int i = 0; i < curPairing.dancers.size(); i++) {
-          int closestIndex;
-          int closestDistance = 1000 * 1000;
-          for (int j = 0; j < candidatePosition.placements.size(); j++) {
-            if (taken[j]) continue;
-            int dist = manDist(curPairing.dancers[i], candidatePosition.placements[j]);
-            if (dist < closestDistance) {
-              closestDistance = dist;
-              closestIndex = j;
-            }
-          }
-          taken[closestIndex] = true;
-          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[closestIndex]});
-        }
-        break;
-      }
-      candidatePosition.placements.clear();
-      for (int j = cur.y - pointsOnNegative; j < cur.y + pointsOnPositive && j >= 0 && j < n; j++) {
-        if (board[cur.x][j]) break;
-        candidatePosition.placements.push_back({cur.x, j});
-      }
-      if (candidatePosition.placements.size() == curPairing.dancers.size()) {
-        // We found a proper placement!
-        for (Point dancerFinal : candidatePosition.placements) {
-          board[dancerFinal.x][dancerFinal.y] = true;
-        }
-        finalConfiguration.push_back({cur - Point(0, pointsOnNegative), cur + Point(0, pointsOnPositive - 1)});
-#ifdef DEBUG
-        if (curPairing.dancers.size() != candidatePosition.placements.size()) {
-          cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
-        }
-#endif
-        for (int i = 0; i < curPairing.dancers.size(); i++) {
-          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[i]});
-        }
-        break;
-      }
+      int horizontalFirst = r.randInt(0, 1); // Randomize horizontal or vertical first
+      if (findValidPosition(curPairing, cur, pointsOnNegative, pointsOnPositive, n, dancerMapping, finalConfiguration, board, horizontalFirst)) break;
+      if (findValidPosition(curPairing, cur, pointsOnNegative, pointsOnPositive, n, dancerMapping, finalConfiguration, board, horizontalFirst ^ 1)) break;
     }
   }
   return {dancerMapping, finalConfiguration};
@@ -396,7 +401,7 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
     // get a new pairing iterator, so the pairings start anew
     PairingIterator it(client);
     double deadline = t.getTime() + t.timeLeft() / 2;
-    if (t.timeLeft() < 5) {
+    if (t.timeLeft() < 115) {
       break;
     }
     if (t.timeLeft() < 15) {
@@ -408,6 +413,10 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
       if (iteration == maxIterations && t.getTime() > deadline) {
         break;
       }
+    }
+    // make sure we actually simulated something successfully
+    if (state.currentBestSequence.dancerMoves.empty()) {
+      continue;
     }
     // final dancer positions from the simulation
     vector<Point> dancerFinalPositions;
@@ -438,9 +447,28 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
     return stars;
   }
 
+  // // time ran out, do random
+  // Random r;
+  // GameState finalState(boardSize, numColors, client->dancers, stars, &t);
+  // while (stars.size() < numStars) {
+  //   Point p(r.randInt(0, boardSize - 1), r.randInt(0, boardSize - 1));
+  //   if (finalState.board[p.y][p.x] == 0) {
+  //     bool tooClose = false;
+  //     for (Point &star : stars) {
+  //       if (manDist(p, star) < numColors + 1) {
+  //         tooClose = true;
+  //         break;
+  //       }
+  //     }
+  //     if (!tooClose) {
+  //       stars.push_back(p);
+  //     }
+  //   }
+  // }
+
   // time ran out, place stars as close to the dancers as possible
-  GameState state(boardSize, numColors, client->dancers, stars, &t);
-  vector<PointScore> candidates = getAdjCandidates(state);
+  GameState finalState(boardSize, numColors, client->dancers, stars, &t);
+  vector<PointScore> candidates = getAdjCandidates(finalState);
   for (PointScore &candidateStar : candidates) {
     bool tooClose = false;
     for (Point &star : stars) {
