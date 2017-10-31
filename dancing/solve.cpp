@@ -3,6 +3,9 @@
 #include "client.h"
 #include "structs.h"
 #include "spiral_iterator.h"
+#include "pairing_iterator.h"
+#include "game_state.h"
+#include "../timer/timer.h"
 
 #include <vector>
 #include <limits>
@@ -161,8 +164,33 @@ SolutionSpec pairingsToPositions(Client *client, vector<Pairing> pairings) {
           cerr << "ERROR: curPairing and CandidatePosition are not the same size in pairingsToPositions" << endl;
         }
 #endif
+        // We sort the dancers in the pairing by the one who has the longest min distance to a square to prioritize overall min distance
+        sort(curPairing.dancers.begin(), curPairing.dancers.end(),
+            [&candidatePosition](const Point &a, const Point &b) -> bool {
+              int closestDistanceA = 1000 * 1000;
+              int closestDistanceB = 1000 * 1000;
+              for (int i = 0; i < candidatePosition.placements.size(); i++) {
+                closestDistanceA = min(closestDistanceA, manDist(a, candidatePosition.placements[i]));
+                closestDistanceB = min(closestDistanceB, manDist(b, candidatePosition.placements[i]));
+              }
+              return closestDistanceA > closestDistanceB;
+            }
+        );
+
+        vector<bool> taken(candidatePosition.placements.size(), false);
         for (int i = 0; i < curPairing.dancers.size(); i++) {
-          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[i]});
+          int closestIndex;
+          int closestDistance = 1000 * 1000;
+          for (int j = 0; j < candidatePosition.placements.size(); j++) {
+            if (taken[j]) continue;
+            int dist = manDist(curPairing.dancers[i], candidatePosition.placements[j]);
+            if (dist < closestDistance) {
+              closestDistance = dist;
+              closestIndex = j;
+            }
+          }
+          taken[closestIndex] = true;
+          dancerMapping.push_back({curPairing.dancers[i], candidatePosition.placements[closestIndex]});
         }
         break;
       }
@@ -289,6 +317,54 @@ SolutionSpec solveManyPoints(Client *client, const vector<Dancer> &dancers, cons
   return {dancerMapping, finalConfiguration};
 }
 
+vector<Point> choreoPlaceStars(Client *client) {
+  int boardSize = client->serverBoardSize;
+  int numDancers = client->serverNumDancers;
+  int numColors = client->serverNumColors;
+  int numStars = numDancers; // because the rule says so
+  Timer t(1000);
+  t.start();
+
+  vector<Point> stars; // stars is initially empty
+  while (stars.size() < numDancers) {
+    // construct a game state with the modified stars
+    client->stars = stars;
+    GameState state(boardSize, numColors, client->dancers, stars, &t);
+    // get a new pairing iterator, so the pairings start anew
+    PairingIterator it(client);
+    // do 10 simulations
+    for (int i = 0; i < 10; i++) {
+      SolutionSpec solspec = pairingsToPositions(client, it.getNext());
+      state.simulate(solspec, "pairingsToPositions");
+    }
+    // final dancer positions from the simulation
+    vector<Point> dancerFinalPositions;
+    for (DancerMove &dm : state.currentBestSequence.dancerMoves.back()) {
+      dancerFinalPositions.push_back(dm.to);
+    }
+    // add stars to these final positions
+    for (Point dancerFinalPos : dancerFinalPositions) {
+      bool tooClose = false;
+      for (Point star : stars) {
+        if (manDist(dancerFinalPos, star) < numColors + 1) {
+          tooClose = true;
+          break;
+        }
+      }
+      // satisfy distance constraint and is empty
+      if (!tooClose && state.board[dancerFinalPos.y][dancerFinalPos.x] == 0) {
+        stars.push_back(dancerFinalPos);
+        if (stars.size() >= numDancers) {
+          break;
+        }
+      }
+    }
+  }
+  // need back up plan in case time runs out
+
+  return stars;
+}
+
 vector<Point> dummyPlaceStars(Client *client) {
   int n = client->serverBoardSize;
   int k = client->serverNumDancers;
@@ -319,6 +395,7 @@ vector<Point> dummyPlaceStars(Client *client) {
   }
   return starsToPlace;
 }
+
 
 
 ChoreographerMove dummyGetChoreographerMove(Client *client) {

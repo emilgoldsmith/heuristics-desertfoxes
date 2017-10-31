@@ -4,6 +4,7 @@
 #include "game_state.h"
 #include "pairing_iterator.h"
 #include "../random/random.h"
+#include "../timer/timer.h"
 
 #include <iostream>
 #include <string>
@@ -12,6 +13,7 @@
 
 using namespace std;
 
+/*
 vector<Pairing> getSANeighbour(vector<Pairing> source) {
   Random r;
   int firstIndex = r.randInt(0, source.size() - 1);
@@ -24,11 +26,17 @@ vector<Pairing> getSANeighbour(vector<Pairing> source) {
   return source;
 }
 
-double getSACost(vector<Pairing> pairings, Client *client, GameState *state) {
-  SolutionSpec solutionSpec = pairingsToPositions(client, pairings);
-  return 5.0;
-  //return state->simulate(solutionSpec).dancerMoves.size();
+double getSACost(vector<Pairing> pairings) {
+  int maxDist = -1;
+  for (Pairing curPairing : pairings) {
+    Point center = computeCenterBruteforce(curPairing.dancers);
+    for (Point curPoint : curPairing.dancers) {
+      maxDist = max(maxDist, manDist(center, curPoint));
+    }
+  }
+  return maxDist;
 }
+*/
 
 int main(int argc, char **argv) {
   if (argc != 4) {
@@ -39,17 +47,12 @@ int main(int argc, char **argv) {
   int port = atoi(argv[2]);
   int role = atoi(argv[3]);
   Client client(ip, port, role);
-  GameState state(client.serverBoardSize, client.serverNumColors, client.dancers, client.stars);
+  Timer t(60 + 58);
+  t.start();
+  GameState state(client.serverBoardSize, client.serverNumColors, client.dancers, client.stars, &t);
   if (role == 1) {
-    client.makeSpoilerMove(dummyPlaceStars(&client));
+    client.makeSpoilerMove(choreoPlaceStars(&client));
   } else {
-
-    // First we do a few runs with pairings that are close to each other
-    PairingIterator it(&client);
-    for (int i = 0; i < 10; i++) {
-      SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
-      state.simulate(solutionSpec, "pairingsToPositions");
-    }
 
     /*
     // Then we compute a center for all dancers and place them in there
@@ -59,27 +62,53 @@ int main(int argc, char **argv) {
     */
 
     /*
-    // Then we try simulated annealing
+    // First do a round of Simulated Annealing
     Random r;
     vector<Pairing> oldPairing = it.getNext();
-    double oldCost = getSACost(oldPairing, &client, &state);
-    double T = 1.0;
+    double oldCost = getSACost(oldPairing);
+    vector<Pairing> bestPairing = oldPairing;
+    double bestCost = oldCost;
+    double T = 1000.0;
     double T_min = 0.00001;
-    double alpha = 0.5;
+    double alpha = 0.945;
     while (T > T_min) {
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 100; i++) {
         vector<Pairing> newPairing = getSANeighbour(oldPairing);
-        double newCost = getSACost(newPairing, &client, &state);
+        double newCost = getSACost(newPairing);
         double acceptanceProbability = exp((oldCost - newCost)/T);
         if (acceptanceProbability > r.randDouble(0, 1)) {
           oldPairing = newPairing;
           oldCost = newCost;
+          if (oldCost < bestCost) {
+            bestCost = oldCost;
+            bestPairing = oldPairing;
+          }
         }
       }
       T *= alpha;
     }
-    */
+    // Test the result of SA
+    SolutionSpec solutionSpec = pairingsToPositions(&client, bestPairing);
+    for (int i = 0; i < 10; i++) {
+      // Simulate it several times as simulate has some random stuff going on
+      state.simulate(solutionSpec, "Simulated Annealing");
+    }
+#ifdef DEBUG
+    cout << "Simulated Annealing finished after " << t.getTime() << " seconds" << endl;
+#endif
 
+    */
+    // Then we just run pairingsToPositions
+    PairingIterator it(&client);
+    // Keep going until we're out of time
+#ifdef DEBUG
+    for (int i = 0; i < 20; i++) {
+#else
+    while (t.timeLeft() > 0) {
+#endif
+      SolutionSpec solutionSpec = pairingsToPositions(&client, it.getNext());
+      state.simulate(solutionSpec, "pairingsToPositions");
+    }
 
     // Then we send the best solution we could find
     ChoreographerMove solution = state.currentBestSequence;
@@ -87,5 +116,6 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
     state.printStrategyStats();
 #endif
+    cout << "We simulated " << state.numSimulations << " simulations. Wow! How awesome aren't we??" << endl;
   }
 }
