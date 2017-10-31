@@ -5,7 +5,6 @@
 #include "spiral_iterator.h"
 #include "pairing_iterator.h"
 #include "game_state.h"
-#include "../timer/timer.h"
 
 #include <vector>
 #include <limits>
@@ -317,13 +316,11 @@ SolutionSpec solveManyPoints(Client *client, const vector<Dancer> &dancers, cons
   return {dancerMapping, finalConfiguration};
 }
 
-vector<Point> adjPlaceStars(Client *client) {
+vector<Point> adjPlaceStars(Client *client, Timer &t) {
   int boardSize = client->serverBoardSize;
   int numDancers = client->serverNumDancers;
   int numColors = client->serverNumColors;
   int numStars = numDancers; // because the rule says so
-  Timer t(60 + 55);
-  t.start();
 
   vector<Point> stars; // stars is initially empty
   GameState state(boardSize, numColors, client->dancers, stars, &t);
@@ -372,13 +369,11 @@ vector<Point> adjPlaceStars(Client *client) {
   return stars;
 }
 
-vector<Point> choreoPlaceStars(Client *client) {
+vector<Point> choreoPlaceStars(Client *client, Timer &t) {
   int boardSize = client->serverBoardSize;
   int numDancers = client->serverNumDancers;
   int numColors = client->serverNumColors;
   int numStars = numDancers; // because the rule says so
-  Timer t(1000);
-  t.start();
 
   vector<Point> stars; // stars is initially empty
   while (stars.size() < numDancers) {

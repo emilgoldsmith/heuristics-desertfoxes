@@ -4,6 +4,7 @@
 #include "geometry.hpp"
 #include "client.h"
 #include "structs.h"
+#include "../timer/timer.h"
 
 #include <vector>
 
@@ -13,8 +14,8 @@ Point getFurthestPoint(const Point &center, const std::vector<Point> &points, bo
 std::vector<Pairing> getPairing(Client *client);
 SolutionSpec pairingsToPositions(Client *client, std::vector<Pairing> pairings);
 SolutionSpec solveManyPoints(Client *client, const std::vector<Dancer> &dancers, const std::vector<Point> &takenPositions);
-std::vector<Point> adjPlaceStars(Client *client);
-std::vector<Point> choreoPlaceStars(Client *client);
+std::vector<Point> adjPlaceStars(Client *client, Timer &t);
+std::vector<Point> choreoPlaceStars(Client *client, Timer &t);
 std::vector<Point> dummyPlaceStars(Client *client);
 ChoreographerMove dummyGetChoreographerMove(Client *client);
 
