@@ -376,16 +376,25 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
   int numStars = numDancers; // because the rule says so
 
   vector<Point> stars; // stars is initially empty
+  int minIterations = 10;
+  int maxIterations = 10000;
+  int iteration = maxIterations;
   while (stars.size() < numDancers) {
     // construct a game state with the modified stars
     client->stars = stars;
     GameState state(boardSize, numColors, client->dancers, stars, &t);
     // get a new pairing iterator, so the pairings start anew
     PairingIterator it(client);
-    // do 10 simulations
-    for (int i = 0; i < 10; i++) {
+    double deadline = t.getTime() + t.timeLeft() / 2;
+    if (t.timeLeft() < 10) {
+      iteration = minIterations;
+    }
+    for (int i = 0; i < iteration; i++) {
       SolutionSpec solspec = pairingsToPositions(client, it.getNext());
       state.simulate(solspec, "pairingsToPositions");
+      if (iteration == maxIterations && t.getTime() > deadline) {
+        break;
+      }
     }
     // final dancer positions from the simulation
     vector<Point> dancerFinalPositions;
@@ -409,6 +418,7 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
         }
       }
     }
+    cout << stars.size() << endl;
   }
   // need back up plan in case time runs out
 
