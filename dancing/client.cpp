@@ -201,11 +201,6 @@ bool Client::isConsistent() {
 
 bool Client::starsAreValid(vector<Point> starsToPlace) {
   bool valid = true;
-  // Make sure we are actually sending k stars (sending less would never be beneficial)
-  if (starsToPlace.size() != serverNumDancers) {
-    cerr << "Not sending k stars, k is " << serverNumDancers << " and attempted number of stars sent was " << starsToPlace.size() << endl;
-    valid = false;
-  }
   // Make sure the manhattan distance is at least k+1 between all stars
   for (Point firstStar : starsToPlace) {
     bool foundItself = false;
@@ -244,6 +239,10 @@ void Client::makeSpoilerMove(vector<Point> starsToPlace) {
     cerr << "Attempted to place stars more than once, this is not allowed" << endl;
     cerr << "Aborting spoiler move attempt" << endl;
     return;
+  }
+  // Make sure we are actually sending k stars (sending less would never be beneficial)
+  if (starsToPlace.size() != serverNumDancers) {
+    cerr << "Not sending k stars, k is " << serverNumDancers << " and attempted number of stars sent was " << starsToPlace.size() << endl;
   }
   if (!starsAreValid(starsToPlace)) {
     cerr << "The attempted star placement was invalid" << endl;
