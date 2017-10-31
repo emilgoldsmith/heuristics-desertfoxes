@@ -224,8 +224,8 @@ Point GameState::searchBestNext(Dancer &dancer, Point &finalPosition, vector<Poi
     visited[dir.y + bfsLimit][dir.x + bfsLimit] = true;
   }
 
-  Point bestMove = {0, 0};
-  int bestMoveDistance = manDist(dancer.position, finalPosition);
+  Point bestMove = initViableNexts[0] - dancer.position;
+  int bestMoveDistance = manDist(bestMove + dancer.position, finalPosition);
   while (!q.empty()) {
     PointParent pp = q.front();
     q.pop();
