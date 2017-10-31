@@ -328,6 +328,7 @@ vector<Point> choreoPlaceStars(Client *client) {
   vector<Point> stars; // stars is initially empty
   while (stars.size() < numDancers) {
     // construct a game state with the modified stars
+    client->stars = stars;
     GameState state(boardSize, numColors, client->dancers, stars, &t);
     // get a new pairing iterator, so the pairings start anew
     PairingIterator it(client);
