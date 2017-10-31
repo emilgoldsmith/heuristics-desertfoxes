@@ -401,7 +401,7 @@ vector<Point> choreoPlaceStars(Client *client, Timer &t) {
     // get a new pairing iterator, so the pairings start anew
     PairingIterator it(client);
     double deadline = t.getTime() + t.timeLeft() / 2;
-    if (t.timeLeft() < 115) {
+    if (t.timeLeft() < 5) {
       break;
     }
     if (t.timeLeft() < 15) {
