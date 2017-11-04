@@ -1,0 +1,26 @@
+Let there be M packages, N versions, and K compatibility relationships
+
+Poser idea:
+1. Fix a configuration that will be the maximal configuration:
+  C_MAX = {p_1.v_MAX1, p_2.v_MAX2,..., p_M.v_MAXM}, where MAX1,...,MAXM are around N/2
+  We want the versions in the maximal construction to be somewhere in the middle to make the following steps easier
+  This will create M choose 2 compatibility relationships, and C_MAX is really the only thing the poser needs to output (even though outputing more wouldn't hurt).
+
+2. Hide maximal configuration by adding strictly smaller configurations
+  Fix a non-empty STRICT subset of C_MAX. Now for each package p_i not included in this subset, randomly choose a version that is smaller than v_MAXi. Then make these package versions compatible with each other and with everything in C_MAX.
+
+  This step creates a configuration that is strictly smaller than C_MAX, and can be repeated as many times as desired. The poser wants the solver to spend time finding these configurations.
+
+3. Hide maximal configuration by adding compatibility relationships of larger versions
+  Step 2 by itself is not sufficient because a solver can simply go through the compatibility relationships, get the largest version that appears for each package, and put them together to recover the C_MAX.
+
+  To counter this solver strategy, the poser should add compatibility relationships with versions larger than v_MAXi for each i, while making sure that no new maximal configuration is created:
+
+  Fix a non-empty strict subset of C_MAX. Now for each ommited package p_i BUT ONE, randomly choose a version greater than v_MAXi. Then make these package versions compatible with each other and with everything in C_MAX. However, these package versions are not compatible with any versions of that ONE excluded packages, so they cannot form new configurations.
+
+  We can also repeat this step multiple times, but we need to make sure the larger package versions we generate are used in ONE step only.
+
+4. More thoughts.
+  The poser should make the versions in C_MAX in mid-range to prevent any sequential bruteforce algorithm to find C_MAX quickly (i.e., either searching from the smallest versions or largest versions.). However, it might be better to have them in the low-to-mid range instead to provide more "space" for step 3, since step 3 forbids repetitions while step 2 does not
+
+  Also, when fixing a non-empty STRICT subset of C_MAX in either step 2 or 3, the poser should make sure the subset is not too large. If the subset is almost identical to C_MAX, then the package-version pairs in C_MAX would appear much more often than any other package-version pairs in the set of compatibility relationships, and thus enabling a possible statistical attack - the solver could just try to put the most frequent package-versions together and see if they form a valid configuration.
