@@ -110,4 +110,5 @@ int main() {
     cout << maximalConfigVersion;
     if (i != numP) cout << ' ';
   }
+  cout << endl;
 }
