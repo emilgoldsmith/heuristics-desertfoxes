@@ -4,7 +4,9 @@
   "numCompatibles": 5,
   "hostname": "localhost",
   "port": 34567,
-  "date1": "01/01/3000 0:00 AM",
+  "date1": "11/01/2017 0:00 AM",
   "date2": "01/02/3000 0:00 AM",
-  "date3": "01/03/3000 0:00 AM"
+  "date3": "01/03/3000 0:00 AM",
+  "poserName": "dfpose",
+  "solverName": "dfsolve"
 }
