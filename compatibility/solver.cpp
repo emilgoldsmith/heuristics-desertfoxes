@@ -42,7 +42,7 @@ int numP, numV, numC;
 vector<Package> dfs(vector<Package> currentConfig) {
   if (currentConfig.size() == numP) return currentConfig;
   int p = currentConfig.back().p + 1;
-  for (int v = 1; v <= numV; v++) {
+  for (int v = numV; v > 0; v--) {
     bool allValid = true;
     for (Package curPkg : currentConfig) {
       allValid = allValid && adjacent[p][v][curPkg.p][curPkg.v];
@@ -69,7 +69,7 @@ int main() {
   }
 
   vector<Package> bestConfig;
-  for (int v = 1; v <= numV; v++) {
+  for (int v = numV; v > 0; v--) {
     vector<Package> initialConfig = {{1, v}};
     bestConfig = dfs(initialConfig);
     if (bestConfig.size() > 0) break;
