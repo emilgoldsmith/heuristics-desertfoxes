@@ -18,6 +18,10 @@ ifeq ($(VERBOSE), 1)
 	CXXFLAGS += -DVERBOSE
 endif
 
+all: poser solver
+
 poser: poser.cpp ../random/random.cpp
 	$(CXX) -o poser.out poser.cpp ../random/random.cpp $(CXXFLAGS)
 
+solver: solver.cpp ../random/random.cpp
+	$(CXX) -o solver.out solver.cpp ../random/random.cpp $(CXXFLAGS)
