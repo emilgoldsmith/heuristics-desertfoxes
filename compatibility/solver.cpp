@@ -12,33 +12,51 @@ struct Package {
 };
 
 bool adjacent[25][45][25][45]; // this is automatically initialized to 0
+int numP, numV, numC;
 
-/*
-vector<Pairing> getSANeighbour(vector<Pairing> source) {
+vector<Package> getSANeighbour(vector<Package> source) {
   Random r;
-  int firstIndex = r.randInt(0, source.size() - 1);
-  int secondIndex = r.randInt(0, source.size() - 1);
-  while (secondIndex == firstIndex) {
-    secondIndex = r.randInt(0, source.size() - 1);
+  // Determine the orders that we try finding a neighbor in
+  vector<int> packageCheckOrder(numV, 0);
+  for (int i = 0; i < numP; i++) {
+    packageCheckOrder[i] = i + 1;
   }
-  int colorToSwap = r.randInt(0, source[0].dancers.size() - 1);
-  swap(source[firstIndex].dancers[colorToSwap], source[secondIndex].dancers[colorToSwap]);
+  shuffle(packageCheckOrder.begin(), packageCheckOrder.end(), r.generator);
+
+  vector<int> versionCheckOrder(numV, 0);
+  for (int i = 0; i < numV; i++) {
+    versionCheckOrder[i] = i + 1;
+  }
+
+  for (int p : packageCheckOrder) {
+    shuffle(versionCheckOrder.begin(), versionCheckOrder.end(), r.generator);
+    for (int v : versionCheckOrder) {
+      if (v == source[p - 1].v) continue;
+      bool validSwap = true;
+      for (Package pkg : source) {
+        if (pkg.p != p) {
+          validSwap = validSwap && adjacent[p][v][pkg.p][pkg.v];
+          if (!validSwap) break;
+        }
+      }
+      if (validSwap) {
+        source[p-1] = {p, v};
+        return source;
+      }
+    }
+  }
+  cerr << "Reached the end of getSANeighbour! Not intended!" << endl;
   return source;
 }
 
-double getSACost(vector<Pairing> pairings) {
-  int maxDist = -1;
-  for (Pairing curPairing : pairings) {
-    Point center = computeCenterBruteforce(curPairing.dancers);
-    for (Point curPoint : curPairing.dancers) {
-      maxDist = max(maxDist, manDist(center, curPoint));
-    }
+double getSACost(vector<Package> config) {
+  int versionSum = 0;
+  for (Package pkg : config) {
+    versionSum += pkg.v;
   }
-  return maxDist;
+  return versionSum;
 }
-*/
 
-int numP, numV, numC;
 vector<Package> dfs(vector<Package> currentConfig) {
   if (currentConfig.size() == numP) return currentConfig;
   int p = currentConfig.back().p + 1;
@@ -75,6 +93,30 @@ int main() {
     if (bestConfig.size() > 0) break;
   }
 
+  Random r;
+  vector<Package> oldConfig = bestConfig;
+  double oldCost = getSACost(oldConfig);
+  double bestCost = oldCost;
+  double T = 1000.0;
+  double T_min = 0.00001;
+  double alpha = 0.945;
+  while (T > T_min) {
+    for (int i = 0; i < 100; i++) {
+      vector<Package> newConfig = getSANeighbour(oldConfig);
+      double newCost = getSACost(newConfig);
+      double acceptanceProbability = exp((newCost - oldCost)/T); // We try to maximize instead of minimize
+      if (acceptanceProbability > r.randDouble(0, 1)) {
+        oldConfig = newConfig;
+        oldCost = newCost;
+        if (oldCost > bestCost) {
+          bestCost = oldCost;
+          bestConfig = oldConfig;
+        }
+      }
+    }
+    T *= alpha;
+  }
+
   // Output answer
   cout << 1 << endl;
   for (int i = 1; i <= numP; i++) {
@@ -86,30 +128,4 @@ int main() {
   }
   cout << endl;
 
-  /*
-  Random r;
-  vector<Pairing> oldPairing = it.getNext();
-  double oldCost = getSACost(oldPairing);
-  vector<Pairing> bestPairing = oldPairing;
-  double bestCost = oldCost;
-  double T = 1000.0;
-  double T_min = 0.00001;
-  double alpha = 0.945;
-  while (T > T_min) {
-    for (int i = 0; i < 100; i++) {
-      vector<Pairing> newPairing = getSANeighbour(oldPairing);
-      double newCost = getSACost(newPairing);
-      double acceptanceProbability = exp((oldCost - newCost)/T);
-      if (acceptanceProbability > r.randDouble(0, 1)) {
-        oldPairing = newPairing;
-        oldCost = newCost;
-        if (oldCost < bestCost) {
-          bestCost = oldCost;
-          bestPairing = oldPairing;
-        }
-      }
-    }
-    T *= alpha;
-  }
-  */
 }
