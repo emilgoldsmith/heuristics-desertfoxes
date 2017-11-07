@@ -77,6 +77,8 @@ vector<Package> dfs(vector<Package> currentConfig) {
 
 
 int main() {
+  Timer t(60 + 58);
+  t.start();
   // First read input
   cin >> numP >> numV >> numC;
   for (int i = 0; i < numC; i++) {
@@ -91,7 +93,9 @@ int main() {
   vector<Package> bestConfig;
   int bestCost = 0;
   Random r;
-  for (int i = 0; i < 100; i++) {
+  double start = t.getTime();
+  double timeUnit = -1;
+  while (true)  {
     shuffle(packageCheckOrder.begin(), packageCheckOrder.end(), r.generator);
     vector<Package> initialConfig;
     vector<Package> candidateConfig = hillClimb(dfs(initialConfig));
@@ -100,6 +104,14 @@ int main() {
       bestCost = candidateCost;
       bestConfig = candidateConfig;
     }
+    if (timeUnit < 0) {
+      timeUnit = t.getTime() - start;
+    }
+#ifdef DEBUG
+    // If in debug just run for 20 seconds
+    if (t.getTime() > 20) break;
+#endif
+    if (t.timeLeft() < 2 * timeUnit) break;
   }
 
   // Output answer

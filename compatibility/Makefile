@@ -23,5 +23,5 @@ all: poser solver
 poser: poser.cpp ../random/random.cpp
 	$(CXX) -o poser.out poser.cpp ../random/random.cpp $(CXXFLAGS)
 
-solver: solver.cpp ../random/random.cpp
-	$(CXX) -o solver.out solver.cpp ../random/random.cpp $(CXXFLAGS)
+solver: solver.cpp ../random/random.cpp ../timer/timer.cpp
+	$(CXX) -o solver.out solver.cpp ../random/random.cpp $(CXXFLAGS) ../timer/timer.cpp
