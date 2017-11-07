@@ -1,4 +1,8 @@
 #!/bin/sh
+# make poser solver
 node init.js
-node run_local.js poser
-node run_local.js solver
+node retrieve.js poser
+./poser.out < poser.in > poser.sol
+node submit.js poser
+node retrieve.js solver
+./solver.out < solver.in > solver.sol
