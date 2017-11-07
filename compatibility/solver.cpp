@@ -126,6 +126,5 @@ int main() {
     cout << bestConfig[i-1].v;
     if (i != numP) cout << ' ';
   }
-  cout << endl;
-
+  // cout << endl;
 }
