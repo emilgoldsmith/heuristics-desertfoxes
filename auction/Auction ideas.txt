@@ -1,0 +1,48 @@
+Learning what values the other teams use.
+
+wait longer when a crucial defence 14 (13) 0's and a 1
+
+Make a "want" function
+
+Finding first index where game can be won.
+
+Play with 7 people
+
+propose 2 player championship
+
+make shit loads of calculations about that list
+make winning strategy calculations
+for example, for the next 4 they will need to buy me out
+but they only have enough money to buy me out 3 times,
+so then I will win.
+do this in if conditions
+maybe recursion.
+
+Never bid for anything there's not a minimum of 3 of.
+
+calculate max game length (15 of something) (average is 44 for 7 players)
+
+Always consider worst competitor. 
+
+don't buy someone out if it would make you lose
+
+We want to either have more money, or have strong paintings.
+Therefore, only bid as much as you would actually pay, if you either
+have more money or stronger in paintings then it must nearly
+certainly be that you're still better off if someone else wins it.
+
+Binary search for bid that will give winning strategy if won.
+
+Change the group numbers for the want function according to what other people bid.
+
+Making things work for no matter how many opponents we have. 
+
+Maybe making want function dependant on how much money we have.
+
+Have to make that required dependant on the range
+
+put in winning strategy at prevention
+
+If you're winning with another painting convincingly, ignore everything else.
+
+Change group amounts to also be able to go down
