@@ -6,3 +6,4 @@ node retrieve.js poser
 node submit.js poser
 node retrieve.js solver
 ./solver.out < solver.in > solver.sol
+node submit.js solver
