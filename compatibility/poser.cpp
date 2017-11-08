@@ -16,7 +16,11 @@ struct CompRelationship {
   Package p2;
 };
 
-void generateSmall(int numP, int numV, int numC, int maximalConfigVersion, vector<CompRelationship> &relationships) {
+bool adjacent[25][45][25][45]; // this is automatically initialized to 0
+bool largeUsed[25][45];
+
+int generateSmall(int numP, int numV, int numC, int maximalConfigVersion, vector<CompRelationship> &relationships) {
+  int numAdded = 0;
   Random r;
   int sizeOfSubset = r.randInt(numP >> 2, 3 * (numP >> 2)); // This could both be changed to be deterministic or change the range of the random numbers
   // Make a bitmask and shuffle it randomly to choose which packages to keep
@@ -39,15 +43,22 @@ void generateSmall(int numP, int numV, int numC, int maximalConfigVersion, vecto
       // This package is not in the subset
       for (int j = 1; relationships.size() < numC && j <= numP; j++) {
         if (j <= i && !bitmask[j]) continue; // We already handled this in an earlier iteration
-        relationships.push_back({{i, smallVersions[i]}, {j, smallVersions[j]}});
+        if (!adjacent[i][smallVersions[i]][j][smallVersions[j]]) {
+          relationships.push_back({{i, smallVersions[i]}, {j, smallVersions[j]}});
+          adjacent[i][smallVersions[i]][j][smallVersions[j]] = true;
+          adjacent[i][smallVersions[j]][i][smallVersions[j]] = true;
+          numAdded++;
+        }
       }
     }
   }
+  return numAdded;
 }
 
-void generateLarge(int numP, int numV, int numC, int maximalConfigVersion, vector<CompRelationship> &relationships) {
+int generateLarge(int numP, int numV, int numC, int maximalConfigVersion, vector<CompRelationship> &relationships) {
+  int numAdded = 0;
   Random r;
-  int sizeOfSubset = r.randInt(numP >> 2, 3 * (numP >> 2)); // This could both be changed to be deterministic or change the range of the random numbers
+  int sizeOfSubset = numP / 2; // This could both be changed to be deterministic or change the range of the random numbers
   // Make a bitmask and shuffle it randomly to choose which packages to keep
   vector<bool> bitmask(numP + 1, false);
   for (int i = 1; i <= sizeOfSubset; i++) {
@@ -58,8 +69,20 @@ void generateLarge(int numP, int numV, int numC, int maximalConfigVersion, vecto
   vector<int> largeVersions(numP + 1, maximalConfigVersion);
   for (int i = 1; i < bitmask.size(); i++) {
     if (!bitmask[i]) {
-      int version = r.randInt(maximalConfigVersion + 1, numV); // Constants here can also be changed
-      largeVersions[i] = version;
+      // check if version has been exhausted
+      int k;
+      for (k = maximalConfigVersion + 1; k <= numV; k++) {
+        if (!largeUsed[bitmask[i]][k]) {
+          break;
+        }
+      }
+      if (k == numV + 1) {
+        bitmask[i] = true;
+        continue;
+      }
+      // generate randomly a new version
+      largeUsed[bitmask[i]][k] = true;
+      largeVersions[i] = k;
     }
   }
   int ignoredPackage = r.randInt(1, numP);
@@ -70,17 +93,22 @@ void generateLarge(int numP, int numV, int numC, int maximalConfigVersion, vecto
       // This package is not in the subset
       for (int j = 1; relationships.size() < numC && j <= numP; j++) {
         if (j == ignoredPackage || (j <= i && !bitmask[j])) continue; // We already handled this in an earlier iteration
-        relationships.push_back({{i, largeVersions[i]}, {j, largeVersions[j]}});
+        if (!adjacent[i][largeVersions[i]][j][largeVersions[j]]) {
+          relationships.push_back({{i, largeVersions[i]}, {j, largeVersions[j]}});
+          adjacent[i][largeVersions[i]][j][largeVersions[j]] = true;
+          numAdded++;
+        }
       }
     }
   }
+  return numAdded;
 }
 
 int main() {
   int numP, numV, numC;
   cin >> numP >> numV >> numC;
   // Since no one knows our strategy we can just as well make this deterministic as no one can take advantage of it
-  int maximalConfigVersion = (numV >> 1) + 1; // Guyu I'm not sure if you want to maybe divide this by 4 instead of 2 or something in regard to your thoughts about mid-low range but I'm not 100% sure I understand completely what you're talking about
+  int maximalConfigVersion = numV / 3; // Guyu I'm not sure if you want to maybe divide this by 4 instead of 2 or something in regard to your thoughts about mid-low range but I'm not 100% sure I understand completely what you're talking about
   vector<CompRelationship> relationships;
   relationships.reserve(numC);
 
@@ -96,8 +124,18 @@ int main() {
   }
 
   // These could possibly be put in a loop if handled properly
-  generateSmall(numP, numV, numC, maximalConfigVersion, relationships);
-  generateLarge(numP, numV, numC, maximalConfigVersion, relationships);
+  while (relationships.size() < numC) {
+    if (generateLarge(numP, numV, numC, maximalConfigVersion, relationships) == 0) {
+      break;
+    }
+  }
+
+  while (relationships.size() < numC) {
+    if (generateSmall(numP, numV, numC, maximalConfigVersion, relationships) == 0) {
+      break;
+    }
+  }
+
 
   // Now we output all our relationships
   cout << relationships.size() << endl;
