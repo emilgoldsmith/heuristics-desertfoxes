@@ -56,7 +56,8 @@ vector<Package> hillClimb(vector<Package> source) {
 }
 
 vector<int> packageCheckOrder;
-vector<Package> dfs(vector<Package> currentConfig) {
+vector<Package> dfs(vector<Package> currentConfig, Timer *t) {
+  if (t->timeLeft() < 0) return vector<Package>();
   if (currentConfig.size() == numP) return currentConfig;
   int p = packageCheckOrder[currentConfig.size()];
   for (int v = numV; v > 0; v--) {
@@ -68,7 +69,7 @@ vector<Package> dfs(vector<Package> currentConfig) {
     if (allValid) {
       vector<Package> configCopy(currentConfig);
       configCopy.push_back({p, v});
-      vector<Package> candidateConfig = dfs(configCopy);
+      vector<Package> candidateConfig = dfs(configCopy, t);
       if (candidateConfig.size() > 0) return candidateConfig;
     }
   }
@@ -98,7 +99,10 @@ int main() {
   while (true)  {
     shuffle(packageCheckOrder.begin(), packageCheckOrder.end(), r.generator);
     vector<Package> initialConfig;
-    vector<Package> candidateConfig = hillClimb(dfs(initialConfig));
+    vector<Package> candidateConfig = dfs(initialConfig, &t);
+    if (candidateConfig.size() == 0) {
+      cerr << "DFS didn't find solution" << endl;
+    }
     int candidateCost = getCost(candidateConfig);
     if (candidateCost > bestCost) {
       bestCost = candidateCost;
