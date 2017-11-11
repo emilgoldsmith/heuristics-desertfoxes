@@ -14,6 +14,7 @@ class Solver {
     int numToWin;
     int curRound = 0;
     std::vector<int> totalPaintings;
+    std::vector<std::vector<int>> totalPaintingsUntil;
     std::vector<int> auctionRounds;
     std::vector<Player> standings;
 
@@ -21,7 +22,7 @@ class Solver {
     void computeGameLength();
     void updateState(int winnerId, int winnerBid);
     int getBid();
-    int recurse();
+    int recurse(int rd, int adversary, std::vector<Player> curStandings);
 };
 
 #endif
