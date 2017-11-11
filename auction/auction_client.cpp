@@ -15,7 +15,7 @@ json AuctionClient::receiveUpdate() {
   return sock->receiveJSON(BUFFER_SIZE);
 }
 
-void AuctionClient::makeBid(int bidItem, int bidAmount) {
+void AuctionClient::makeBid(string bidItem, int bidAmount) {
   json j = {
     {"bid_item", bidItem},
     {"bid_amount", bidAmount}

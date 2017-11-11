@@ -18,5 +18,5 @@ ifeq ($(VERBOSE), 1)
 	CXXFLAGS += -DVERBOSE
 endif
 
-main: main.cpp auction_client.cpp
-	$(CXX) -o main.out auction_client.cpp ../socket/socket_client.cpp $(CXXFLAGS)
+main: main.cpp auction_client.cpp solver.cpp
+	$(CXX) -o main.out main.cpp auction_client.cpp solver.cpp ../socket/socket_client.cpp $(CXXFLAGS)

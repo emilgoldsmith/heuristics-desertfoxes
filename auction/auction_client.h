@@ -13,7 +13,7 @@ public:
   AuctionClient(std::string serverIP, int serverPort);
   nlohmann::json receiveInit();
   nlohmann::json receiveUpdate();
-  void makeBid(int bidItem, int bidAmount);
+  void makeBid(std::string bidItem, int bidAmount);
 };
 
 #endif
