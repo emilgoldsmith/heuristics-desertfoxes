@@ -17,7 +17,7 @@ Solver::Solver(int artistNum, int winningNum, const vector<int> &itemsInAuction,
 }
 
 void Solver::computeGameLength() {
-  totalPaintings.insert(totalPaintings.begin(), numArtist, 0);
+  totalPaintings.insert(totalPaintings.begin(), numArtists, 0);
   int high = 0;
   const int pidgeonHoleLimit = (numToWin - 1) * standings.size() + 1;
   for (int i = 0; i < auctionRounds.size() && high < pidgeonHoleLimit; i++) {
@@ -35,9 +35,9 @@ void Solver::updateState(int winnerId, int winnerBid) {
 
 int Solver::getBid() {
   int curItem = auctionRounds[curRound];
-  int money = getOurMoney;
+  int money = standings[0].moneyLeft;
 
-  if (ourStandings[curItem] == numToWin - 1) {
+  if (standings[0].paintings[curItem] == numToWin - 1) {
     return money;
   }
 
@@ -52,7 +52,7 @@ int Solver::getBid() {
 
   int biggestThreat = -1;
   for (int otherPlayerId = 1; otherPlayerId < standings.size(); otherPlayerId++) {
-    if (standings[otherPlayerId][curItem] == numToWin - 1) {
+    if (standings[otherPlayerId].paintings[curItem] == numToWin - 1) {
       max(biggestThreat, standings[otherPlayerId].moneyLeft);
     }
   }

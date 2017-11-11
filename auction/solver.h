@@ -10,11 +10,11 @@ struct Player {
 
 class Solver {
   public:
-    int numArtist;
+    int numArtists;
     int numToWin;
     int curRound = 0;
-    vector<int> totalPaintings;
-    vector<int> auctionRounds;
+    std::vector<int> totalPaintings;
+    std::vector<int> auctionRounds;
     std::vector<Player> standings;
 
     Solver(int artistNum, int winningNum, const std::vector<int> &itemsInAuction, int startingWealth, int numPlayers);
