@@ -135,22 +135,18 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
   bool canWin = false;
   vector<Player> newStandings(curStandings);
   while (lo < hi) {
-    int mid = lo + ((hi - low) >> 1);
+    int mid = lo + ((hi - lo) >> 1);
     newStandings[adversary].paintings[curItem]++;
     newStandings[adversary].moneyLeft -= mid;
     if (recurse(rd + 1, adversary, newStandings) == -1) {
       lo = mid + 1;
     } else {
       canWin = true;
-      high = mid;
+      hi = mid;
     }
     newStandings[adversary].paintings[curItem]--;
     newStandings[adversary].moneyLeft += mid;
   }
   if (canWin) return lo;
   return -1;
-}
-
-int main() {
-  return 0;
 }
