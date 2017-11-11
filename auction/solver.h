@@ -12,13 +12,16 @@ class Solver {
   public:
     int numArtist;
     int numToWin;
-    vector<int> auctionRounds
+    int curRound = 0;
+    vector<int> totalPaintings;
+    vector<int> auctionRounds;
     std::vector<Player> standings;
 
-    Solver(int artistNum, int winningNum, std::vector<int> itemsInAuction, int startingWealth, int numPlayers);
-
+    Solver(int artistNum, int winningNum, const std::vector<int> &itemsInAuction, int startingWealth, int numPlayers);
+    void computeGameLength();
     void updateState(int winnerId, int winnerBid);
     int getBid();
+    int recurse();
 };
 
 #endif
