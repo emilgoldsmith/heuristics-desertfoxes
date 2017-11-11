@@ -12,6 +12,7 @@ public:
 
   AuctionClient(std::string serverIP, int serverPort);
   nlohmann::json receiveInit();
+  void sendTeamName();
   nlohmann::json receiveUpdate();
   void makeBid(std::string bidItem, int bidAmount);
 };

@@ -5,10 +5,17 @@ using json = nlohmann::json;
 
 AuctionClient::AuctionClient(std::string serverIP, int serverPort) {
   sock = new SocketClient(serverIP, serverPort);
+  cout << "Client initialized" << endl;
 }
 
 json AuctionClient::receiveInit() {
   return sock->receiveJSON(BUFFER_SIZE);
+}
+
+void AuctionClient::sendTeamName() {
+  json j;
+  j["name"] = TEAM_NAME;
+  sock->sendJSON(j);
 }
 
 json AuctionClient::receiveUpdate() {

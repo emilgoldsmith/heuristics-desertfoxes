@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
   string ip = argv[1];
   int port = atoi(argv[2]);
   AuctionClient client(ip, port);
+  client.sendTeamName();
 
   // init solver
   json gameConfig = client.receiveInit();
@@ -39,17 +40,19 @@ int main(int argc, char **argv) {
     client.makeBid(bidItem, bidAmount);
 
     json update = client.receiveUpdate();
-    // someone won the bid
-    if (update["bid_winner"]) {
-      cout << "Bid winner: " << update["bid_winner"] << " Bid amount: " << update["winning_bid"] << endl;
-      // create new name-index mapping for bid winner if necessary
-      if (nameIndexMap.find(update["bid_winner"]) == nameIndexMap.end()) {
-        nameIndexMap["bid_winner"] = nextPlayerIndex;
-        nextPlayerIndex++;
-      }
-      solver.updateState(nameIndexMap[update["bidwinner"]], update["winning_bid"]);
+    cout << update.dump() << endl;
+    string bidWinner = update.value("bid_winner", "");
+    int winningBid = update.value("winning_bid", 0);
+
+    cout << "Bid winner: " << bidWinner << " Bid amount: " << winningBid << endl;
+    // create new name-index mapping for bid winner if necessary
+    if (nameIndexMap.find(bidWinner) == nameIndexMap.end()) {
+      nameIndexMap["bid_winner"] = nextPlayerIndex;
+      nextPlayerIndex++;
     }
-    // game over
+    solver.updateState(nameIndexMap[bidWinner], winningBid);
+
+    // check if game over
     if (update["finished"]) {
       cout << "Game over: " << update["reason"] << endl;
       break;
