@@ -1,4 +1,5 @@
 #include "solver.h"
+#include "../timer/timer.h"
 
 #include <vector>
 #include <chrono>
@@ -11,9 +12,15 @@ Solver::Solver(int artistNum, int winningNum, const vector<int> &itemsInAuction,
   numToWin(winningNum),
   auctionRounds(itemsInAuction)
 {
+  t = new Timer(60 + 58);
+  t->start();
   // We are always player id 0
   standings.insert(standings.begin(), numPlayers, {startingWealth, vector<int>(artistNum, 0)});
   computeGameLength();
+}
+
+Solver::~Solver() {
+  delete t;
 }
 
 void Solver::computeGameLength() {
@@ -28,6 +35,11 @@ void Solver::computeGameLength() {
     }
     high = max(high, totalPaintings[auctionRounds[i]]);
   }
+  lastRound = 0;
+  for (int x : totalPaintings) {
+    lastRound += x;
+  }
+  lastRound--;
 }
 
 void Solver::updateState(int winnerId, int winnerBid) {
@@ -38,6 +50,7 @@ void Solver::updateState(int winnerId, int winnerBid) {
 }
 
 int Solver::getBid() {
+  start = t->getTime();
   int curItem = auctionRounds[curRound];
   int money = standings[0].moneyLeft;
 
@@ -54,23 +67,13 @@ int Solver::getBid() {
     return 0;
   }
 
-  /*
   int candidateBid = recurse(curRound, 1, standings);
   for (int i = 2; i < standings.size(); i++) {
     candidateBid = max(candidateBid, recurse(curRound, i, standings));
   }
-  */
-  int bestPainting = 0;
-  int maxOccurence = -1;
-  for (int i = 0; i < numArtists; i++) {
-    if (totalPaintings[i] > maxOccurence) {
-      maxOccurence = totalPaintings[i];
-      bestPainting = i;
-    }
+  if (candidateBid == -1) {
+    candidateBid = money / (2*(numToWin - standings[0].paintings[curItem]));
   }
-  int denominator = numToWin - standings[0].paintings[bestPainting];
-  int candidateBid = (money + denominator - 1) / denominator;
-  if (bestPainting != curItem) candidateBid = 0;
 
   int biggestThreat = -1;
   for (int otherPlayerId = 1; otherPlayerId < standings.size(); otherPlayerId++) {
@@ -100,6 +103,14 @@ int Solver::getBid() {
 }
 
 int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
+  double moveTime = t->getTime() - start;
+  double initialTimeLeft = t->timeLeft() + moveTime;
+  if (moveTime > (initialTimeLeft / (lastRound - curRound))) {
+    return -1;
+  }
+  if (rd >= auctionRounds.size()) {
+    return 0;
+  }
   int curItem = auctionRounds[rd];
   if (totalPaintings[curItem] < numToWin) {
     return recurse(rd + 1, adversary, curStandings);
