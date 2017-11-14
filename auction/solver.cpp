@@ -135,7 +135,7 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
   int hi = (curStandings[0].moneyLeft + numToWin - curStandings[0].paintings[curItem] - 1) / (numToWin - curStandings[0].paintings[curItem]);
   bool canWin = false;
   vector<Player> newStandings(curStandings);
-  while (lo < hi) {
+  while (lo <= hi) {
     int mid = lo + ((hi - lo) >> 1);
     newStandings[adversary].paintings[curItem]++;
     newStandings[adversary].moneyLeft -= mid + 1;
@@ -144,6 +144,7 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
     } else {
       canWin = true;
       hi = mid;
+      if (hi == lo) break;
     }
     newStandings[adversary].paintings[curItem]--;
     newStandings[adversary].moneyLeft += mid + 1;

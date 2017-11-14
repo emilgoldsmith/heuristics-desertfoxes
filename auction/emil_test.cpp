@@ -6,6 +6,7 @@ using namespace std;
 
 int main() {
   vector<int> itemsInAuction = {2, 0, 0, 1, 0, 2, 2, 1, 2, 0, 0, 2, 0, 2, 1, 1, 2, 0, 0, 2, 0, 2, 1, 1, 2, 1, 2, 1, 0, 1, 1, 1, 0, 2, 1, 1, 2, 0, 1, 1, 1, 2, 2, 1, 1, 0, 1, 1, 2, 2, 1, 0, 2, 2, 0, 2, 0, 0, 2, 0, 0, 1, 1, 0, 1, 0, 1, 2, 1, 0, 2, 1, 2, 2, 2, 1, 1, 2, 0, 0, 0, 1, 1, 0, 0, 0, 2, 1, 1, 2, 1, 2, 2, 2, 0, 0, 2, 1, 1, 0};
+  // vector<int> itemsInAuction = {0, 0, 0, 0, 0, 0, 0};
   Solver solver(3, 5, itemsInAuction, 100, 2);
   cout << "First 15 items:" << endl;
   for (int i = 0; i < 15; i++) {
