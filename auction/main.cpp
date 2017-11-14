@@ -42,8 +42,15 @@ int main(int argc, char **argv) {
 
     json update = client.receiveUpdate();
     cout << update.dump() << endl;
-    string bidWinner = update.value("bid_winner", "");
-    int winningBid = update.value("winning_bid", 0);
+    string bidWinner;
+    try {
+      bidWinner = update["bid_winner"];
+    } catch (const domain_error& e) {
+      cout << "No bidder this round" << endl;
+      currentRound++;
+      continue;
+    }
+    int winningBid = update["winning_bid"];
 
     cout << "Bid winner: " << bidWinner << " Bid amount: " << winningBid << endl;
     // create new name-index mapping for bid winner if necessary
