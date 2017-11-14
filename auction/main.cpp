@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   for (string sType : gameConfig["auction_items"]) {
     itemsInAuction.push_back(sType.at(1) - '0');
   }
-  int requiredCount = ((int) gameConfig["required_count"]) + 1;
+  int requiredCount = (int) gameConfig["required_count"];
   Solver solver(gameConfig["artists_types"], requiredCount, itemsInAuction, gameConfig["init_wealth"], gameConfig["player_count"]);
 
   // init playerName map
