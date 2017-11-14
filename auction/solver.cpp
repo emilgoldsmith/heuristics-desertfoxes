@@ -130,23 +130,23 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
 
   // Base cases covered, now we handle the meaty part
 
-  int lo = 1; // We never let the opponent win with just 0
+  int lo = 0; // We never let the opponent win with just 0
   // Anything above this would be suicide
-  int hi = min(curStandings[adversary].moneyLeft / (numToWin - curStandings[adversary].paintings[curItem]), curStandings[0].moneyLeft);
+  int hi = (curStandings[0].moneyLeft + numToWin - curStandings[0].paintings[curItem] - 1) / (numToWin - curStandings[0].paintings[curItem]);
   bool canWin = false;
   vector<Player> newStandings(curStandings);
   while (lo < hi) {
     int mid = lo + ((hi - lo) >> 1);
     newStandings[adversary].paintings[curItem]++;
-    newStandings[adversary].moneyLeft -= mid;
-    if (recurse(rd + 1, adversary, newStandings) == -1) {
+    newStandings[adversary].moneyLeft -= mid + 1;
+    if (newStandings[adversary].moneyLeft >= 0 && recurse(rd + 1, adversary, newStandings) == -1) {
       lo = mid + 1;
     } else {
       canWin = true;
       hi = mid;
     }
     newStandings[adversary].paintings[curItem]--;
-    newStandings[adversary].moneyLeft += mid;
+    newStandings[adversary].moneyLeft += mid + 1;
   }
   if (canWin) return lo;
   return -1;
