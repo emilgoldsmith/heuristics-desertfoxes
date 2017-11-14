@@ -42,6 +42,12 @@ int main(int argc, char **argv) {
 
     json update = client.receiveUpdate();
     cout << update.dump() << endl;
+    // check if game over
+    if (update["finished"]) {
+      cout << "Game over: " << update["reason"] << endl;
+      break;
+    }
+
     string bidWinner;
     try {
       bidWinner = update["bid_winner"];
@@ -55,16 +61,10 @@ int main(int argc, char **argv) {
     cout << "Bid winner: " << bidWinner << " Bid amount: " << winningBid << endl;
     // create new name-index mapping for bid winner if necessary
     if (nameIndexMap.find(bidWinner) == nameIndexMap.end()) {
-      nameIndexMap["bid_winner"] = nextPlayerIndex;
+      nameIndexMap[bidWinner] = nextPlayerIndex;
       nextPlayerIndex++;
     }
     solver.updateState(nameIndexMap[bidWinner], winningBid);
-
-    // check if game over
-    if (update["finished"]) {
-      cout << "Game over: " << update["reason"] << endl;
-      break;
-    }
 
     currentRound++;
   }
