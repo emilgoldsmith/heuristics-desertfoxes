@@ -20,3 +20,7 @@ endif
 
 main: main.cpp auction_client.cpp solver.cpp
 	$(CXX) -o main.out main.cpp auction_client.cpp solver.cpp ../socket/socket_client.cpp $(CXXFLAGS)
+
+run_emil_test: emil_test.cpp solver.cpp
+	$(CXX) -o emil_test.out emil_test.cpp solver.cpp $(CXXFLAGS)
+	./emil_test.out

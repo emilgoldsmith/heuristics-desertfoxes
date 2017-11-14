@@ -54,7 +54,6 @@ int Solver::getBid() {
     return 0;
   }
 
-  // Maybe do this for each player and pick max bid
   int candidateBid = recurse(curRound, 1, standings);
   for (int i = 2; i < standings.size(); i++) {
     candidateBid = max(candidateBid, recurse(curRound, i, standings));
@@ -63,7 +62,7 @@ int Solver::getBid() {
   int biggestThreat = -1;
   for (int otherPlayerId = 1; otherPlayerId < standings.size(); otherPlayerId++) {
     if (standings[otherPlayerId].paintings[curItem] == numToWin - 1) {
-      max(biggestThreat, standings[otherPlayerId].moneyLeft);
+      biggestThreat = max(biggestThreat, standings[otherPlayerId].moneyLeft);
     }
   }
   if (biggestThreat == -1) return candidateBid;
@@ -92,7 +91,7 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
   bool theyCanWin = curStandings[adversary].paintings[curItem] == numToWin - 1;
   if (weCanWin || theyCanWin) {
     // Check if someone else can outbid then we assume they do
-    int maxMoney;
+    int maxMoney = -1;
     if (weCanWin) maxMoney = curStandings[0].moneyLeft;
     if (theyCanWin) maxMoney = max(maxMoney, curStandings[adversary].moneyLeft);
     for (int otherPlayer = 1; otherPlayer < standings.size(); otherPlayer++) {
@@ -111,6 +110,7 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
     } else if (weCanWin) {
       if (curStandings[adversary].moneyLeft > maxMoney) {
         curStandings[adversary].moneyLeft -= maxMoney + 1;
+        curStandings[adversary].paintings[curItem]++;
         return recurse(rd + 1, adversary, curStandings);
       } else {
         // We win!
@@ -119,6 +119,7 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
     } else {
       if (curStandings[0].moneyLeft > maxMoney) {
         curStandings[0].moneyLeft -= maxMoney + 1;
+        curStandings[0].paintings[curItem]++;
         return recurse(rd + 1, adversary, curStandings);
       } else {
         // We lose as we can't outbid the opponent
@@ -129,9 +130,9 @@ int Solver::recurse(int rd, int adversary, vector<Player> curStandings) {
 
   // Base cases covered, now we handle the meaty part
 
-  int lo = 0;
+  int lo = 1; // We never let the opponent win with just 0
   // Anything above this would be suicide
-  int hi = max(curStandings[adversary].moneyLeft / (numToWin - curStandings[adversary].paintings[curItem]), curStandings[0].moneyLeft);
+  int hi = min(curStandings[adversary].moneyLeft / (numToWin - curStandings[adversary].paintings[curItem]), curStandings[0].moneyLeft);
   bool canWin = false;
   vector<Player> newStandings(curStandings);
   while (lo < hi) {
