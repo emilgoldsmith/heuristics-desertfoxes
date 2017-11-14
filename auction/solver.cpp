@@ -74,6 +74,11 @@ int Solver::getBid() {
   if (candidateBid == -1) {
     candidateBid = money / (2*(numToWin - standings[0].paintings[curItem]));
   }
+  double moveTime = t->getTime() - start;
+  double initialTimeLeft = t->timeLeft() + moveTime;
+  if (moveTime > (initialTimeLeft / (lastRound - curRound))) {
+    candidateBid = money / (2*(numToWin - standings[0].paintings[curItem]));
+  }
 
   int biggestThreat = -1;
   for (int otherPlayerId = 1; otherPlayerId < standings.size(); otherPlayerId++) {
