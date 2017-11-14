@@ -24,8 +24,8 @@ int main(int argc, char **argv) {
   for (string sType : gameConfig["auction_items"]) {
     itemsInAuction.push_back(sType.at(1) - '0');
   }
-  // right now numPlayers is hardcoded
-  Solver solver(gameConfig["artists_types"], gameConfig["required_count"], itemsInAuction, gameConfig["init_wealth"], 2);
+  int requiredCount = ((int) gameConfig["required_count"]) + 1;
+  Solver solver(gameConfig["artists_types"], requiredCount, itemsInAuction, gameConfig["init_wealth"], gameConfig["player_count"]);
 
   // init playerName map
   map<string, int> nameIndexMap;
@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     int bidAmount = solver.getBid();
     string bidItem = gameConfig["auction_items"][currentRound];
     client.makeBid(bidItem, bidAmount);
+    cout << "Bidding " << bidAmount << " on " << bidItem << endl;
 
     json update = client.receiveUpdate();
     cout << update.dump() << endl;
