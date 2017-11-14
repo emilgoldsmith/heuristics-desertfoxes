@@ -54,10 +54,23 @@ int Solver::getBid() {
     return 0;
   }
 
+  /*
   int candidateBid = recurse(curRound, 1, standings);
   for (int i = 2; i < standings.size(); i++) {
     candidateBid = max(candidateBid, recurse(curRound, i, standings));
   }
+  */
+  int bestPainting = 0;
+  int maxOccurence = -1;
+  for (int i = 0; i < numArtists; i++) {
+    if (totalPaintings[i] > maxOccurence) {
+      maxOccurence = totalPaintings[i];
+      bestPainting = i;
+    }
+  }
+  int denominator = numToWin - standings[0].paintings[bestPainting];
+  int candidateBid = (money + denominator - 1) / denominator;
+  if (bestPainting != curItem) candidateBid = 0;
 
   int biggestThreat = -1;
   for (int otherPlayerId = 1; otherPlayerId < standings.size(); otherPlayerId++) {
@@ -77,7 +90,11 @@ int Solver::getBid() {
       // We don't have enough money to outbid
       return candidateBid;
     }
-    this_thread::sleep_for(chrono::seconds(5));
+    int gameLength = 0;
+    for (int x : totalPaintings) {
+      gameLength += x;
+    }
+    this_thread::sleep_for(chrono::seconds((int)(1.5 * (int)(120/gameLength))));
     return biggestThreat + 1;
   }
 }
