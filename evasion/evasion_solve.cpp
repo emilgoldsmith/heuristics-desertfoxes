@@ -55,6 +55,24 @@ int findWallBetween(GameState *state, Position p1, Position p2) {
   return -1;
 }
 
+int getDistToCenter(GameState *state, Position p) {
+  int highestDiff = 0;
+  Position velocityToMove = {0, 0};
+  int dx[4] = {1, 0, 1, -1}; // horizontal, vertical, diagonal, counterdiagonal
+  int dy[4] = {0, 1, 1, 1};
+  int total = 0;
+  for (int dir = 0; dir < 4; dir++) {
+    int rayLengthPositive = 0;
+    for (int steps = 1; !state->isOccupied({p.x + steps*dx[dir], p.y + steps*dy[dir]}); steps++) rayLengthPositive++;
+    int rayLengthNegative = 0;
+    for (int steps = 1; !state->isOccupied({p.x - steps * dx[dir], p.y - steps * dy[dir]}); steps++) rayLengthNegative++;
+    int diff = rayLengthNegative - rayLengthPositive;
+    if (diff < 0) diff = -diff;
+    total += diff;
+  }
+  return total;
+}
+
 pair<int, Position> getPathToCenter(GameState *state, Position p) {
   int highestDiff = 0;
   Position velocityToMove = {0, 0};
@@ -192,7 +210,7 @@ pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Posi
     q.pop();
     if (cur.second.second >= ticksToSearch || q.empty()) {
       // Time to evaluate the best move
-      int distToCenter = getPathToCenter(state, start + cur.first).first;
+      int distToCenter = getDistToCenter(state, start + cur.first);
       if (distToCenter < bestMove.second.first) {
         bestMove = {cur.second.first, {distToCenter, ticksToSearch}};
       }
@@ -251,7 +269,7 @@ pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Posi
     if (!hasValidMoves && cur.second.second > bestMove.second.second) {
       // This move can't go any further but it is also the move that stayed along the longest
       // up until now
-      int distToCenter = getPathToCenter(state, start + cur.first).first;
+      int distToCenter = getDistToCenter(state, start + cur.first);
       bestMove = {cur.second.first, {distToCenter, cur.second.second}};
     }
   }
