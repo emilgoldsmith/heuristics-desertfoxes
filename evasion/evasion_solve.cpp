@@ -190,7 +190,7 @@ pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Posi
   while (!q.empty()) {
     pair<Position, pair<Position, int>> cur = q.front();
     q.pop();
-    if (cur.second.second >= ticksToSearch) {
+    if (cur.second.second >= ticksToSearch || q.empty()) {
       // Time to evaluate the best move
       int distToCenter = getPathToCenter(state, start + cur.first).first;
       if (distToCenter < bestMove.second.first) {
@@ -206,7 +206,10 @@ pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Posi
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           Position move = {cur.first.x + parity * dx[i], cur.first.y + parity * dy[j]};
-          if (visited[move.x + offset][move.y + offset]) continue;
+          if (visited[move.x + offset][move.y + offset]) {
+            hasValidMoves = true;
+            continue;
+          }
           Position realPlace = start + move;
           auto it = deadlyPoints->begin();
           for (; it != deadlyPoints->end(); it++) {
@@ -262,7 +265,7 @@ pair<Position, pair<int, int>> findSurvivalMove(Position start, vector<pair<Posi
 Position solvePreyHeuristic(GameState *state) {
   bool hasWallBetween = findWallBetween(state, state->prey, state->hunter) != -1;
   int hunterPreyDistance = computeDistance(state->prey, state->hunter);
-  int ticksToSearch = 151;
+  int ticksToSearch = 15;
   if (hunterPreyDistance <= 2 * ticksToSearch * ticksToSearch) { // The 2 is sqrt2 squared (the amount of distance coverable in 1 timestep)
     // First check if we're in danger of dying if we're in the same box as hunter and pretty close
     vector<pair<Position, vector<int>>> deadlyPoints = getDeadlyPoints(state, ticksToSearch);
