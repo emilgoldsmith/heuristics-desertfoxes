@@ -512,7 +512,7 @@ HunterMove solveHunterGuyu(GameState *state) {
     if (hunterPreyDist.x * state->hunterDirection.x > 0) {
       // check if wall will recharge in time
       if (willRechargeInTime(state, true)) {
-        wallCandidates.push_back(2);
+        // wallCandidates.push_back(2);
       }
     // wall won't separate hunter and prey
     } else {
@@ -522,7 +522,7 @@ HunterMove solveHunterGuyu(GameState *state) {
   if (shouldBuildHorizontal) {
     if (hunterPreyDist.y * state->hunterDirection.y > 0) {
       if (willRechargeInTime(state, false)) {
-        wallCandidates.push_back(1);
+        // wallCandidates.push_back(1);
       }
     } else {
       wallCandidates.push_back(1);
