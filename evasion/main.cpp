@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     this_thread::sleep_for(chrono::milliseconds(4));
 #endif
     if (client.isHunter) {
-      hm = client.hunterMakeMove(solveHunterHeuristic);
+      hm = client.hunterMakeMove(solveHunterGuyu);
       client.receiveUpdate();
       if (client.latestUpdate.gameNum == 1 && client.latestUpdate.tickNum == 0) {
         continue;
