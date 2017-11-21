@@ -363,14 +363,25 @@ bool wallIsInBetween(GameState *state, int wallIndex) {
 
 bool willHitWall(GameState *state, int wallIndex) {
   Wall wall = state->walls[wallIndex];
-  int dist;
   // vertical wall
   if (wall.start.x == wall.end.x) {
     // if hunter is going towards the wall
-    return state->hunterDirection.x * (wall.start.x - state->hunter.x) > 0;
-  }
+    if (state->hunterDirection.x * (wall.start.x - state->hunter.x) > 0) {
+      // if hunter is dist 1 away from wall
+      if (abs(wall.start.x - state->hunter.x) == 1) {
+        return true;
+      }
+    }
   // horizontal wall
-  return state->hunterDirection.y * (wall.start.y - state->hunter.y) > 0;
+  } else {
+    if (state->hunterDirection.y * (wall.start.y - state->hunter.y) > 0) {
+      if (abs(wall.start.y - state->hunter.y) == 1) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 bool willRechargeInTime(GameState *state, bool buildVertical) {
@@ -451,7 +462,7 @@ int getNewNonboundingWall(GameState *state, int newWallType) {
   return -1;
 }
 
-HunterMove solverHunterGuyu(GameState *state) {
+HunterMove solveHunterGuyu(GameState *state) {
   // case 1: need to go through wall and immediately rebuild
   // our algorithm ensures that if hunter needs to go through, it can rebuild
   for (int i = 0; i < state->walls.size(); i++) {
@@ -463,13 +474,19 @@ HunterMove solverHunterGuyu(GameState *state) {
     }
   }
 
-  // case 2: don't need to go through any wall
-  // wall still needs to recharge
+  // case 2: wall still needs to recharge
   if (state->cooldownTimer != 0) {
     return { 0, {} };
   }
 
-  // can build a wall
+  // case 3: wall between hunter and prey, so don't build a wall
+  for (int i = 0; i < state->walls.size(); i++) {
+    if (wallIsInBetween(state, i)) {
+      return { 0, {} };
+    }
+  }
+
+  // case 4: can build a wall
   Position hunterPreyDist = state->hunter - state->prey;
   Position hunterPreyAbsDist = { abs(hunterPreyDist.x), abs(hunterPreyDist.y) };
   bool shouldBuildVertical = false;
@@ -528,6 +545,10 @@ HunterMove solverHunterGuyu(GameState *state) {
   // it is possible for at most 1 wall to become non-bounding after placing a new wall
   int wallToDelete = getNewNonboundingWall(state, wallType);
   if (wallToDelete == -1) {
+    // might run out of walls
+    if (state->walls.size() == state->maxWalls) {
+      return { 0, {} };
+    }
     return { wallType, {} };
   }
   return { wallType, { wallToDelete } };
