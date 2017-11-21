@@ -351,75 +351,62 @@ Dimension getPreyBoxDimension(GameState *state, vector<int> boundingWalls) {
   return { minX, minY, maxX, maxY };
 }
 
-HunterMove solveHunterGuyu(GameState *state) {
-  int wallType = 0;
-  vector<int> wallCandidates;
-  vector<int> indicesToDelete;
+bool wallIsInBetween(GameState *state, int wallIndex) {
+  Wall wall = state->walls[wallIndex];
+  // vertical wall
+  if (wall.start.x == wall.end.x) {
+    return (state->hunter.x - wall.start.x) * (wall.start.x - state->prey.x) > 0;
+  }
+  // horizontal wall
+  return (state->hunter.y - wall.start.y) * (wall.start.y - state->prey.y) > 0;
+}
 
-  Position hunterPreyDist = state->hunter - state->prey;
-  bool hunterTowardsPreyX = hunterPreyDist.x * state->hunterDirection.x < 0;
-  bool hunterTowardsPreyY = hunterPreyDist.y * state->hunterDirection.y < 0;
+bool willHitWall(GameState *state, int wallIndex) {
+  Wall wall = state->walls[wallIndex];
+  int dist;
+  // vertical wall
+  if (wall.start.x == wall.end.x) {
+    // if hunter is going towards the wall
+    return state->hunterDirection.x * (wall.start.x - state->hunter.x) > 0;
+  }
+  // horizontal wall
+  return state->hunterDirection.y * (wall.start.y - state->hunter.y) > 0;
+}
 
-  // should consider building vertical
-  if (state->cooldownTimer == 0) {
-    if (abs(hunterPreyDist.x) <= 2) {
-      if (hunterTowardsPreyX) {
-        wallCandidates.push_back(2);
-      // hunter is moving away
-      } else {
-        // calculate the number of ticks before hunter gets back to the same x
-        int numTicks = 0;
-        GameState stateCopy(*state);
-        do {
-          HunterMove hm = { 0, {} };
-          Position pm = { 0, 0 };
-          if (!stateCopy.preyMoves) {
-            pm = { 2, 2 };
-          }
-          stateCopy.makeMove(hm, pm);
-          numTicks++;
-          if (numTicks > state->cooldown) {
-            break;
-          }
-        } while (stateCopy.hunter.x != state->hunter.x);
-        // hunter is able to come back, destroy the old wall, and build a new wall immediately
-        if (numTicks > state->cooldown) {
-          wallCandidates.push_back(2);
-        }
-      }
+bool willRechargeInTime(GameState *state, bool buildVertical) {
+  int numTicks = 0;
+  GameState stateCopy(*state);
+
+  while (true) {
+    HunterMove hm = { 0, {} };
+    Position pm = { 0, 0 };
+    if (!stateCopy.preyMoves) {
+      pm = { 2, 2 };
     }
-    // should consider building horizontal
-    if (abs(hunterPreyDist.y) <= 2) {
-      if (hunterTowardsPreyY) {
-        wallCandidates.push_back(1);
-      // hunter is moving away
-      } else {
-        // calculate the number of ticks before hunter gets back to the same y
-        int numTicks = 0;
-        GameState stateCopy(*state);
-        do {
-          HunterMove hm = { 0, {} };
-          Position pm = { 0, 0 };
-          if (!stateCopy.preyMoves) {
-            pm = { 2, 2 };
-          }
-          stateCopy.makeMove(hm, pm);
-          numTicks++;
-          if (numTicks > state->cooldown) {
-            break;
-          }
-        } while (stateCopy.hunter.y != state->hunter.y);
-        // hunter is able to come back, destroy the old wall, and build a new wall immediately
-        if (numTicks > state->cooldown) {
-          wallCandidates.push_back(1);
-        }
+    stateCopy.makeMove(hm, pm);
+    numTicks++;
+    if (numTicks > state->cooldown) {
+      return true;
+    }
+    // check if hunter has returned
+    if (buildVertical) {
+      if (stateCopy.hunter.x == state->hunter.x) {
+        break;
       }
+    } else if (stateCopy.hunter.y == state->hunter.y) {
+      break;
     }
   }
 
-  // get best wall candidate (out of 2 at most)
+  return false;
+}
+
+int getBetterWall(GameState *state) {
+  // both horizontal and vertical walls are feasible
+  // choose the minimum prey box min-dim
+  int wallType = 0;
   int minDim = 300;
-  for (int wc : wallCandidates) {
+  for (int wc = 1; wc <= 2; wc++) {
     GameState stateCopy(*state);
     stateCopy.maxWalls += 1;
     Position pm = { 0, 0 };
@@ -427,8 +414,7 @@ HunterMove solveHunterGuyu(GameState *state) {
       pm = { 2, 2 };
     }
     stateCopy.makeMove({ wc, {} }, pm);
-    vector<int> boundingWalls = getPreyBoundingWalls(&stateCopy);
-    Dimension preyBox = getPreyBoxDimension(&stateCopy, boundingWalls);
+    Dimension preyBox = getPreyBoxDimension(&stateCopy, getPreyBoundingWalls(&stateCopy));
     int dim = min(preyBox.maxX - preyBox.minX, preyBox.maxY - preyBox.minY);
     if (dim < minDim) {
       minDim = dim;
@@ -436,71 +422,115 @@ HunterMove solveHunterGuyu(GameState *state) {
     }
   }
 
-  vector<int> boundingWalls = getPreyBoundingWalls(state);
-  // delete trap walls
-  for (int i = 0; i < state->walls.size(); i++) {
-    Wall wall = state->walls[i];
-    Position hunterWallDist = state->hunter - wall.start;
-    // if vertical wall
-    if (wall.start.x == wall.end.x) {
-      // if hunter is moving towards the wall
-      if (hunterWallDist.x * state->hunterDirection.x < 0) {
-        // if hunter is only 1 unit away from the wall
-        // and moving towards the prey (trap wall)
-        if (hunterWallDist.x == 2 && hunterTowardsPreyX) {
-          indicesToDelete.push_back(i);
-          continue;
-        }
-      }
-    // horizontal wall
-    } else {
-      // if hunter is moving towards the wall
-      if (hunterWallDist.y * state->hunterDirection.y < 0) {
-        // if hunter is only 1 unit away from the wall
-        // and moving towards the prey (trap wall)
-        if (hunterWallDist.y == 2 && hunterTowardsPreyY) {
-          indicesToDelete.push_back(i);
-          continue;
-        }
-      }
-    }
-  }
+  return wallType;
+}
 
-  // delete non-bounding walls (after building the new wall)
+int getNewNonboundingWall(GameState *state, int newWallType) {
   GameState stateCopy(*state);
   stateCopy.maxWalls += 1;
   Position pm = { 0, 0 };
   if (!stateCopy.preyMoves) {
     pm = { 2, 2 };
   }
-  stateCopy.makeMove({ wallType, {} }, pm);
-  vector<int> boundingWallsCopy = getPreyBoundingWalls(&stateCopy);
+  stateCopy.makeMove({ newWallType, {} }, pm);
+  vector<int> boundingWalls = getPreyBoundingWalls(&stateCopy);
   for (int i = 0; i < state->walls.size(); i++) {
-    // not already included in indiceToDelete
-    bool alreadyDeleted = false;
-    for (int deleted : indicesToDelete) {
-      if (deleted == i) {
-        alreadyDeleted = true;
-        break;
-      }
-    }
-    if (alreadyDeleted) {
-      continue;
-    }
-    // not a bounding wall
     bool isBounding = false;
-    for (int bound : boundingWallsCopy) {
-      if (bound == i) {
+    for (int bw : boundingWalls) {
+      if (i == bw) {
         isBounding = true;
         break;
       }
     }
     if (!isBounding) {
-      indicesToDelete.push_back(i);
+      return i;
     }
   }
 
-  return { wallType, indicesToDelete };
+  // every wall is still a bounding wall
+  return -1;
+}
+
+HunterMove solverHunterGuyu(GameState *state) {
+  // case 1: need to go through wall and immediately rebuild
+  // our algorithm ensures that if hunter needs to go through, it can rebuild
+  for (int i = 0; i < state->walls.size(); i++) {
+    Wall wall = state->walls[i];
+    if (wallIsInBetween(state, i) && willHitWall(state, i)) {
+      // vertical : horizontal
+      int wallType = wall.start.x == wall.end.x ? 2 : 1;
+      return { wallType, { i } };
+    }
+  }
+
+  // case 2: don't need to go through any wall
+  // wall still needs to recharge
+  if (state->cooldownTimer != 0) {
+    return { 0, {} };
+  }
+
+  // can build a wall
+  Position hunterPreyDist = state->hunter - state->prey;
+  Position hunterPreyAbsDist = { abs(hunterPreyDist.x), abs(hunterPreyDist.y) };
+  bool shouldBuildVertical = false;
+  bool shouldBuildHorizontal = false;
+  // condition here is important - this ensures a wall will always be built promptly
+  if (hunterPreyAbsDist.x == 2 || (hunterPreyAbsDist.x == 1 && !state->preyMoves)) {
+    shouldBuildVertical = true;
+  }
+  if (hunterPreyAbsDist.y == 2 || (hunterPreyAbsDist.y == 1 && !state->preyMoves)) {
+    shouldBuildHorizontal = true;
+  }
+
+  // but shouldn't build any wall
+  if (!shouldBuildVertical && !shouldBuildHorizontal) {
+    return { 0, {} };
+  }
+
+  // probably should build a wall
+  vector<int> wallCandidates;
+  if (shouldBuildVertical) {
+    // check if the wall will separate hunter and prey
+    // wall - prey, hunter - wall
+    if (hunterPreyDist.x * state->hunterDirection.x > 0) {
+      // check if wall will recharge in time
+      if (willRechargeInTime(state, true)) {
+        wallCandidates.push_back(2);
+      }
+    // wall won't separate hunter and prey
+    } else {
+      wallCandidates.push_back(2);
+    }
+  }
+  if (shouldBuildHorizontal) {
+    if (hunterPreyDist.y * state->hunterDirection.y > 0) {
+      if (willRechargeInTime(state, false)) {
+        wallCandidates.push_back(1);
+      }
+    } else {
+      wallCandidates.push_back(1);
+    }
+  }
+
+  // no valid candidates
+  if (wallCandidates.empty()) {
+    return { 0, {} };
+  }
+  int wallType;
+  // only 1 candidate
+  if (wallCandidates.size() == 1) {
+    wallType = wallCandidates[0];
+  // compare 2 candidates
+  } else {
+    wallType = getBetterWall(state);
+  }
+
+  // it is possible for at most 1 wall to become non-bounding after placing a new wall
+  int wallToDelete = getNewNonboundingWall(state, wallType);
+  if (wallToDelete == -1) {
+    return { wallType, {} };
+  }
+  return { wallType, { wallToDelete } };
 }
 
 HunterMove solveHunterHeuristic(GameState *state) {
